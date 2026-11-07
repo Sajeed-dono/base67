@@ -4,34 +4,46 @@ Updated: 2026-11-08
 
 ## Current prompt and gate
 
-- **Current prompt: Prompt 1 of 8 — Foundation, Game Brief, Data Layer and Campaign Architecture.**
-- **Prompt 1 is complete.** Do not begin Prompt 2 until the user approves moving on.
-- This update completed Prompt 1 foundation work only. It did not start Prompt 2 or implement a playable simulation.
+- Current prompt: **Prompt 2 of 8 — Visual Design System, Astronauts, Persistent Base Map and Navigation.**
+- Prompt 1 and Prompt 2 are complete. Prompt 3 has not started and requires user approval.
+- This step implemented presentation, navigation, and accessibility support. It did not implement the simulation or mission outcomes.
 
-## Completed and verified
+## Foundation status
 
-- `docs/GAME_BRIEF.md` matches the canonical 15-level brief in Prompt 1. The pre-update brief and decisions snapshots are preserved under `docs/archive/`.
-- `docs/DECISIONS.md` now maps all six original `levels.json` entries, their lesson IDs, and their win-rule intent into the 15-level campaign. The legacy file remains read-only.
-- The simulation note is at the sequence-required `docs/SIM_MODEL.md`; its content was preserved during rename.
-- All original data files remain unchanged. The SHA-256 test passed. The supplied data checker passed in the previous foundation session; it was also rerun during this Prompt 1 task (see validation below).
-- The 15-level campaign, chapter membership, sequential unlock chain, and site risk classifications are in extra GAME VALUE configuration.
-- Building and research definitions reference the provisional timer rules. Timer and research durations come from the updated GDD proposals and remain explicitly provisional GAME VALUEs.
-- `display_text.json` maps the legacy title to `BASE 67`. `GameDataRepository.displayText` applies that mapping. Tests cover displayed radio text and scan Dart UI sources for the obsolete title.
-- All bundled JSON files load into typed `DataDocument`/`DataRecord` structures. NASA facts and sources also have dedicated typed models and repository lookup methods.
-- The validator checks NASA hosts and fact/source references, metadata classes, campaign ordering and chapters, progression unlocks, building/equipment/level/timer references, research prerequisites/timers, crew task references, timer ranges and prerequisites, and site risk labels.
-- The campaign save schema includes crew names, site, cargo/inventory, buildings, resources, research, timer jobs/timestamps, event history, rewards, results, and settings. Local SharedPreferences storage is abstracted behind a testable key-value interface.
-- Tests cover data validation and loading, original-pack checksums, display text, deterministic RNG, campaign save/store round-trip, timer completion idempotence after serialization/restart, the prologue entry point, and the debug-only Data Check entry.
-- `lib/game/` remains an empty implementation area with `.gitkeep` so it is tracked.
+- `docs/GAME_BRIEF.md` follows the canonical 15-level brief. Pre-update brief and decision copies are archived under `docs/archive/`.
+- `docs/DECISIONS.md` records the six-level legacy mapping into the 15-level campaign. Original `assets/data/levels.json` remains a read-only reference.
+- The sequence-authoritative simulation note is `docs/SIM_MODEL.md`; the earlier rename preserved its content.
+- The new 15-level campaign, chapter membership, sequential unlock chain, and site risk classifications live under `assets/data/extra/`.
+- Timer and research durations remain provisional GAME VALUEs. No new balancing values were introduced in Prompt 2.
+- The legacy display mapping renders the current game name as BASE 67. Tests scan Dart UI sources for the obsolete title.
+- The typed repository, validator, persistent save schema, timer completion, and deterministic RNG remain in place from Prompt 1.
+- The original data pack checksum test passed. `python check_data.py` reported `facts: 40 | sources: 24 | ALL OK` during Prompt 1 validation.
 
 ## Prompt 1 completion
 
-- `flutter analyze` is clean after a brace-only style fix to the existing site timeout condition. The change preserves the same conditional and timeout action.
-- The first prologue title has a long-press Data Check entry point only in debug builds. The widget test opens the Data Check screen through that entry point; the entry key and handler are gated by `kDebugMode`.
-- No playable simulation was added, as Prompt 1 requires.
+- `flutter analyze` and `flutter test` passed at Prompt 1 completion.
+- The debug-only Data Check screen is accessible from a long-press on the first prologue title and from the debug Settings menu.
+- The original prologue story and choice sequence remain intact.
 
-## Validation for this Prompt 1 task
+## Prompt 2 completion
+
+- `lib/ui/theme.dart` defines color, spacing, radii, motion, typography, and the four text-size settings. The palette includes color-blind-safe status colors and visible status icons.
+- `lib/ui/game_widgets.dart` provides the requested reusable controls and cards, including `DataChip`, `TimerCard`, `ResourceCard`, `BuildingCard`, `ResearchCard`, and `CrewAssignmentCard`.
+- `lib/ui/crew_bean.dart` draws four astronaut roles, role badges, 12 suit colors, and all nine requested moods. Reduced-motion mode disables the breathing loop.
+- `lib/ui/mars_base_painter.dart` draws Mars terrain and vector facilities. Built/unbuilt and upgraded facilities have distinct map states; solar panels show dust.
+- Home Base reads campaign save data for facilities, crew, resource amounts, timers, site, and next goal. Unconfigured resource amounts remain visibly unset.
+- Campaign Map shows all 15 levels in five visually differentiated chapters, with locked, available, completed, and mastered states. Available levels open briefings. The Mars Notebook route is present, but `assets/data/extra/fact_cards.json` currently has no card entries.
+- Navigation routes cover Splash, Prologue, Home Base, Campaign Map, mission flow, build, research, crew, notebook, rewards, settings, About, Credits, Debug Design Gallery, and Debug Data Check. Later mission systems remain presentation shells for their approved steps.
+- The app preserves the prologue story and decision flow. Its scene text can scroll on smaller screens at larger text sizes, and the final scene can hand off to Home Base.
+- Settings persist the four text-size choices and reduced-motion preference. Reduced-motion mode also removes route fades.
+- Widget tests exercise the requested reusable UI, all navigation routes, Home Base and Campaign Map at 360 dp and 1024 dp, and 1.4× text scaling.
+
+## Visual references
+
+- `docs/reference/` contains no files. Prompt 2 uses the sequence's written visual direction; this gap is recorded in `docs/DECISIONS.md`.
+
+## Validation for Prompt 2
 
 - `flutter analyze`: exit code 0; no issues found.
-- `flutter test --no-pub --reporter expanded`: exit code 0; all 10 tests passed, including the debug Data Check entry test.
-- `python check_data.py`: facts: 40 | sources: 24 | ALL OK.
-- `git diff -- assets/data :!assets/data/extra/**` returned no diff. The original data directory is untracked in this Git root, so the checksum test also verified each original pack file against the saved SHA-256 manifest. The prologue change is limited to braces and a debug-only Data Check gesture.
+- `flutter test --no-pub --reporter expanded`: exit code 0; all 17 tests passed.
+- The original-pack checksum test passed in the full suite. No files in the original `assets/data/` pack were edited.

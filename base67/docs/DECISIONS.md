@@ -33,5 +33,13 @@
 
 - The legacy title string is retained in original source data. `assets/data/extra/display_text.json` provides a GAME VALUE presentation replacement to `BASE 67`; repository callers must use `GameDataRepository.displayText` for source-provided text. Original NASA/source files are not edited.
 - Timer and research durations now use only the updated GDD's suggested ranges/durations and remain marked `provisional` GAME VALUEs. They are pacing proposals, not validated balances or NASA facts. Original data-pack balance values remain unchanged.
-- `lib/game/` is reserved for Prompt 2 presentation work. It currently contains only `.gitkeep`; no game screen or simulation was started here.
+- `lib/game/` contains the Home Base and Campaign Map presentation screens from Prompt 2; simulation and mission outcomes remain deferred.
 - The site timeout's one-line conditional was wrapped in braces to satisfy the analyzer; its condition and action are unchanged. The first prologue title opens Data Check on long-press only when `kDebugMode` is true. Release builds have no active entry handler, and the Data Check widget also guards itself against release use. No lint ignore was needed.
+
+## Prompt 2 visual and navigation decisions
+
+- `docs/reference/` contains no visual files. Prompt 2 therefore uses its written Mars map direction: warm rust terrain, a deep dusk sky, a compact illustrated settlement, rounded cards, and clear campaign nodes. No external artwork or font was added.
+- The UI uses bundled/platform Roboto typography and local vector drawing through Flutter painters. Text size settings use the four specified factors; reduced-motion mode disables the CrewBean breathing loop and removes route fades.
+- Home Base and Campaign Map read the existing campaign save. Resource quantities, capacities, costs, and effects remain unset when no saved or approved value exists; this step does not add balance figures or simulation behavior.
+- The prologue story and decision flow remain unchanged. Its scene text area can scroll on small screens at larger text sizes, and its app route provides a Home Base handoff after the final scene.
+- Routes for later mission systems are present as presentation shells. This Prompt 2 work does not implement the simulation, mission outcomes, construction actions, or research effects.

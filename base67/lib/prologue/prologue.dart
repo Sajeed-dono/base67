@@ -13,20 +13,6 @@ import '../data/validation/data_check_screen.dart';
 const rust = Color(0xFFB7410E);
 const ink = Color(0xFF0B0A0F);
 
-class Base67App extends StatelessWidget {
-  const Base67App({super.key});
-  @override
-  Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'BASE 67',
-    theme: ThemeData.dark(useMaterial3: true).copyWith(
-      scaffoldBackgroundColor: ink,
-      colorScheme: const ColorScheme.dark(primary: rust),
-    ),
-    home: const Prologue(),
-  );
-}
-
 // ---------------------------------------------------------------- data
 
 class Line {
@@ -266,7 +252,9 @@ class Mission {
 // ---------------------------------------------------------------- flow
 
 class Prologue extends StatefulWidget {
-  const Prologue({super.key});
+  const Prologue({super.key, this.onComplete});
+
+  final VoidCallback? onComplete;
   @override
   State<Prologue> createState() => _PrologueState();
 }
@@ -293,7 +281,16 @@ class _PrologueState extends State<Prologue> {
         : const Center(
             child: Text('Prologue complete — hand off to the main game here.'),
           );
-    return Scaffold(body: SafeArea(child: body));
+    return Scaffold(
+      body: SafeArea(child: body),
+      floatingActionButton: i >= steps.length && widget.onComplete != null
+          ? FloatingActionButton.extended(
+              onPressed: widget.onComplete,
+              icon: const Icon(Icons.rocket_launch_rounded),
+              label: const Text('Go to Home Base'),
+            )
+          : null,
+    );
   }
 }
 
@@ -386,9 +383,11 @@ class _CineScreenState extends State<CineScreen> {
             Text(widget.cine.place, style: t.labelSmall),
             Expanded(
               child: Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  child: content,
+                child: SingleChildScrollView(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: content,
+                  ),
                 ),
               ),
             ),

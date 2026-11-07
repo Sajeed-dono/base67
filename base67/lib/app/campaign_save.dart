@@ -155,6 +155,7 @@ class CampaignSave {
     Set<String>? unlockedLevelIds,
     Set<String>? completedActivityIds,
     List<TimerJobSave>? timerJobs,
+    Map<String, Object?>? settings,
   }) => CampaignSave(
     version: version,
     completedLevelIds: completedLevelIds ?? this.completedLevelIds,
@@ -175,7 +176,7 @@ class CampaignSave {
     playerDisplayName: playerDisplayName,
     deterministicSeed: deterministicSeed,
     eventHistory: eventHistory,
-    settings: settings,
+    settings: settings ?? this.settings,
   );
 
   static List<String> _sorted(Set<String> values) => values.toList()..sort();

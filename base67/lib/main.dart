@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'prologue/prologue.dart';
+import 'app/base67_app.dart';
 
-export 'prologue/prologue.dart' show Base67App;
+export 'app/base67_app.dart' show Base67App;
 
 void main() => runApp(const Base67App());
