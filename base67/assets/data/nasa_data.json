@@ -1,0 +1,418 @@
+{
+  "_meta": {
+    "file": "nasa_data.json",
+    "version": "0.3",
+    "updated": "2026-11-06",
+    "data_class": "NASA_DATA",
+    "rule": "Only values read on a NASA page, each with the page id (see sources.json). No game-balance numbers and no our-own-formula numbers live here. All pages were read on 2026-11-06 through a summarizing tool, so check each against its page (see the Verify sheet in the spreadsheet)."
+  },
+  "facts": {
+    "solar_irradiance": {
+      "group": "planet",
+      "label": "Solar irradiance at Mars",
+      "value": 586.2,
+      "unit": "W/m2",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "Solar irradiance (W/m2): 586.2"
+    },
+    "gravity": {
+      "group": "planet",
+      "label": "Mean surface gravity",
+      "value": 3.73,
+      "unit": "m/s2",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "Mean surface gravity 3.73 m/s2"
+    },
+    "pressure_mean": {
+      "group": "planet",
+      "label": "Mean surface pressure",
+      "value": 6.36,
+      "unit": "mb",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "6.36 mb at mean radius"
+    },
+    "pressure_min": {
+      "group": "planet",
+      "label": "Surface pressure, low end of seasonal range",
+      "value": 4.0,
+      "unit": "mb",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "Varies from 4.0 to 8.7 mb with season"
+    },
+    "pressure_max": {
+      "group": "planet",
+      "label": "Surface pressure, high end of seasonal range",
+      "value": 8.7,
+      "unit": "mb",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "Varies from 4.0 to 8.7 mb with season"
+    },
+    "temp_mean": {
+      "group": "planet",
+      "label": "Mean surface temperature",
+      "value": -59,
+      "unit": "C",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "About 214 K (-59 C)"
+    },
+    "temp_min": {
+      "group": "planet",
+      "label": "Minimum surface temperature",
+      "value": -89,
+      "unit": "C",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "184 K (-89 C) at the Viking 1 lander site"
+    },
+    "temp_max": {
+      "group": "planet",
+      "label": "Maximum surface temperature",
+      "value": -31,
+      "unit": "C",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "242 K (-31 C) at the Viking 1 lander site"
+    },
+    "sol_hours": {
+      "group": "planet",
+      "label": "Length of a Martian solar day",
+      "value": 24.6597,
+      "unit": "hours",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "Length of day (solar): 24.6597 hrs"
+    },
+    "co2_pct": {
+      "group": "planet",
+      "label": "Carbon dioxide in the surface atmosphere",
+      "value": 95.1,
+      "unit": "% by volume",
+      "source_ids": [
+        "S01"
+      ],
+      "page_says": "CO2 95.1%"
+    },
+    "rad_gale_surface": {
+      "group": "radiation",
+      "label": "Radiation on the Mars surface at Gale (dose equivalent, average Aug 2012 to Jun 2013)",
+      "value": 0.67,
+      "unit": "mSv/day",
+      "source_ids": [
+        "S02"
+      ],
+      "page_says": "An average of 0.67 millisieverts per day from August 2012 to June 2013"
+    },
+    "rad_gale_absorbed_gcr": {
+      "group": "radiation",
+      "label": "Galactic cosmic ray absorbed dose rate at the surface",
+      "value": 210,
+      "unit": "microGy/day",
+      "source_ids": [
+        "S03"
+      ],
+      "page_says": "A slowly varying dose rate of about 210 micrograys per day"
+    },
+    "rad_cruise": {
+      "group": "radiation",
+      "label": "Radiation on the trip to Mars (galactic cosmic rays)",
+      "value": 1.8,
+      "unit": "mSv/day",
+      "source_ids": [
+        "S04"
+      ],
+      "page_says": "Average of 1.8 milliSieverts of GCR per day on its journey to Mars"
+    },
+    "rad_round_trip": {
+      "group": "radiation",
+      "label": "Round-trip mission dose for humans",
+      "value": 1000,
+      "unit": "mSv (order of)",
+      "source_ids": [
+        "S02"
+      ],
+      "page_says": "On the order of 1,000 millisieverts"
+    },
+    "tau_3_sunlight": {
+      "group": "dust",
+      "label": "Share of sunlight that reaches the ground at tau 3",
+      "value": 5,
+      "unit": "%",
+      "source_ids": [
+        "S07"
+      ],
+      "page_says": "A tau of three indicates that only about 5 percent of the sunlight entering the atmosphere directly reaches the surface"
+    },
+    "tau_opportunity_2018": {
+      "group": "dust",
+      "label": "Tau at Opportunity, 10 June 2018",
+      "value": 10.8,
+      "unit": "tau",
+      "source_ids": [
+        "S05",
+        "S06"
+      ],
+      "page_says": "Estimated tau of 10.8 as of Sunday morning (10 June)"
+    },
+    "tau_2007_storm_above": {
+      "group": "dust",
+      "label": "Tau of the 2007 storm (lower bound)",
+      "value": 5.5,
+      "unit": "tau",
+      "source_ids": [
+        "S05"
+      ],
+      "page_says": "Somewhere above 5.5"
+    },
+    "storm_first_detected": {
+      "group": "dust",
+      "label": "2018 storm first detected",
+      "value": "2018-05-30",
+      "unit": "date",
+      "source_ids": [
+        "S05"
+      ],
+      "page_says": "First detected the storm on Wednesday, May 30"
+    },
+    "storm_planet_encircling": {
+      "group": "dust",
+      "label": "2018 storm became planet-encircling",
+      "value": "2018-06-19",
+      "unit": "date",
+      "source_ids": [
+        "S05"
+      ],
+      "page_says": "June 19"
+    },
+    "storm_decay_began": {
+      "group": "dust",
+      "label": "2018 storm began to decay",
+      "value": "2018-07-23",
+      "unit": "date",
+      "source_ids": [
+        "S05"
+      ],
+      "page_says": "July 23: dust was settling faster than it was being lifted"
+    },
+    "storm_shape": {
+      "group": "dust",
+      "label": "Shape of the 2018 storm",
+      "value": "growth over about a month, near the peak for three weeks, then a multi-month decay",
+      "unit": "text",
+      "source_ids": [
+        "S07"
+      ],
+      "page_says": "Complex growth over the first month, near the peak for three weeks, then a multi-month decay"
+    },
+    "gale_lat": {
+      "group": "sites",
+      "label": "Gale Crater latitude",
+      "value": -4.59,
+      "unit": "degrees N (negative = south)",
+      "source_ids": [
+        "S08"
+      ],
+      "page_says": "137.44 E, 4.59 S"
+    },
+    "gale_lon": {
+      "group": "sites",
+      "label": "Gale Crater longitude",
+      "value": 137.44,
+      "unit": "degrees E",
+      "source_ids": [
+        "S08"
+      ],
+      "page_says": "137.44 E, 4.59 S"
+    },
+    "gale_elevation": {
+      "group": "sites",
+      "label": "Gale Crater landing-site elevation",
+      "value": -4501,
+      "unit": "m",
+      "source_ids": [
+        "S09"
+      ],
+      "page_says": "Minus 4,501 meters elevation (page names no datum)"
+    },
+    "gale_air_temp_high": {
+      "group": "sites",
+      "label": "Gale Crater daily air temperature high (REMS)",
+      "value": 0,
+      "unit": "C",
+      "source_ids": [
+        "S15"
+      ],
+      "page_says": "Daily highs at about 32 F (0 C)"
+    },
+    "gale_air_temp_low": {
+      "group": "sites",
+      "label": "Gale Crater daily air temperature low (REMS)",
+      "value": -70,
+      "unit": "C",
+      "source_ids": [
+        "S15"
+      ],
+      "page_says": "Lows at about minus 94 F (minus 70 C)"
+    },
+    "meridiani_lat": {
+      "group": "sites",
+      "label": "Meridiani Planum (Opportunity landing site) latitude",
+      "value": -1.95,
+      "unit": "degrees N (negative = south)",
+      "source_ids": [
+        "S08"
+      ],
+      "page_says": "Printed as -1.95 N",
+      "note": "Printed as \"-1.95°N\" on the page; read here as 1.95 S. Confirm on another NASA page."
+    },
+    "meridiani_lon": {
+      "group": "sites",
+      "label": "Meridiani Planum longitude",
+      "value": 354.47,
+      "unit": "degrees E",
+      "source_ids": [
+        "S08"
+      ],
+      "page_says": "354.47 E"
+    },
+    "deuteronilus_lat": {
+      "group": "sites",
+      "label": "Deuteronilus Mensae point latitude",
+      "value": 42.2,
+      "unit": "degrees N",
+      "source_ids": [
+        "S10"
+      ],
+      "page_says": "Image centered at 42.2 degrees north latitude",
+      "note": "Centre of one NASA image, used as the site point."
+    },
+    "deuteronilus_lon": {
+      "group": "sites",
+      "label": "Deuteronilus Mensae point longitude",
+      "value": 24.7,
+      "unit": "degrees E",
+      "source_ids": [
+        "S10"
+      ],
+      "page_says": "24.7 degrees east longitude"
+    },
+    "arcadia_lat": {
+      "group": "sites",
+      "label": "Arcadia Planitia point latitude",
+      "value": 38.855,
+      "unit": "degrees N",
+      "source_ids": [
+        "S11"
+      ],
+      "page_says": "Latitude: 38.855",
+      "note": "Location of one NASA image, used as the site point."
+    },
+    "arcadia_lon": {
+      "group": "sites",
+      "label": "Arcadia Planitia point longitude",
+      "value": 172.318,
+      "unit": "degrees E",
+      "source_ids": [
+        "S11"
+      ],
+      "page_says": "Longitude: 172.318"
+    },
+    "arcadia_ice_depth": {
+      "group": "sites",
+      "label": "Depth of ice in parts of Arcadia Planitia (upper bound)",
+      "value": 30,
+      "unit": "cm below the surface",
+      "source_ids": [
+        "S12"
+      ],
+      "page_says": "Less than one foot (30 centimeters) below the surface"
+    },
+    "ice_best_regions": {
+      "group": "sites",
+      "label": "Regions with the most remote-sensing evidence for accessible ice (northern mid-latitudes)",
+      "value": "Arcadia Planitia and Deuteronilus Mensae",
+      "unit": "text",
+      "source_ids": [
+        "S13",
+        "S14"
+      ],
+      "page_says": "The broad plains of Arcadia and the extensive glacial networks across Deuteronilus Mensae match the greatest number of remote-sensing criteria"
+    },
+    "crew_oxygen": {
+      "group": "crew",
+      "label": "Oxygen per crewmember per day (82 kg reference astronaut, 90 min exercise)",
+      "value": 0.89,
+      "unit": "kg/person/day",
+      "source_ids": [
+        "S18"
+      ],
+      "page_says": "A daily O2 requirement of 0.89 kg"
+    },
+    "crew_oxygen_rest": {
+      "group": "crew",
+      "label": "Oxygen per crewmember per day, at rest",
+      "value": 0.771,
+      "unit": "kg/person/day",
+      "source_ids": [
+        "S16"
+      ],
+      "page_says": "Resting 0.771 kg/person/day"
+    },
+    "crew_oxygen_exercise": {
+      "group": "crew",
+      "label": "Oxygen per crewmember per day, with exercise",
+      "value": 1.083,
+      "unit": "kg/person/day",
+      "source_ids": [
+        "S16"
+      ],
+      "page_says": "With exercise 1.083 kg/person/day"
+    },
+    "crew_water": {
+      "group": "crew",
+      "label": "Minimum drinking water per crewmember per day",
+      "value": 2.5,
+      "unit": "L/person/day",
+      "source_ids": [
+        "S16",
+        "S17"
+      ],
+      "page_says": "Minimum 2.5 L per crewmember per day",
+      "note": "Hygiene water is mission dependent; NASA gives no number."
+    },
+    "crew_kcal": {
+      "group": "crew",
+      "label": "Average energy per crewmember per day",
+      "value": 3035,
+      "unit": "kcal/day",
+      "source_ids": [
+        "S16"
+      ],
+      "page_says": "Average 3,035 kcal/day per crewmember"
+    },
+    "crew_food_packaged": {
+      "group": "crew",
+      "label": "As-packaged food mass per crewmember per day (ISS planning value)",
+      "value": 2.39,
+      "unit": "kg/person/day",
+      "source_ids": [
+        "S18"
+      ],
+      "page_says": "BVAD Table 4-53 ISS planning value 2.39 kg"
+    }
+  }
+}

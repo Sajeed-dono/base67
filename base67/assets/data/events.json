@@ -1,0 +1,138 @@
+{
+  "_meta": {
+    "file": "events.json",
+    "version": "0.3",
+    "note": "The NASA storm images are real. The storm effect inside the game is a model, so show the DERIVED label next to game values (Part 5 wording note).",
+    "provenance": "designed",
+    "data_class": "GAME_VALUE",
+    "note_nasa": "Game file. Numbers here are game values, not NASA data."
+  },
+  "events": [
+    {
+      "id": "dust_storm",
+      "label": "Global dust storm",
+      "type": "weather",
+      "tau_profile_id": "storm_2018_stylized",
+      "panel_dust_gain_pct_per_hour": 0.4,
+      "chance_per_sol": 0.0,
+      "scripted": true,
+      "inspired_by": "2018 Mars global dust storm (NASA PIA22737, PIA22487, PIA22519)",
+      "inspired_by_source_ids": [
+        "S05",
+        "S07",
+        "S19",
+        "S20"
+      ]
+    },
+    {
+      "id": "meteor_shower",
+      "label": "Meteor shower",
+      "type": "hazard",
+      "chance_per_sol": 0.05,
+      "effect": {
+        "damage": "solar_panel",
+        "units": 1,
+        "prevented_by": "spare_part_repair"
+      },
+      "inspired_by": "Part 4 surprise events"
+    },
+    {
+      "id": "ice_found",
+      "label": "Rover finds ice",
+      "type": "bonus",
+      "chance_per_sol": 0.08,
+      "effect": {
+        "water_kg": 20
+      },
+      "requires_ice_tier": [
+        "medium",
+        "high"
+      ],
+      "inspired_by": "NASA says ice is near the surface in northern mid-latitudes (S12). Amount and chance are game values.",
+      "inspired_by_source_ids": [
+        "S12"
+      ]
+    },
+    {
+      "id": "clear_day",
+      "label": "Lucky clear day",
+      "type": "bonus",
+      "chance_per_sol": 0.1,
+      "effect": {
+        "tau_override": 0.3,
+        "duration_sols": 1
+      }
+    },
+    {
+      "id": "sep_event",
+      "label": "Solar particle event",
+      "type": "radiation",
+      "chance_per_sol": 0.03,
+      "effect": {
+        "dose_spike_msv": 4
+      },
+      "mitigated_by": "shelter",
+      "inspired_by": "NASA's Curiosity RAD results cover galactic cosmic rays and solar energetic particles (NTRS record, S23). The spike size is a game value.",
+      "inspired_by_source_ids": [
+        "S23"
+      ]
+    }
+  ],
+  "tau_profiles": [
+    {
+      "id": "storm_2018_stylized",
+      "label": "Stylized 2018-style storm",
+      "provenance": "GAME_VALUE (shape follows NASA's description; the numbers are ours)",
+      "basis": "NASA describes complex growth over the first month, near the peak for three weeks, then a multi-month decay (S07). The game squeezes this into hours and caps the peak at 4.0. The real tau at Opportunity reached about 10.8 (S05, S06).",
+      "unit_time": "hours_into_storm",
+      "keyframes": [
+        {
+          "hour": 0,
+          "tau": 0.8
+        },
+        {
+          "hour": 2,
+          "tau": 2.0
+        },
+        {
+          "hour": 4,
+          "tau": 3.5
+        },
+        {
+          "hour": 6,
+          "tau": 4.0
+        },
+        {
+          "hour": 8,
+          "tau": 4.0
+        },
+        {
+          "hour": 10,
+          "tau": 3.5
+        },
+        {
+          "hour": 12,
+          "tau": 2.5
+        }
+      ],
+      "interpolation": "linear",
+      "direct_light_pct_check": {
+        "tau_2.0": 13.5,
+        "tau_3.5": 3.0,
+        "tau_4.0": 1.8
+      },
+      "inspired_by_source_ids": [
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "nasa_fact_ids": [
+        "storm_shape",
+        "storm_first_detected",
+        "storm_planet_encircling",
+        "storm_decay_began",
+        "tau_opportunity_2018"
+      ]
+    }
+  ]
+}

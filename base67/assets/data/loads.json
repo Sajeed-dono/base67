@@ -1,0 +1,101 @@
+{
+  "_meta": {
+    "file": "loads.json",
+    "version": "0.3",
+    "provenance": "designed",
+    "baseline_switchable_total_kw": 2.8,
+    "baseline_note": "habitat_base 1.0 + heater 0.8 + greenhouse_lights 0.6 + ice_miner 0.4. With 2 batteries (40 kWh) and no sun this drains roughly 6 to 7 percent per hour, similar to the Sample 1 decision screen.",
+    "saves_pct_rule": "saves_pct_of_total = kw / baseline_switchable_total_kw * 100 (derived)",
+    "prototype_note": "The live prototype controls are: heater set point, greenhouse lights, ice miner, panel cleaning, shelter and repair. earth_communications and rover_charging appear only in the Sample 1 mock-up, so they are flagged concept_only.",
+    "data_class": "GAME_VALUE",
+    "note_nasa": "Game file. Numbers here are game values, not NASA data."
+  },
+  "loads": [
+    {
+      "id": "habitat_base",
+      "label": "Habitat life support",
+      "kw": 1.0,
+      "switchable": false,
+      "in_prototype": true,
+      "consequence": "Cannot be switched off. Air, pumps and computers."
+    },
+    {
+      "id": "heater",
+      "label": "Habitat heating",
+      "kw": 0.8,
+      "switchable": true,
+      "in_prototype": true,
+      "saves_pct_of_total": 29,
+      "consequence": "Crew gets cold",
+      "control": "set point slider",
+      "set_point_range_c": [
+        10,
+        24
+      ]
+    },
+    {
+      "id": "greenhouse_lights",
+      "label": "Greenhouse lights",
+      "kw": 0.6,
+      "switchable": true,
+      "in_prototype": true,
+      "saves_pct_of_total": 21,
+      "consequence": "Slower food growth"
+    },
+    {
+      "id": "ice_miner",
+      "label": "Ice miner",
+      "kw": 0.4,
+      "switchable": true,
+      "in_prototype": true,
+      "saves_pct_of_total": 14,
+      "consequence": "Less water"
+    },
+    {
+      "id": "earth_communications",
+      "label": "Earth communications",
+      "kw": 0.2,
+      "switchable": true,
+      "in_prototype": false,
+      "concept_only": true,
+      "saves_pct_of_total": 7,
+      "consequence": "Contact lost"
+    },
+    {
+      "id": "rover_charging",
+      "label": "Rover charging",
+      "kw": 0.4,
+      "switchable": true,
+      "in_prototype": false,
+      "concept_only": true,
+      "saves_pct_of_total": 14,
+      "consequence": "No expeditions"
+    }
+  ],
+  "actions": [
+    {
+      "id": "panel_cleaning",
+      "label": "Clean panels",
+      "kw": 0.3,
+      "duration_hours": 1,
+      "effect": "Restores panel output after dust (see game_constants.dust.panel_cleaning_restores_pct).",
+      "in_prototype": true
+    },
+    {
+      "id": "shelter",
+      "label": "Shelter in storm cellar",
+      "kw": 0,
+      "effect": "Cuts radiation from a solar particle event by 80 percent while active. Crew cannot work.",
+      "dose_reduction_pct_during_sep": 80,
+      "in_prototype": true
+    },
+    {
+      "id": "repair",
+      "label": "Repair",
+      "kw": 0.1,
+      "effect": "Uses one spare part to restore a damaged panel or system.",
+      "needs": "spare_part",
+      "in_prototype": true
+    }
+  ]
+}

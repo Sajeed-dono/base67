@@ -1,0 +1,162 @@
+{
+  "_meta": {
+    "file": "levels.json",
+    "version": "0.3",
+    "status_note": "All six levels are planned features (Parts 3 and 4). The Part 5 storm is shown from the current prototype, a 30-sol mission. In the video say 'adds' and 'unlocks', not 'has'.",
+    "provenance": "designed",
+    "budget_check": "Level 1 working build: 4 panels (20) + 3 batteries (12) = 32, inside the budget of 34. The 2-battery build (28) runs the battery down to about 4 percent each night, which is the night_power_gap lesson.",
+    "data_class": "GAME_VALUE",
+    "note_nasa": "Game file. Numbers here are game values, not NASA data."
+  },
+  "levels": [
+    {
+      "id": "L1_power",
+      "order": 1,
+      "name": "Power",
+      "icon": "level_power.png",
+      "adds": [
+        "solar_panel",
+        "battery"
+      ],
+      "teaches": "Sunlight comes and goes, so a battery has to carry the night.",
+      "budget": 34,
+      "sols": 10,
+      "event_ids": [
+        "clear_day"
+      ],
+      "win": {
+        "survive_sols": 10,
+        "battery_never_below_pct": 20
+      },
+      "lesson_ids": [
+        "night_power_gap"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "L2_storms",
+      "order": 2,
+      "name": "Storms",
+      "icon": "level_storms.png",
+      "adds": [
+        "dust_storm",
+        "panel_cleaning",
+        "load_shedding"
+      ],
+      "teaches": "Dust hides the sun. Decide what stays on before the storm.",
+      "budget": 38,
+      "sols": 15,
+      "event_ids": [
+        "dust_storm"
+      ],
+      "win": {
+        "survive_sols": 15,
+        "battery_never_below_pct": 0
+      },
+      "lesson_ids": [
+        "storm_battery_drain"
+      ],
+      "status": "planned",
+      "prototype_equivalent": "Part 5 storm scenario"
+    },
+    {
+      "id": "L3_air",
+      "order": 3,
+      "name": "Air",
+      "icon": "level_air.png",
+      "adds": [
+        "greenhouse"
+      ],
+      "teaches": "Crew breathe oxygen out of a fixed supply. Plants help, but plants need power.",
+      "budget": 40,
+      "sols": 15,
+      "event_ids": [
+        "meteor_shower"
+      ],
+      "win": {
+        "survive_sols": 15,
+        "oxygen_never_below_kg": 10
+      },
+      "lesson_ids": [
+        "oxygen_shortfall"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "L4_radiation",
+      "order": 4,
+      "name": "Radiation",
+      "icon": "level_radiation.png",
+      "adds": [
+        "shielding",
+        "shelter"
+      ],
+      "teaches": "Mars has little atmosphere. Shielding costs budget that other systems also need.",
+      "budget": 46,
+      "sols": 20,
+      "event_ids": [
+        "sep_event"
+      ],
+      "win": {
+        "survive_sols": 20,
+        "dose_below_msv": 25
+      },
+      "lesson_ids": [
+        "radiation_over_limit"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "L5_food_water",
+      "order": 5,
+      "name": "Food and Water",
+      "icon": "level_food_water.png",
+      "adds": [
+        "ice_miner"
+      ],
+      "teaches": "Mining ice and growing food both use power. Your landing site decides how much ice you get.",
+      "budget": 54,
+      "sols": 25,
+      "event_ids": [
+        "ice_found"
+      ],
+      "win": {
+        "survive_sols": 25,
+        "water_never_below_kg": 20,
+        "food_never_below_kg": 10
+      },
+      "lesson_ids": [
+        "water_shortfall",
+        "food_shortfall"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "L6_commander",
+      "order": 6,
+      "name": "Commander",
+      "icon": "level_commander.png",
+      "adds": [],
+      "teaches": "Everything at once. Every choice helps one thing and hurts another.",
+      "budget": 60,
+      "sols": 30,
+      "event_ids": [
+        "dust_storm",
+        "meteor_shower",
+        "ice_found",
+        "clear_day",
+        "sep_event"
+      ],
+      "win": {
+        "survive_sols": 30,
+        "crew_alive": 4
+      },
+      "lesson_ids": [
+        "storm_battery_drain",
+        "radiation_over_limit",
+        "crew_too_cold"
+      ],
+      "status": "planned"
+    }
+  ]
+}

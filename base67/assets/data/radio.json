@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "file": "radio.json",
+    "version": "0.3",
+    "status": "planned",
+    "note": "Mission Control messages shown in the radio bubble. Fictional lines written by the team. Keep them short so they fit the bubble.",
+    "data_class": "GAME_VALUE",
+    "note_nasa": "Game file. Numbers here are game values, not NASA data."
+  },
+  "messages": [
+    {
+      "id": "r_welcome",
+      "trigger": "level_start",
+      "text": "Mission Control to Outpost Zero. You have the outpost, Commander."
+    },
+    {
+      "id": "r_storm_warning",
+      "trigger": "event:dust_storm:warning",
+      "text": "Orbiter sees a dust storm growing. Decide what stays on before the sun goes."
+    },
+    {
+      "id": "r_battery_low",
+      "trigger": "battery_pct < 40",
+      "text": "Battery is below forty percent. Shed a load now."
+    },
+    {
+      "id": "r_battery_critical",
+      "trigger": "battery_pct < 25",
+      "text": "Battery is near the safe minimum. Cut something big."
+    },
+    {
+      "id": "r_cold",
+      "trigger": "habitat_temp_c < 14",
+      "text": "Crew reports the habitat is getting cold."
+    },
+    {
+      "id": "r_sep",
+      "trigger": "event:sep_event",
+      "text": "Solar particle event. Get the crew into shelter."
+    },
+    {
+      "id": "r_ice",
+      "trigger": "event:ice_found",
+      "text": "Rover found ice nearby. Good news for the water tanks."
+    },
+    {
+      "id": "r_clear_day",
+      "trigger": "event:clear_day",
+      "text": "A clear day. Panels will run well today."
+    },
+    {
+      "id": "r_win",
+      "trigger": "level_complete",
+      "text": "Outpost Zero is still standing. Nice work, Commander."
+    }
+  ]
+}

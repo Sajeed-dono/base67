@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "file": "research.json",
+    "version": "0.2.0",
+    "data_class": "GAME_VALUE",
+    "status": "provisional",
+    "notes": [
+      "Topics and suggested durations are copied from the updated GDD. Durations and effects remain provisional GAME VALUEs, not real NASA research timelines.",
+      "Prerequisites are empty until the campaign research order is balanced."
+    ]
+  },
+  "projects": [
+    {"id":"solar_energy_fundamentals","name":"Solar Energy Fundamentals","description":"Learn how sunlight can power a base.","introduced_level_id":"L01_first_light","prerequisites":[],"timer_id":"research_solar_energy_fundamentals","effects":[]},
+    {"id":"advanced_battery_systems","name":"Advanced Battery Systems","description":"Explore ways to store energy for later.","introduced_level_id":"L02_power_storage","prerequisites":[],"timer_id":"research_advanced_battery_systems","effects":[]},
+    {"id":"dust_protection_technology","name":"Dust Protection Technology","description":"Learn how maintenance can help dusty panels.","introduced_level_id":"L04_dust_on_mars","prerequisites":[],"timer_id":"research_dust_protection_technology","effects":[]},
+    {"id":"oxygen_production","name":"Oxygen Production","description":"Study oxygen production and storage.","introduced_level_id":"L07_breathing_matters","prerequisites":[],"timer_id":"research_oxygen_production","effects":[]},
+    {"id":"radiation_protection","name":"Radiation Protection","description":"Explore shelter and shielding choices.","introduced_level_id":"L09_shelter_protocol","prerequisites":[],"timer_id":"research_radiation_protection","effects":[]},
+    {"id":"advanced_water_extraction","name":"Advanced Water Extraction","description":"Learn about water extraction from ice.","introduced_level_id":"L11_ice_operations","prerequisites":[],"timer_id":"research_advanced_water_extraction","effects":[]},
+    {"id":"sustainable_mars_agriculture","name":"Sustainable Mars Agriculture","description":"Explore greenhouse growing systems.","introduced_level_id":"L12_food_and_supplies","prerequisites":[],"timer_id":"research_sustainable_mars_agriculture","effects":[]}
+  ]
+}

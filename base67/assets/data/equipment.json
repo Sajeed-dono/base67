@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "file": "equipment.json",
+    "version": "0.3",
+    "provenance": "designed",
+    "note": "All costs and outputs are game-balance values. Only the solar panel peak output is derived from a NASA number (solar irradiance, source S01).",
+    "data_class": "GAME_VALUE",
+    "note_nasa": "Game file. Numbers here are game values, not NASA data."
+  },
+  "budget_unit": "points",
+  "equipment": [
+    {
+      "id": "solar_panel",
+      "name": "Solar panel",
+      "cost": 5,
+      "area_m2": 30,
+      "efficiency": 0.25,
+      "peak_kw": 4.4,
+      "peak_kw_provenance": "derived",
+      "peak_kw_formula": "586.2 W/m2 * 30 m2 * 0.25 = 4396 W",
+      "max_units": 8,
+      "icon": "icon_solar.png",
+      "area_efficiency_provenance": "designed",
+      "uses_nasa_fact_ids": [
+        "solar_irradiance"
+      ],
+      "peak_kw_class": "DERIVED"
+    },
+    {
+      "id": "battery",
+      "name": "Battery",
+      "cost": 4,
+      "capacity_kwh": 20,
+      "max_units": 6,
+      "icon": "icon_battery.png"
+    },
+    {
+      "id": "greenhouse",
+      "name": "Greenhouse",
+      "cost": 8,
+      "load_id": "greenhouse_lights",
+      "food_kg_per_sol": 0.8,
+      "oxygen_kg_per_sol": 0.5,
+      "max_units": 2,
+      "icon": "icon_greenhouse.png"
+    },
+    {
+      "id": "shielding",
+      "name": "Radiation shielding",
+      "cost": 7,
+      "dose_reduction_pct": 25,
+      "max_units": 2,
+      "icon": "icon_shielding.png"
+    },
+    {
+      "id": "spare_part",
+      "name": "Spare part",
+      "cost": 2,
+      "repairs": 1,
+      "max_units": 4,
+      "icon": "icon_spare.png"
+    },
+    {
+      "id": "ice_miner",
+      "name": "Ice miner",
+      "cost": 6,
+      "load_id": "ice_miner",
+      "water_kg_per_sol_by_ice_tier": {
+        "low": 5,
+        "medium": 15,
+        "high": 25
+      },
+      "max_units": 1,
+      "in_script_budget_list": false,
+      "note": "Not in the Part 4 budget list, but it is a live control in the prototype, so it is included.",
+      "icon": "icon_ice_miner.png"
+    }
+  ]
+}

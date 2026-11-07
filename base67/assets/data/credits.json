@@ -1,0 +1,564 @@
+{
+  "_meta": {
+    "file": "credits.json",
+    "version": "0.2",
+    "updated": "2026-11-06",
+    "purpose": "One running credits list for all six video parts and for the game. Built from the master credits list on the last two pages of the script. Fill every 'TODO' as you collect each asset.",
+    "id_prefixes": {
+      "n_": "NASA media",
+      "s_": "Free stock (Pexels or Unsplash)",
+      "m_": "Made by the team",
+      "g_": "Game footage",
+      "x_": "Other (software, fonts, music, AI)"
+    },
+    "status_values": [
+      "todo",
+      "collected",
+      "credited",
+      "optional",
+      "cut"
+    ],
+    "check_before_submitting": "Check the official challenge rules for the exact credit format."
+  },
+  "team": {
+    "names": [
+      "TODO name 1",
+      "TODO name 2",
+      "TODO name 3",
+      "TODO name 4",
+      "TODO name 5"
+    ],
+    "team_name": "TODO",
+    "note": "Every member must be named on the credits card."
+  },
+  "on_screen_short_form": {
+    "slot": "3:50-3:58, hold at least 4 seconds, no scrolling",
+    "lines": [
+      "Team: [all team member names]",
+      "NASA Curiosity RAD data, NASA SWIM ice maps, NASA Mars Fact Sheet",
+      "NASA/JPL-Caltech imagery (MSSS, Cornell, ASU); three.js (cdnjs)",
+      "Stock clips: Pexels and Unsplash",
+      "Script drafting and game data files assisted by Claude (Anthropic)"
+    ],
+    "do_not": "Do not put the NASA logo on any slide. Write 'NASA data' as plain text."
+  },
+  "assets": [
+    {
+      "id": "s_p1_stars",
+      "parts": [
+        1
+      ],
+      "asset": "Stars or Milky Way time-lapse (Part 1)",
+      "kind": "stock",
+      "source": "Pexels or Unsplash",
+      "creator": "TODO",
+      "url": "TODO",
+      "credit_line": "TODO creator / Pexels",
+      "license": "Pexels or Unsplash license",
+      "status": "todo",
+      "notes": "Must be a different clip from the Part 2 stars clip."
+    },
+    {
+      "id": "n_p1_astronaut",
+      "parts": [
+        1
+      ],
+      "asset": "Astronaut spacewalk or station footage (4-5 s)",
+      "kind": "nasa",
+      "source": "NASA media library (images.nasa.gov)",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo",
+      "notes": "Pick footage with no identifiable close-up face if possible (identifiable persons need care)."
+    },
+    {
+      "id": "m_p1_p6_cards",
+      "parts": [
+        1,
+        6
+      ],
+      "asset": "Question card, BRAVE word card, seesaw, wordmark, team card, grey game-over screen, what-we-need slide, credits card",
+      "kind": "made",
+      "tool": "TODO (Canva, PowerPoint or similar)",
+      "credit_line": "Made by the team in TODO",
+      "ai_used": "TODO yes/no",
+      "status": "todo"
+    },
+    {
+      "id": "s_p2_stock",
+      "parts": [
+        2
+      ],
+      "asset": "Child at night sky, kid in helmet, classroom, rocket launch, tablet kid (images and clips)",
+      "kind": "stock",
+      "source": "Pexels or Unsplash",
+      "creator": "TODO per item",
+      "url": "TODO per item",
+      "credit_line": "TODO",
+      "license": "Pexels or Unsplash license",
+      "status": "todo",
+      "notes": "One line per item is best. Duplicate this entry for each file."
+    },
+    {
+      "id": "n_p2_gale_photo",
+      "parts": [
+        2
+      ],
+      "asset": "Curiosity view of Gale Crater",
+      "kind": "nasa",
+      "source": "NASA",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA/JPL-Caltech (confirm on the image page)",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo"
+    },
+    {
+      "id": "n_p2_dust_storm_image",
+      "parts": [
+        2
+      ],
+      "asset": "Real Mars dust storm image from orbit",
+      "kind": "nasa",
+      "source": "NASA",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA/JPL-Caltech (confirm on the image page)",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo",
+      "notes": "Must differ from the Part 3 and Part 5 storm media."
+    },
+    {
+      "id": "n_p2_rover_footage",
+      "parts": [
+        2
+      ],
+      "asset": "Mars rover driving or Mars surface footage",
+      "kind": "nasa",
+      "source": "NASA",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo"
+    },
+    {
+      "id": "m_p2_p6_split",
+      "parts": [
+        2,
+        6
+      ],
+      "asset": "Split image: child's dream | NASA data chart",
+      "kind": "made",
+      "tool": "TODO",
+      "credit_line": "Made by the team; chart data NASA (credit the chart source, for example Curiosity RAD)",
+      "ai_used": "TODO",
+      "status": "todo",
+      "notes": "Reused in Part 6. Keep the file."
+    },
+    {
+      "id": "m_p3_art",
+      "parts": [
+        3
+      ],
+      "asset": "Title card, crew illustration, dashboard sketch, six-step staircase",
+      "kind": "made",
+      "tool": "TODO",
+      "credit_line": "Made by the team; crew art note the AI tool and what it made",
+      "ai_used": "TODO yes/no, which tool, what it made",
+      "status": "todo"
+    },
+    {
+      "id": "s_p3_warning_light",
+      "parts": [
+        3
+      ],
+      "asset": "Red warning light flashing clip",
+      "kind": "stock",
+      "source": "Pexels or Unsplash",
+      "creator": "TODO",
+      "url": "TODO",
+      "credit_line": "TODO",
+      "license": "Pexels or Unsplash license",
+      "status": "todo"
+    },
+    {
+      "id": "n_p3_dim_mars_footage",
+      "parts": [
+        3
+      ],
+      "asset": "Dim, dusty Mars surface footage",
+      "kind": "nasa",
+      "source": "NASA",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo",
+      "notes": "Must differ from the Part 2 and Part 5 Mars footage."
+    },
+    {
+      "id": "n_p4_gale_photo",
+      "parts": [
+        4
+      ],
+      "asset": "Gale Crater photo (first site card)",
+      "kind": "nasa",
+      "source": "NASA",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA/JPL-Caltech (confirm on the image page)",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo"
+    },
+    {
+      "id": "n_p4_rover_footage",
+      "parts": [
+        4
+      ],
+      "asset": "Mars rover driving (NASA)",
+      "kind": "nasa",
+      "source": "NASA",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo"
+    },
+    {
+      "id": "m_p4_site_cards",
+      "parts": [
+        4
+      ],
+      "asset": "Sketch cards for Arcadia Planitia, Deuteronilus Mensae and the equatorial plain",
+      "kind": "made",
+      "tool": "TODO",
+      "credit_line": "Made by the team in TODO",
+      "ai_used": "TODO",
+      "status": "todo"
+    },
+    {
+      "id": "m_p4_ui_art",
+      "parts": [
+        4
+      ],
+      "asset": "Budget screen, level icons, crew portraits, event icons, mission patch, badge, certificate",
+      "kind": "made",
+      "tool": "TODO",
+      "credit_line": "Made by the team in TODO; note any AI use",
+      "ai_used": "TODO (crew portraits especially)",
+      "status": "todo"
+    },
+    {
+      "id": "s_p4_stock",
+      "parts": [
+        4
+      ],
+      "asset": "Kid on tablet, meteor or shooting-star time-lapse, child holding a certificate",
+      "kind": "stock",
+      "source": "Pexels or Unsplash",
+      "creator": "TODO per item",
+      "url": "TODO per item",
+      "credit_line": "TODO",
+      "license": "Pexels or Unsplash license",
+      "status": "todo",
+      "notes": "Not in the master list on the last page, but Part 4 uses these clips, so they need credits."
+    },
+    {
+      "id": "n_p5_pia22487",
+      "parts": [
+        5
+      ],
+      "asset": "Mars before and after the 2018 dust storm (MRO, May vs July)",
+      "kind": "nasa",
+      "source": "NASA Photojournal PIA22487",
+      "title": "Mars Before and After Dust Storm",
+      "url": "https://www.jpl.nasa.gov/images/pia22487-mars-before-and-after-dust-storm/",
+      "url_status": "verified",
+      "credit_line": "NASA/JPL-Caltech/MSSS",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo",
+      "source_id": "S19"
+    },
+    {
+      "id": "n_p5_pia22519",
+      "parts": [
+        5
+      ],
+      "asset": "2018 dust storm growing (animation)",
+      "kind": "nasa",
+      "source": "NASA Photojournal PIA22519",
+      "title": "2018 Giant Dust Storm on Mars",
+      "url": "https://www.jpl.nasa.gov/images/pia22519-2018-giant-dust-storm-on-mars/",
+      "url_status": "verified",
+      "credit_line": "NASA/JPL-Caltech/MSSS",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo",
+      "source_id": "S20"
+    },
+    {
+      "id": "n_p5_pia22930",
+      "parts": [
+        5
+      ],
+      "asset": "Opportunity's last images (faint Sun)",
+      "kind": "nasa",
+      "source": "NASA Photojournal PIA22930",
+      "title": "Last Images Opportunity Took",
+      "url": "https://www.jpl.nasa.gov/images/pia22930-last-images-opportunity-took/",
+      "url_status": "verified",
+      "credit_line": "NASA/JPL-Caltech/Cornell/ASU",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo",
+      "source_id": "S06"
+    },
+    {
+      "id": "n_p5_pia22929",
+      "parts": [
+        5
+      ],
+      "asset": "Opportunity's last images",
+      "kind": "nasa",
+      "source": "NASA Photojournal PIA22929",
+      "title": "Opportunity's Last Message",
+      "url": "https://science.nasa.gov/photojournal/opportunitys-last-message/",
+      "url_status": "verified",
+      "credit_line": "NASA/JPL-Caltech/Cornell/ASU",
+      "license": "NASA Media Usage Guidelines",
+      "status": "todo",
+      "source_id": "S21"
+    },
+    {
+      "id": "n_p5_pia22737",
+      "parts": [
+        5
+      ],
+      "asset": "Dust opacity (tau) animation, Opportunity marked (optional extra)",
+      "kind": "nasa",
+      "source": "NASA Photojournal PIA22737",
+      "title": "Mars Climate Sounder Studies 2018 Dust Storm",
+      "url": "https://www.jpl.nasa.gov/images/pia22737-mars-climate-sounder-studies-2018-dust-storm/",
+      "url_status": "verified",
+      "credit_line": "NASA/JPL-Caltech",
+      "license": "NASA Media Usage Guidelines",
+      "status": "optional",
+      "notes": "Also the source of the 'tau 3 lets about 5 percent of sunlight through' fact used in constants.json.",
+      "source_id": "S07"
+    },
+    {
+      "id": "n_p5_pia22521",
+      "parts": [
+        5
+      ],
+      "asset": "Shades of Martian Darkness: simulated sky at tau 1, 3, 5, 7, 9, 11 (suggested extra for the 'sun disappears' moment)",
+      "kind": "nasa",
+      "source": "NASA/JPL Image PIA22521",
+      "title": "Shades of Martian Darkness",
+      "url": "https://www.jpl.nasa.gov/images/pia22521-shades-of-martian-darkness/",
+      "url_status": "verified",
+      "credit_line": "NASA/JPL-Caltech/TAMU",
+      "license": "NASA Media Usage Guidelines",
+      "status": "optional",
+      "notes": "Not in the original script. It is a simulated view, so label it 'simulated' if you use it.",
+      "source_id": "S22"
+    },
+    {
+      "id": "n_p5_dusty_panel",
+      "parts": [
+        5
+      ],
+      "asset": "Dusty solar panel or rover deck image (optional)",
+      "kind": "nasa",
+      "source": "NASA (search 'HiRISE Studies the Dust on InSight' or a rover selfie)",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA/JPL-Caltech (confirm on the image page)",
+      "license": "NASA Media Usage Guidelines",
+      "status": "optional"
+    },
+    {
+      "id": "n_p5_rover_footage",
+      "parts": [
+        5
+      ],
+      "asset": "Mars surface or dust-devil rover footage (optional)",
+      "kind": "nasa",
+      "source": "NASA Mars Exploration Program media",
+      "title": "TODO",
+      "url": "TODO",
+      "credit_line": "NASA",
+      "license": "NASA Media Usage Guidelines",
+      "status": "optional",
+      "notes": "Must differ from the Part 2 and Part 3 Mars footage."
+    },
+    {
+      "id": "m_p5_samples",
+      "parts": [
+        5
+      ],
+      "asset": "Decision screen (Sample 1) and lesson card (Sample 2)",
+      "kind": "made",
+      "tool": "TODO",
+      "credit_line": "Made by the team",
+      "status": "todo",
+      "notes": "Label Sample 1 'Concept mock-up' or swap the two concept-only switches for real controls (see loads.json)."
+    },
+    {
+      "id": "s_p5_p6_clips",
+      "parts": [
+        5,
+        6
+      ],
+      "asset": "Switch or warning-light clip (Part 5); tablet and classroom clips (Part 6)",
+      "kind": "stock",
+      "source": "Pexels",
+      "creator": "TODO per clip",
+      "url": "TODO per clip",
+      "credit_line": "TODO",
+      "license": "Pexels license",
+      "status": "todo"
+    },
+    {
+      "id": "s_p5_habitat_red",
+      "parts": [
+        5
+      ],
+      "asset": "Dim habitat interior in red emergency light (optional)",
+      "kind": "stock",
+      "source": "Pexels or Unsplash",
+      "creator": "TODO",
+      "url": "TODO",
+      "credit_line": "TODO",
+      "license": "Pexels or Unsplash license",
+      "status": "optional"
+    },
+    {
+      "id": "g_all_game_footage",
+      "parts": [
+        3,
+        4,
+        5
+      ],
+      "asset": "Game footage (prototype screen recordings)",
+      "kind": "game",
+      "credit_line": "Made by the team",
+      "status": "todo"
+    },
+    {
+      "id": "x_music_fonts",
+      "parts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "asset": "Music, sound effects and fonts",
+      "kind": "other",
+      "source": "TODO",
+      "credit_line": "TODO",
+      "license": "TODO",
+      "status": "todo",
+      "notes": "Add each item with its source and license."
+    }
+  ],
+  "datasets": [
+    {
+      "id": "d_rad",
+      "name": "Curiosity Radiation Assessment Detector (RAD) results",
+      "used_for": "Gale radiation values (0.67 mSv/day, 210 microGy/day, 1.8 mSv/day cruise)",
+      "pages": [
+        "S02",
+        "S03",
+        "S04",
+        "S23"
+      ],
+      "citation": "Hassler, D. M., et al. Mars' Surface Radiation Environment Measured with the Mars Science Laboratory's Curiosity Rover. Science 343 (6169), 2014. doi:10.1126/science.1244797 (record: NASA NTRS 20180007641).",
+      "credit_line": "NASA Curiosity RAD data"
+    },
+    {
+      "id": "d_swim",
+      "name": "NASA Mars Subsurface Water Ice Mapping (SWIM)",
+      "used_for": "Ice ranking for Arcadia Planitia and Deuteronilus Mensae",
+      "pages": [
+        "S12",
+        "S13",
+        "S14"
+      ],
+      "citation": "Morgan, G. A., et al. (2021). Availability of subsurface water-ice resources in the northern mid-latitudes of Mars. Nature Astronomy 5, 230-236 (record: NASA NTRS 20205008958).",
+      "credit_line": "NASA SWIM ice maps"
+    },
+    {
+      "id": "d_factsheet",
+      "name": "NASA Mars Fact Sheet",
+      "used_for": "Solar irradiance, gravity, pressure, temperatures, day length",
+      "pages": [
+        "S01"
+      ],
+      "credit_line": "NASA Mars Fact Sheet"
+    },
+    {
+      "id": "d_tau",
+      "name": "2018 dust storm: tau and timeline",
+      "used_for": "Storm tau profile, tau 10.8 at Opportunity, 5 percent sunlight at tau 3",
+      "pages": [
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "credit_line": "NASA/JPL-Caltech"
+    },
+    {
+      "id": "d_sites",
+      "name": "Site coordinates and elevation",
+      "used_for": "Gale, Meridiani, Arcadia and Deuteronilus points",
+      "pages": [
+        "S08",
+        "S09",
+        "S10",
+        "S11"
+      ],
+      "credit_line": "NASA/JPL-Caltech; NASA GISS"
+    },
+    {
+      "id": "d_crew",
+      "name": "NASA crew life-support planning values",
+      "used_for": "Oxygen, water, food per crewmember",
+      "pages": [
+        "S16",
+        "S17",
+        "S18"
+      ],
+      "credit_line": "NASA NASA-STD-3001 technical briefs; NASA NTRS"
+    }
+  ],
+  "software": [
+    {
+      "id": "x_threejs",
+      "name": "three.js r128",
+      "source": "cdnjs",
+      "license": "MIT",
+      "credit_line": "three.js (cdnjs)"
+    }
+  ],
+  "ai_tools": [
+    {
+      "tool": "Claude (Anthropic)",
+      "used_for": "Script drafting, and drafting the game data JSON files and this credits list",
+      "credit_line": "Script drafting and game data files assisted by Claude (Anthropic)",
+      "note": "Add every other AI tool used (for example crew art) with what it made."
+    }
+  ],
+  "rules": [
+    "Credit every third-party asset and every AI tool.",
+    "NASA media is generally not copyrighted, but credit NASA as the source, do not claim it as your own, and do not imply NASA endorses the project.",
+    "Do not use the NASA logo, insignia or logotype. Write 'NASA data' as plain text.",
+    "Media with identifiable people can need extra care. Check the image page.",
+    "Pinterest is for ideas only. Do not use Pinterest images in the final video.",
+    "Samples 1 and 2 are drawn by the team, not taken from NASA.",
+    "Every real number in the game data files points to a NASA page in sources.json. Values without a source id are tagged designed or derived and must not be presented as NASA data."
+  ]
+}

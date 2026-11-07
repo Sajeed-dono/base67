@@ -1,0 +1,178 @@
+{
+  "_meta": {
+    "file": "sources.json",
+    "version": "0.2",
+    "updated": "2026-11-06",
+    "policy": "Every real number in the game data points to one of these NASA pages by id. Anything without a source id is tagged designed (game balance) or derived (our formula on NASA numbers). Each page was opened and read on 2026-11-06; check them again before submission."
+  },
+  "sources": [
+    {
+      "id": "S01",
+      "title": "NASA Mars Fact Sheet",
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+      "gives": "Solar irradiance 586.2 W/m2; surface gravity 3.73 m/s2; mean surface pressure 6.36 mb (varies 4.0 to 8.7 mb); surface temperature mean about 214 K (-59 C), min 184 K (-89 C) and max 242 K (-31 C) at the Viking 1 site; solar day length 24.6597 hours.",
+      "credit": "NASA Space Science Data Coordinated Archive"
+    },
+    {
+      "id": "S02",
+      "title": "NASA: Rover Results Include First Age Measurement on Mars and Help for Human Exploration",
+      "url": "https://www.nasa.gov/news-release/nasa-rover-results-include-first-age-measurement-on-mars-and-help-for-human-exploration/",
+      "gives": "Curiosity RAD: average 0.67 millisieverts per day on the Mars surface, Aug 2012 to Jun 2013; round-trip dose for a human mission on the order of 1,000 millisieverts.",
+      "credit": "NASA"
+    },
+    {
+      "id": "S03",
+      "title": "Radiation Measurements on Mars (NASA Science)",
+      "url": "https://science.nasa.gov/resource/radiation-measurements-on-mars/",
+      "gives": "Galactic cosmic rays contribute a slowly varying dose rate of about 210 micrograys per day on the Mars surface.",
+      "credit": "NASA/JPL-Caltech/SwRI"
+    },
+    {
+      "id": "S04",
+      "title": "Data From NASA Rover's Voyage to Mars Aids Planning (JPL)",
+      "url": "https://www.jpl.nasa.gov/news/data-from-nasa-rovers-voyage-to-mars-aids-planning/",
+      "gives": "Curiosity was exposed to an average of 1.8 millisieverts of galactic cosmic rays per day on its journey to Mars.",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "id": "S05",
+      "title": "Opportunity Hunkers Down During Dust Storm (JPL)",
+      "url": "https://www.jpl.nasa.gov/news/opportunity-hunkers-down-during-dust-storm/",
+      "gives": "Estimated tau of 10.8 at Opportunity on 10 June 2018; the 2007 storm tau was above 5.5; storm first detected 30 May 2018; became planet-encircling 19 June 2018; began decaying 23 July 2018; rover temperature about -29 C on 10 June.",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "id": "S06",
+      "title": "PIA22930 Last Images Opportunity Took",
+      "url": "https://www.jpl.nasa.gov/images/pia22930-last-images-opportunity-took/",
+      "gives": "Pancam images from 10 June 2018 (sol 5,111): faint Sun in the dust storm; tau about 10.8.",
+      "credit": "NASA/JPL-Caltech/Cornell/ASU"
+    },
+    {
+      "id": "S07",
+      "title": "PIA22737 Mars Climate Sounder Studies 2018 Dust Storm",
+      "url": "https://www.jpl.nasa.gov/images/pia22737-mars-climate-sounder-studies-2018-dust-storm/",
+      "gives": "Tau is a measure of how much light dust blocks; a tau of three means only about 5 percent of the sunlight entering the atmosphere directly reaches the surface. Storm: complex growth over the first month, near the peak for three weeks, then a multi-month decay.",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "id": "S08",
+      "title": "NASA GISS Mars24 Sunclock: Mars Landers",
+      "url": "https://www.giss.nasa.gov/tools/mars24/help/landers.html",
+      "gives": "Curiosity at Gale Crater: 137.44 E, 4.59 S. Opportunity at Meridiani Planum: 354.47 E, -1.95 (latitude as printed).",
+      "credit": "NASA GISS"
+    },
+    {
+      "id": "S09",
+      "title": "Mars Science Laboratory / Curiosity Fact Sheet (PDF)",
+      "url": "https://mars.nasa.gov/system/internal_resources/details/original/605_MSL_Fact_Sheet.pdf",
+      "gives": "Landing site 4.6 S, 137.4 E; elevation minus 4,501 meters; landing 6 Aug 2012 UT.",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "id": "S10",
+      "title": "Glacial Ice Deposits in Mid-Latitudes of Mars (PIA12861)",
+      "url": "https://science.nasa.gov/photojournal/glacial-ice-deposits-in-mid-latitudes-of-mars/",
+      "gives": "Image centred at 42.2 N, 24.7 E in Deuteronilus Mensae.",
+      "credit": "NASA/JPL-Caltech/ASI/University of Rome/Southwest Research Institute"
+    },
+    {
+      "id": "S11",
+      "title": "Arcadia Planitia - False Color (NASA Science)",
+      "url": "https://science.nasa.gov/photojournal/arcadia-planitia-false-color/",
+      "gives": "Image location listed as latitude 38.855, longitude 172.318 (positive east).",
+      "credit": "NASA/JPL-Caltech/ASU"
+    },
+    {
+      "id": "S12",
+      "title": "NASA's Treasure Map for Water Ice on Mars",
+      "url": "https://www.nasa.gov/solar-system/nasas-treasure-map-for-water-ice-on-mars/",
+      "gives": "Water ice lies underground throughout the mid-latitudes; a large part of Arcadia Planitia is the most tempting northern target, with ice less than one foot (30 cm) below the surface in places and warmer-colored areas over two feet (60 cm) deep; you could use a shovel.",
+      "credit": "NASA"
+    },
+    {
+      "id": "S13",
+      "title": "Availability of Subsurface Water-Ice Resources in the Northern Mid-Latitudes of Mars (NASA NTRS 20205008958)",
+      "url": "https://ntrs.nasa.gov/citations/20205008958",
+      "gives": "SWIM composite ice-consistency maps: the broad plains of Arcadia and the glacial networks across Deuteronilus Mensae match the greatest number of remote-sensing criteria for accessible ice-rich subsurface material. Morgan et al., Nature Astronomy 2021.",
+      "credit": "NASA Technical Reports Server"
+    },
+    {
+      "id": "S14",
+      "title": "Where Should Future Astronauts Land on Mars? Follow the Water (JPL)",
+      "url": "https://www.jpl.nasa.gov/news/where-should-future-astronauts-land-on-mars-follow-the-water/",
+      "gives": "Names the plains of Arcadia Planitia and glacier-filled valleys in Deuteronilus Mensae; northern mid-latitudes offer favorable elevations for landing.",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "id": "S15",
+      "title": "PIA16913 Steady Temperatures at Mars' Gale Crater",
+      "url": "https://www.jpl.nasa.gov/images/pia16913-steady-temperatures-at-mars-gale-crater/",
+      "gives": "REMS air temperature at Gale: daily highs about 0 C and lows about -70 C, mid-Aug 2012 to late Feb 2013.",
+      "credit": "NASA/JPL-Caltech/CAB(CSIC-INTA)/FMI/Ashima Research"
+    },
+    {
+      "id": "S16",
+      "title": "NASA-STD-3001 Technical Brief: ECLSS (OCHMO)",
+      "url": "https://www.nasa.gov/wp-content/uploads/2023/07/eclss-technical-brief-ochmo.pdf",
+      "gives": "Oxygen: 0.771 kg per person per day at rest, 1.083 kg with exercise (75 kg crewmember); drinking water minimum 2.5 L per crewmember per day; average 3,035 kcal per crewmember per day.",
+      "credit": "NASA Office of the Chief Health and Medical Officer"
+    },
+    {
+      "id": "S17",
+      "title": "NASA-STD-3001 Technical Brief: Water (OCHMO)",
+      "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-027-water.pdf",
+      "gives": "Minimum 2.5 L per crewmember per day for drinking and food rehydration; hygiene water is mission dependent (no number given).",
+      "credit": "NASA Office of the Chief Health and Medical Officer"
+    },
+    {
+      "id": "S18",
+      "title": "Astronaut Mass Balance for Long Duration Missions (NASA NTRS 20190027563, ICES-2019-126)",
+      "url": "https://ntrs.nasa.gov/api/citations/20190027563/downloads/20190027563.pdf",
+      "gives": "Reference astronaut (82 kg, 90 min exercise per day): oxygen 0.89 kg per day; drinking water 2.79 kg; as-packaged food 2.39 kg (ISS planning value from the Baseline Values and Assumptions Document); CO2 produced 1.08 kg.",
+      "credit": "NASA Technical Reports Server"
+    },
+    {
+      "id": "S19",
+      "title": "PIA22487 Mars Before and After Dust Storm",
+      "url": "https://www.jpl.nasa.gov/images/pia22487-mars-before-and-after-dust-storm/",
+      "gives": "MRO MARCI views of Mars in May and July 2018 (published 19 July 2018).",
+      "credit": "NASA/JPL-Caltech/MSSS"
+    },
+    {
+      "id": "S20",
+      "title": "PIA22519 2018 Giant Dust Storm on Mars",
+      "url": "https://www.jpl.nasa.gov/images/pia22519-2018-giant-dust-storm-on-mars/",
+      "gives": "MRO images 31 May to 11 June 2018 showing the storm spreading (published 13 June 2018).",
+      "credit": "NASA/JPL-Caltech/MSSS"
+    },
+    {
+      "id": "S21",
+      "title": "PIA22929 Opportunity's Last Message",
+      "url": "https://science.nasa.gov/photojournal/opportunitys-last-message/",
+      "gives": "Last image Opportunity sent, 10 June 2018 (sol 5,111), Pancam left eye, mostly dark from the dust storm.",
+      "credit": "NASA/JPL-Caltech/Cornell/ASU"
+    },
+    {
+      "id": "S22",
+      "title": "PIA22521 Shades of Martian Darkness",
+      "url": "https://www.jpl.nasa.gov/images/pia22521-shades-of-martian-darkness/",
+      "gives": "Simulated views of a darkening Martian sky at tau 1, 3, 5, 7, 9 and 11.",
+      "credit": "NASA/JPL-Caltech/TAMU"
+    },
+    {
+      "id": "S23",
+      "title": "Mars' Surface Radiation Environment Measured with the MSL Curiosity Rover (NASA NTRS 20180007641)",
+      "url": "https://ntrs.nasa.gov/citations/20180007641",
+      "gives": "Citation record: Hassler et al., Science 343 (6169), 2014, doi:10.1126/science.1244797. Covers galactic cosmic rays and solar energetic particles over 300 days from 7 Aug 2012.",
+      "credit": "NASA Technical Reports Server"
+    },
+    {
+      "id": "S24",
+      "title": "NASA Images and Media Usage Guidelines",
+      "url": "https://www.nasa.gov/multimedia/guidelines/index.html",
+      "gives": "Rules for using NASA images and media (credit NASA; the NASA insignia and logotype are not free to use).",
+      "credit": "NASA"
+    }
+  ]
+}

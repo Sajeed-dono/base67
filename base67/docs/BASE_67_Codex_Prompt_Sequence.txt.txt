@@ -1,0 +1,1347 @@
+# BASE 67 — Codex Development Prompt Sequence
+## Updated Master Plan: 15-Level Campaign, Persistent Mars Base, Construction, Research and Crew Management
+
+This document replaces the older six-level Codex prompt sequence. Use this version as the current development instruction set. The game’s name is **BASE 67**. Do not use “Outpost Zero” as the game title, app name, UI label, package display name, documentation title, or release name.
+
+---
+
+# HOW TO USE THIS DOCUMENT
+
+1. Paste the eight prompts into Codex **one at a time and in order**. Do not paste all eight at once.
+2. Before starting, inspect the repository and confirm the original data pack and source documents are present. Preserve the existing working prologue.
+3. After each prompt, run `flutter analyze` and the relevant tests. Review the changes, commit to Git, and only then continue.
+4. Codex must maintain `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md`, and `docs/SIM_MODEL.md` as the project’s living source of truth.
+5. If a design choice is genuinely unresolved, choose the safest simple default, record it in `docs/DECISIONS.md`, and continue. Do not repeatedly stop for minor questions.
+6. Never silently alter the original NASA/source data files. New campaign, progression, timer, economy, and balancing values belong in new files under `assets/data/extra/`.
+7. The project is for children aged 10–14. Keep the experience understandable, fair, accessible, and non-manipulative.
+8. The intended architecture is a **single persistent Mars base** that develops across all 15 levels. This is a core design decision, not an optional interpretation.
+
+---
+
+# PROMPT 1 OF 8 — FOUNDATION, GAME BRIEF, DATA LAYER AND CAMPAIGN ARCHITECTURE
+
+You are working in an existing Flutter project. The BASE 67 prologue already exists and runs from the current application entry point. We are expanding it into a complete, kid-friendly, 2D, offline-first Android game for the NASA Space Apps 2026 challenge, “Build a Junior Astronaut Mission Trainer.”
+
+Build the project in eight controlled steps. This is step 1. Do not build the playable simulation yet.
+
+## A. Inspect before changing anything
+
+1. Read the entire repository and report its current structure.
+2. Inspect `lib/`, `pubspec.yaml`, `assets/`, `docs/`, Android configuration, and existing tests.
+3. Identify the existing prologue implementation and confirm that it runs.
+4. Check for the existing data pack in `assets/data/`, including:
+   - `nasa_data.json`
+   - `sources.json`
+   - `game_constants.json`
+   - `sites.json`
+   - `equipment.json`
+   - `loads.json`
+   - `levels.json`
+   - `events.json`
+   - `lessons.json`
+   - `crew.json`
+   - `radio.json`
+   - `badges.json`
+   - `credits.json`
+   - `credits.md`
+   - `check_data.py`
+   - `README.md`
+5. Check `docs/source/` for the BASE 67 prologue PDF and the existing video/story script. Check `docs/reference/` for any supplied visual references.
+6. If a required file is missing, report the exact missing files. Do not invent their contents or silently replace them.
+
+## B. Create `docs/GAME_BRIEF.md`
+
+Create the following updated brief. It is the source of truth for all later prompts. If an implementation detail conflicts with this brief, follow this brief and record the conflict in `docs/DECISIONS.md`.
+
+```markdown
+# GAME BRIEF: BASE 67
+
+## 1. Game identity
+
+BASE 67 is a 2D, offline-first, portrait-first Android Mars settlement and junior astronaut mission-training game for children aged 10–14.
+
+The player becomes the commander of a four-person crew sent to Mars. The player establishes and manages one persistent Mars base. The same base, crew, facilities, research progress, resources, and mission history carry forward throughout the campaign.
+
+The game has 15 progressively challenging levels grouped into five chapters. Each level introduces a manageable new concept or system. Later levels combine previously learned systems so that the player gradually learns to manage a functioning Mars settlement.
+
+The game should feel like a small, thoughtful settlement-management game, not a collection of disconnected survival mini-games.
+
+## 2. Core gameplay loop
+
+The core loop is:
+
+1. Learn a new Mars science or settlement-management concept.
+2. Review the base, crew, resources, forecast, and mission objective.
+3. Make a decision: build, upgrade, research, assign crew, manage energy, gather resources, or prepare for an event.
+4. Let the simulation run and observe the consequences.
+5. Respond to changing conditions and unexpected events.
+6. Review the outcome and learn why a decision worked or failed.
+7. Unlock the next level and continue developing the same base.
+
+Construction, upgrades, research, repairs, and selected crew tasks may use real-world timers. These timers are optional progression pacing, not a requirement to keep the app open. Progress must continue safely while the app is closed.
+
+## 3. Persistent base — mandatory design
+
+There is ONE persistent Mars base for the entire 15-level campaign.
+
+- The player does not start from zero at every level.
+- Buildings, upgrades, research, crew, mission patch, unlocked technologies, and campaign progress persist.
+- A level adds a new challenge, system, location, event, or management responsibility to the existing base.
+- A level may temporarily provide a scenario-specific mission objective or resource allocation, but it must not erase the player's established base.
+- The Home Map is the player's actual base and campaign hub, not merely a menu of unrelated level buttons.
+- New buildings and systems appear physically on the base map when constructed.
+- The base should visibly evolve from a small landing site into a functioning Mars settlement.
+
+## 4. Campaign structure: 15 levels, five chapters
+
+### Chapter 1 — Power and Energy
+1. First Light: sunlight, solar panels, and the first energy supply.
+2. Power Storage: batteries, capacity, charging, and stored energy.
+3. Energy Manager: power consumption, essential loads, and trade-offs.
+
+### Chapter 2 — Martian Weather
+4. Dust on Mars: dust accumulation and reduced panel efficiency.
+5. The Great Storm: dust storms, forecasts, panel cleaning, and load shedding.
+
+### Chapter 3 — Oxygen and Life Support
+6. Greenhouse Online: greenhouse construction, lights, and basic operation.
+7. Breathing Matters: oxygen production, consumption, and emergency reserves.
+
+### Chapter 4 — Radiation, Water and Food
+8. Radiation Alert: radiation exposure and monitoring.
+9. Shelter Protocol: radiation shielding, safe shelter, and solar particle events.
+10. Finding Water: ice surveys, landing-site conditions, and evidence-based exploration.
+11. Ice Operations: ice mining, extraction capacity, and water reserves.
+12. Food and Supplies: food consumption, storage, greenhouse contribution, and supply planning.
+
+### Chapter 5 — Crew Management and Mission Survival
+13. Crew Care: health, morale, temperature, workload, rest, and crew assignments.
+14. Mission Control: forecasts, maintenance, research, logistics, and multiple systems operating together.
+15. The Final Mission: a complete settlement-management challenge combining the systems learned throughout the campaign.
+
+Each level must have a clear learning objective, a clear mission objective, a new concept or management responsibility, and a short debrief. Avoid introducing several unrelated concepts at once.
+
+## 5. Five campaign chapters
+
+Chapter 1: Power and Energy — Levels 1–3.
+Chapter 2: Martian Weather — Levels 4–5.
+Chapter 3: Oxygen and Life Support — Levels 6–7.
+Chapter 4: Radiation, Water and Food — Levels 8–12.
+Chapter 5: Crew Management and Mission Survival — Levels 13–15.
+
+## 6. Persistent progression systems
+
+The campaign includes:
+
+- Base construction and building upgrades.
+- Research and technology unlocks.
+- Crew assignments and role-based advantages.
+- Resource storage and production.
+- Repairs and maintenance.
+- A Martian sol calendar and simulation clock.
+- Forecasts and mission events.
+- A campaign map showing the 15 levels and five chapters.
+- A Mars Notebook that unlocks educational facts progressively.
+- Badges, mission patches, and a Junior Astronaut certificate.
+
+Construction and research times are GAME VALUE design choices, not NASA facts. Store them in separate, documented configuration files.
+
+## 7. Real-time timers and offline progression
+
+Some activities use real-world elapsed time:
+
+- Construction and building upgrades.
+- Research projects.
+- Major repairs.
+- Selected long-running extraction or production projects.
+
+Rules:
+
+- The player must be able to close the app. Timers continue based on saved timestamps.
+- When the app reopens, calculate elapsed time using saved UTC timestamps and complete any finished activity.
+- Never require the player to keep the screen open.
+- Never punish a child for being offline or not opening the game.
+- No crew member dies, disappears, or suffers severe harm because the player did not return.
+- No premium currency, paid speed-up, ad-gated timer, loot box, manipulative streak, or artificial urgency.
+- Do not create a timer that blocks all meaningful gameplay. While something is building or researching, the player can inspect the base, read Notebook entries, plan, complete available missions, manage other systems, or perform other unlocked activities.
+- Clearly show remaining time and what the activity will unlock.
+- Use a consistent timer service and persist start/end timestamps.
+- Prevent duplicate completion or timer rewards after app restarts.
+- Keep real-world timers separate from the in-game Martian clock. A 30-minute construction timer must not secretly equal a particular number of Martian sols.
+- The app must handle device clock changes defensively. Do not grant duplicate rewards or corrupt saves if the clock moves backwards. Document the chosen approach.
+
+## 8. Two different clocks
+
+The game has two distinct concepts of time:
+
+A. Martian simulation time:
+- Used for sunlight, day/night, resource consumption, weather, radiation, and survival simulation.
+- One sol is read from NASA data (`sol_hours`, 24.6597 hours).
+- One simulation tick is one hour unless the simulation design requires a documented smaller step.
+- Daylight uses the existing game configuration.
+
+B. Real-world progression time:
+- Used for construction, upgrades, research, and selected maintenance tasks.
+- Based on elapsed real-world time.
+- Continues while the app is closed.
+- Must never be confused with Martian sols.
+
+## 9. Data integrity: three data classes
+
+Never mix these classes:
+
+- NASA DATA: values in `nasa_data.json`, with source IDs in `sources.json`.
+- GAME VALUE: design choices in other game JSON files and new files under `assets/data/extra/`.
+- DERIVED: values calculated by formulas using NASA facts and/or explicitly labelled game assumptions.
+
+No NASA number may be typed directly into Dart code. Read it by fact ID. Every displayed scientific or simulation number must show a small NASA DATA, GAME VALUE, or DERIVED chip.
+
+Never edit the original data pack. New campaign and design values go into new files under `assets/data/extra/`, each with `_meta.data_class = "GAME_VALUE"` where appropriate.
+
+## 10. Offline and content rules
+
+- No network calls, web views, remote fonts, or remote images.
+- Bundle all assets.
+- Do not add Android INTERNET permission to the release manifest unless a future, explicitly approved requirement changes this rule.
+- Never use the NASA logo or insignia. “NASA data” may appear as plain text.
+- Credits must be read from the supplied credits files.
+- The About screen must say: “Not yet tested with students.” Do not claim proven learning outcomes.
+
+## 11. Child-friendly design
+
+- Target reading level: approximately grade 5–6.
+- Use short sentences, clear icons, and progressive disclosure.
+- Minimum interactive target size: 48 dp.
+- Avoid graphic harm. Crew members never die. If a crew member needs help, pause or soften the relevant challenge and explain what happened.
+- Failure is feedback, not punishment. Offer retry, explanation, and a way to improve.
+- Avoid manipulative retention systems, pressure, fear-based alerts, and punitive timers.
+- Keep the first minute of every level understandable and rewarding.
+- Provide reduced-motion and text-size settings.
+- Never rely on colour alone to communicate danger or success.
+
+## 12. Crew
+
+Four crew roles are used throughout the campaign:
+
+- Commander — Unshakable; leadership, planning, morale, and power priorities.
+- Engineer — Technical Genius; construction, repair, maintenance, and panel cleaning.
+- Scientist — Keen Observer; research, ice surveys, science observations, and forecasts.
+- Medic — Field Medic; health checks, recovery, shelter drills, and crew wellbeing.
+
+Crew names are chosen by the player. The supplied crew JSON contains templates and traits; preserve the source terminology unless a documented design decision changes it.
+
+## 13. Landing sites
+
+Keep the four original landing sites and the difficulty labels from the BASE 67 source material:
+
+- Gale — EASY
+- Arcadia — MEDIUM
+- Deuteronilus — HARD
+- Equatorial — EXTREME
+
+Use the corrected GAME VALUE site-risk descriptions and risk effects in the extra data layer. Do not display any contradictory original description as if it overrides the selected risk classification.
+
+## 14. Deterministic simulation
+
+Use the existing deterministic RNG requirement and default seed from the source data. A retry of the same mission with the same seed and same inputs must produce the same result. Any intentional variation must be seeded and testable.
+
+## 15. Motivation and rewards
+
+- A visible next goal on the campaign map.
+- Small early success in every level.
+- 1–3 stars or equivalent clear performance feedback.
+- Badges from the data pack where appropriate.
+- Mars Notebook facts unlocked as the player encounters topics.
+- A mission patch.
+- A Junior Astronaut certificate after completing Level 15.
+- No reward system that pressures children to return every day.
+
+## 16. Project structure
+
+Use a clean separation:
+
+- `lib/app/` — routing, app state, persistence coordination.
+- `lib/data/` — typed models, repository, validation.
+- `lib/sim/` — pure Dart simulation engine, no Flutter imports.
+- `lib/progression/` — construction, research, timers, campaign unlocks.
+- `lib/ui/` — theme, widgets, maps, scenery, characters.
+- `lib/prologue/` — existing prologue.
+- `lib/game/` — level and mission presentation.
+- `assets/data/` — original read-only data pack.
+- `assets/data/extra/` — new GAME VALUE configuration.
+- `docs/` — design, decisions, simulation model, QA and project documentation.
+```
+
+## C. Create the campaign and progression data architecture
+
+Do not modify the original JSON files. Add new files under `assets/data/extra/` as needed. At minimum, plan and document:
+
+- `campaign.json` — the 15-level campaign, chapter membership, unlock order, objectives, learning objectives, and new mechanics.
+- `buildings.json` — facility definitions, construction requirements, upgrade levels, build durations, and unlock requirements.
+- `research.json` — technology tree, prerequisites, durations, effects, and unlocks.
+- `progression_rules.json` — campaign progression, base persistence, rewards, and unlock rules.
+- `timer_rules.json` — timer categories, duration rules, timestamp handling, and offline completion rules.
+- `resource_economy.json` — resource capacities, costs, production, and GAME VALUE assumptions.
+- `crew_assignments.json` — role-based tasks, durations, skill effects, and assignment restrictions.
+- `sim_params.json` — simulation-only assumptions and balance parameters.
+- `site_risk.json` — corrected site risk levels, descriptions, and effects.
+- `tutorial.json` — tutorial triggers and progressive hints.
+- `scoring.json` — stars, mission ratings, and completion conditions.
+- `fact_cards.json` — Notebook content templates linked to NASA fact IDs.
+
+Every new configuration file must be versioned, validated, and documented. Do not create all files with invented final numbers if the source does not support them. Use clearly labelled provisional GAME VALUE defaults and record them in `docs/DECISIONS.md`.
+
+## D. Project setup
+
+- Keep dependencies minimal. Use `provider` for state and `shared_preferences` for simple local persistence unless the existing project already has a better compatible approach.
+- If a robust timestamp, database, or migration requirement cannot be safely met with `shared_preferences`, explain why and choose the simplest reliable local-only option. Do not add a cloud backend.
+- Declare all bundled data assets in `pubspec.yaml`.
+- Create the folder layout from the brief.
+- Move the existing prologue into `lib/prologue/` without changing its behaviour.
+- Keep `lib/main.dart` small.
+
+## E. Data layer
+
+Create typed Dart models and a repository for all original and new data files.
+
+Requirements:
+- Load the bundled JSON once and expose typed data.
+- Provide methods such as `repo.fact('rad_gale_surface')` and `repo.source('S02')`.
+- Implement `DataClass { nasa, game, derived }` and a helper for displaying the correct chip.
+- Implement a validator equivalent to the supplied `check_data.py`, including source references, NASA hosts, fact references, and data-class metadata.
+- Add validation for the 15-level campaign, building prerequisites, research prerequisites, timer definitions, and unlock references.
+- Add a debug-only Data Check screen.
+- Never put scientific source values directly into UI or simulation code.
+
+## F. Tests
+
+Test:
+- All original data files load and validate.
+- Every NASA fact and source reference resolves.
+- The original data pack has not been changed.
+- All 15 campaign levels exist and are ordered correctly.
+- All chapter references resolve.
+- Every building, research project, crew task, and timer prerequisite resolves.
+- The same seed produces deterministic simulation inputs.
+- Persistent campaign state can be saved and restored.
+- Real-world timers do not complete twice after restart.
+- The prologue still works.
+
+## Definition of done
+
+`flutter analyze` is clean. Tests pass. The original prologue still runs. Original data files remain unchanged. Create `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, and `docs/DECISIONS.md`. Update progress and report what was created, test results, and any missing or ambiguous data. Do not start Prompt 2.
+
+---
+
+# PROMPT 2 OF 8 — VISUAL DESIGN, ASTRONAUTS, PERSISTENT BASE MAP AND NAVIGATION
+
+First read `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, and `docs/DECISIONS.md`. This is step 2 of 8. Build the visual system and navigation. Do not implement the full simulation yet.
+
+## A. Visual direction
+
+Use the supplied visual references if present. The visual language should feel like a polished, playful strategy-map game adapted to Mars:
+
+- A stylized top-down Mars settlement map.
+- Rounded cards, soft shadows, chunky buttons, circular map pins, badges, and a clear winding campaign path.
+- Deep navy space/night tones, rust-orange Mars ground, sand, teal for safe systems, and red for danger.
+- Clear visual hierarchy. Avoid clutter and tiny technical text.
+- The base must be the main visual focus, not a generic menu screen.
+
+If reference screenshots are missing, use the description above and record that the implementation used the written reference.
+
+## B. Design system
+
+Create `lib/ui/theme.dart` with:
+- Colour tokens.
+- Friendly rounded typography.
+- Body text at least 16 sp where practical; headings 24 sp or larger.
+- Spacing, corner radii, shadows, and animation durations.
+- Text-size multiplier settings: 0.9, 1.0, 1.2, 1.4.
+- Colour-blind-safe palette.
+- Reduced-motion support.
+
+Create reusable widgets:
+- `GameButton`
+- `InfoCard`
+- `MapPin`
+- `ProgressPath`
+- `StarRating`
+- `DataChip`
+- `FactCard`
+- `DaveBubble`
+- `RadioBubble`
+- `GaugeBar`
+- `ModalSheet`
+- `TimerCard` — shows activity, remaining real time, and completion outcome.
+- `ResourceCard` — resource amount, capacity, production/consumption, and data chip.
+- `BuildingCard` — facility state, level, upgrade, and construction progress.
+- `ResearchCard` — research state, prerequisites, and progress.
+- `CrewAssignmentCard` — astronaut, task, duration, and status.
+
+All tappable controls must be at least 48 dp.
+
+## C. Astronaut characters
+
+Create `CrewBean` with Flutter `CustomPainter`:
+- Original bean-shaped astronaut body.
+- Rounded backpack, large visor, simple legs.
+- 12 suit colours.
+- Role badge: Commander star, Engineer wrench, Scientist flask, Medic cross.
+- Moods: okay, cold, hungry, worried, working, resting, sheltering, researching, celebrating.
+- Small posture/face/effect changes for mood.
+- Idle breathing animation.
+- Reduced-motion setting disables looping animation.
+
+Do not copy any copyrighted character, name, logo, or asset from an existing game. Provide a debug preview for all roles and moods.
+
+## D. Mars scenery and base facilities
+
+Create reusable vector painters for:
+- Mars ground and horizon.
+- Habitat dome.
+- Solar panel arrays, with visible dust.
+- Battery storage.
+- Greenhouse.
+- Oxygen/life-support equipment.
+- Radiation shielding.
+- Ice miner and storage.
+- Food storage.
+- Workshop and maintenance bay.
+- Research laboratory.
+- Communications equipment.
+- Rover and charging station.
+- Crew rest and medical area.
+
+Buildings should visually change when upgraded. Keep visual complexity manageable for mobile performance.
+
+## E. Persistent base home screen
+
+Build the Home Base screen as the central hub:
+
+1. Show the player's actual persistent Mars base from a top-down or isometric-inspired map.
+2. Place built facilities on the map. Unbuilt facilities appear as clearly marked construction sites or locked locations.
+3. Show crew members at the base, with their current status or assignment.
+4. Show essential resource summaries without overwhelming the player.
+5. Show active construction and research timers.
+6. Show current campaign chapter and next level objective.
+7. Provide buttons for Campaign Map, Build, Research, Crew, Mars Notebook, Badges, Mission Patch, and Settings.
+8. Provide a clear Continue Mission button when a mission is available.
+9. The map must update when a building is constructed, upgraded, damaged, or repaired.
+10. Do not reset or replace the base when the player opens another level.
+
+## F. Campaign map
+
+Create a 15-node campaign path grouped into five chapters. Each chapter has a clear title and visual identity. Show locked, available, completed, and mastered states. A level node opens its briefing. The map must show the player's current progress and next goal.
+
+The campaign map and Home Base are separate views but share the same persistent state.
+
+## G. Navigation
+
+Create routes for:
+- Splash
+- Prologue
+- Home Base
+- Campaign Map
+- Level Briefing
+- Mission Planning
+- Level Play
+- Mission Debrief
+- Build
+- Research
+- Crew
+- Mars Notebook
+- Badges
+- Mission Patch
+- Settings
+- About
+- Credits
+- Debug Design Gallery
+- Debug Data Check
+
+Keep transitions short and respect reduced motion.
+
+## H. Definition of done
+
+- `flutter analyze` clean.
+- Widget tests for core widgets, DataChip, CrewBean, TimerCard, BuildingCard, and ResearchCard.
+- Smoke test for Home Base and Campaign Map.
+- Verify all screens at 360 dp width and a tablet size.
+- Verify 1.4x text size does not overflow.
+- Update `docs/PROGRESS.md`.
+- Report how to open the design gallery and any visual reference gaps.
+
+---
+
+# PROMPT 3 OF 8 — PROLOGUE, CREW CREATION, LANDING SITE AND FIRST BASE SETUP
+
+First read `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, and `docs/DECISIONS.md`. This is step 3 of 8. Integrate the existing prologue with the new persistent-base campaign.
+
+## A. Preserve the story
+
+Use `docs/source/BASE_67.pdf` as the source for the eight original prologue scenes, if present:
+
+1. The Last Year
+2. The Calling
+3. Your Crew
+4. Four Possible Worlds
+5. Every Kilogram Counts
+6. The Final Goodbye
+7. Departure
+8. Touchdown
+
+Preserve the agreed story wording and sequence. Do not invent a different story or remove the previous Mars mission mystery. Keep typewriter text, tap-to-continue, and Skip where already implemented. If the source PDF is unavailable, report that and preserve the existing working prologue rather than inventing exact source wording.
+
+## B. Re-skin the eight scenes
+
+Use the new theme, Dave bubble, vector scenery, and original astronaut art. Add restrained painted animations for news static, rocket launch, Mars approach, and touchdown. Reduced-motion mode must show still scenes.
+
+## C. Crew creation
+
+Provide four slots, one for each role:
+- Commander
+- Engineer
+- Scientist
+- Medic
+
+Allow the player to choose:
+- Name.
+- Age, if this field remains in the approved story.
+- Suit colour.
+- Visor tint.
+- Cosmetic face style.
+
+Show a live CrewBean preview. Names must be validated. Provide a random-name option. Preserve the role traits and status-line templates from the original crew data. Do not change the crew's roles to generic classes.
+
+## D. Landing site choice
+
+Show all four sites:
+- Gale — EASY
+- Arcadia — MEDIUM
+- Deuteronilus — HARD
+- Equatorial — EXTREME
+
+Show source-backed latitude/longitude and relevant science information with correct data chips. Show sunlight and ice information only where the data pack supports it. Show GAME VALUE terrain risk separately from NASA facts. Explain that the site choice affects the base's starting conditions and future resource strategy.
+
+If the original story requires a countdown, preserve it as a narrative choice mechanic, but do not make the player lose progress or suffer a punitive outcome for taking time to read. A random selection on expiry is acceptable only if it is clearly explained and can be changed before confirmation.
+
+## E. Cargo and initial base setup
+
+Use cargo points, not kilograms, for the initial equipment budget. Keep original equipment costs and constraints read-only. The initial loadout should contain only items permitted by the original Level 1 equipment rules. Show unavailable equipment as locked and explain when it becomes available.
+
+The player is establishing the first version of the persistent base. The starting equipment becomes part of the base inventory and is not discarded at the end of the prologue.
+
+Show a live preview of any derived solar output and battery capacity with formula explanations.
+
+## F. Mission state and save system
+
+Create a persistent `MissionState` or equivalent containing:
+- Crew and their chosen names/appearance.
+- Selected landing site.
+- Starting cargo and inventory.
+- Persistent base facilities and upgrade levels.
+- Resource stores and capacities.
+- Research state.
+- Construction and repair jobs.
+- Campaign unlocks and completed levels.
+- Mission patch and player display name.
+- Deterministic seed and relevant event history.
+- Save schema version.
+
+Save locally and restore on app restart. Provide a safe reset with confirmation. The prologue can be replayed from Settings without erasing the campaign.
+
+## G. First arrival
+
+After touchdown, transition into the Home Base screen. Show the landing craft, initial habitat/landing equipment, crew, and the first available objective: **First Light**. The player must recognize that this is the beginning of one base that will grow throughout the game.
+
+## H. Definition of done
+
+- Mission state save/load round trip passes.
+- Cargo over-budget validation works.
+- Site selection persists.
+- Prologue can be completed with fake taps in a widget/integration test.
+- Completing the prologue lands on the persistent Home Base with Level 1 available.
+- Replaying the prologue does not reset campaign data.
+- `flutter analyze` clean.
+- Update progress and decisions.
+
+---
+
+# PROMPT 4 OF 8 — SIMULATION ENGINE, RESOURCE MODEL AND REAL-TIME PROGRESSION SERVICES
+
+First read `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md`, and the existing data pack. This is step 4 of 8. Build the simulation and progression services. The simulation engine must be pure Dart and must not import Flutter.
+
+## A. Separate the two clocks
+
+Implement two independent clock systems:
+
+1. `SimulationClock`: advances Martian simulation time in controlled ticks. It drives sunlight, day/night, resource consumption, production, weather, radiation, and mission events.
+2. `RealTimeProgressionService`: calculates elapsed real-world time for construction, upgrades, research, and selected maintenance jobs.
+
+Never use a construction timer to advance the Martian sol clock. Never assume that one real-world minute equals a fixed number of simulation hours unless a separate, documented gameplay rule explicitly says so.
+
+## B. Simulation model
+
+Use the original NASA facts and game configuration. Read all NASA values by fact ID. Do not hard-code them.
+
+Implement the existing model where appropriate:
+- Martian sol length from `sol_hours`.
+- Daylight curve from the configured daylight hours.
+- Solar generation from irradiance, panel area, efficiency, site factor, atmospheric dust, and panel dust.
+- Battery charge and discharge, capacity, and safe reserve.
+- Power loads and load shedding.
+- Habitat temperature and heater behaviour.
+- Crew oxygen, water, and food consumption.
+- Greenhouse contribution to food and oxygen.
+- Ice mining and water storage.
+- Radiation accumulation, shielding, and shelter.
+- Scripted and seeded random events.
+- Repairs, panel cleaning, and crew actions.
+
+Retain the original documented NASA/game assumptions where they remain applicable. If a model must change to support the 15-level design, explain the change in `docs/SIM_MODEL.md` and record it in `docs/DECISIONS.md`.
+
+## C. Resource and facility model
+
+Represent resources with:
+- Current quantity.
+- Maximum storage capacity.
+- Production rate.
+- Consumption rate.
+- Source or process responsible for changes.
+- Data class for displayed numeric values.
+
+Facilities should have:
+- Ownership/build state.
+- Level or upgrade tier.
+- Construction/upgrade status.
+- Operating state.
+- Power demand.
+- Production or service effect.
+- Maintenance/damage state.
+- Unlock requirements.
+
+The simulation must distinguish a facility that is not built from one that is built but switched off, damaged, under construction, or out of resources.
+
+## D. Construction and upgrade timer service
+
+Implement a persistent job system for:
+- Initial construction.
+- Building upgrades.
+- Selected facility repairs.
+- Major facility restoration.
+
+Each job stores:
+- Unique job ID.
+- Facility ID.
+- Job type.
+- Start timestamp.
+- Expected completion timestamp.
+- Required materials/resources.
+- Crew assignment, if any.
+- Completion effect.
+- Status: queued, active, completed, cancelled, or blocked.
+
+The timer service must:
+- Persist timestamps.
+- Calculate remaining duration from real elapsed time.
+- Complete jobs exactly once.
+- Restore active jobs after app restart.
+- Handle app backgrounding and offline time.
+- Prevent duplicate resource deductions or duplicate unlocks.
+- Handle invalid/backwards clock changes defensively.
+- Show clear remaining-time information to the UI.
+
+Use provisional GAME VALUE durations in configuration. Initial balancing suggestions, not final truths:
+- Small solar panel installation: approximately 5–15 minutes.
+- Battery installation: approximately 15–30 minutes.
+- Greenhouse construction: approximately 30–60 minutes.
+- Routine repair: approximately 5–20 minutes.
+- Ice extraction facility: approximately 15–45 minutes.
+- Oxygen/life-support upgrade: approximately 30–60 minutes.
+- Habitat expansion: approximately 1–3 hours.
+- Radiation shielding installation: approximately 2–4 hours.
+- Rover construction: approximately 2–5 hours.
+
+Do not make these exact numbers hard-coded. Put them in `buildings.json` or `timer_rules.json`, mark them GAME VALUE, and make them easy to balance.
+
+These timers are pacing estimates, not real engineering estimates and not NASA data.
+
+## E. Research service
+
+Implement a technology/research tree with:
+- Research ID and display name.
+- Description in child-friendly language.
+- Prerequisites.
+- Duration.
+- Optional crew assignment.
+- Unlock/effect.
+- Status and completion timestamp.
+
+Initial suggested research topics and provisional durations:
+- Solar Energy Fundamentals — 10 minutes.
+- Advanced Battery Systems — 30 minutes.
+- Dust Protection Technology — 45 minutes.
+- Oxygen Production — 1 hour.
+- Radiation Protection — 2 hours.
+- Advanced Water Extraction — 2 hours.
+- Sustainable Mars Agriculture — 3 hours.
+
+These are GAME VALUE proposals. Do not present them as scientific facts. Research should unlock useful capabilities and explain the science behind them.
+
+## F. Crew assignments
+
+Each astronaut can perform one assigned task at a time. A task may use simulation time, real time, or immediate resolution depending on its design. The task definition must explicitly declare which clock it uses.
+
+Roles:
+- Commander: planning, priorities, morale, coordination, and mission readiness.
+- Engineer: construction support, repair, maintenance, panel cleaning.
+- Scientist: research, ice survey, weather observation, and data interpretation.
+- Medic: health checks, recovery, safety drills, and crew wellbeing.
+
+Crew assignments must not permanently lock a player out of essential controls. The player can reassign a crew member when safe and appropriate. Avoid excessive micromanagement.
+
+## G. Deterministic simulation API
+
+Provide immutable snapshots and a clean API, for example:
+- `SimState`
+- `SimConfig`
+- `PlayerInputs`
+- `Engine.step(...)`
+- `Engine.run(...)`
+- `Policy`
+- `Trace`
+
+Use seeded randomness. Same seed and same inputs must yield the same simulation trace.
+
+## H. Balance tests
+
+Create reference and naive policies for every level as the campaign is implemented. Reference policies should demonstrate a reasonable strategy. Naive policies should trigger understandable failure lessons, not random punishment.
+
+Test:
+- Solar formula and source fact references.
+- Battery charge/discharge.
+- Resource consumption.
+- Crew needs.
+- Storm and radiation events.
+- Site differences.
+- Facility construction and upgrades.
+- Research prerequisites and unlocks.
+- Real-time timer persistence.
+- Offline completion.
+- Duplicate completion prevention.
+- Clock rollback handling.
+- Crew task assignment and completion.
+- Deterministic retry.
+
+## I. Documentation
+
+Create `docs/SIM_MODEL.md` with:
+- Every formula.
+- Every input and its class: NASA DATA, GAME VALUE, DERIVED.
+- Simplifications and assumptions.
+- The two clocks and their separation.
+- Timer and offline progression behaviour.
+- Resource production and consumption.
+- Event rules.
+- Balance limitations.
+
+## Definition of done
+
+The simulation engine has no Flutter imports. Tests pass. `flutter analyze` is clean. The timer service survives app restarts and offline intervals without duplicate completion. Update progress and decisions. Do not start Prompt 5.
+
+---
+
+# PROMPT 5 OF 8 — LEVELS 1–7: POWER, WEATHER, GREENHOUSE AND OXYGEN
+
+First read `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, `docs/SIM_MODEL.md`, `docs/DECISIONS.md`, and the campaign data. This is step 5 of 8. Implement the shared mission gameplay screen and make Levels 1–7 playable.
+
+## A. Shared mission flow
+
+Every level follows this structure:
+
+1. Briefing: introduce the new concept and explain the mission goal.
+2. Base review: show the current persistent base, crew, resources, and relevant forecast.
+3. Planning: allow only currently unlocked equipment and options. Do not reset the base.
+4. Mission: run the simulation and let the player make decisions.
+5. Debrief: show outcome, resource changes, what worked, what needs improvement, and a short lesson.
+6. Return to the same Home Base with all legitimate progress retained.
+
+The player must be able to access the base and other non-blocked activities while construction or research timers are running.
+
+## B. Mission screen
+
+Portrait layout:
+- Top: level name, chapter, sol/time, forecast, pause.
+- Center: live visual of the persistent base and relevant environment.
+- Resource strip: only the values introduced so far, with progressive disclosure.
+- Controls: available actions and system switches for the current level.
+- Crew: visible status and current assignments.
+- Dave: friendly hints and explanations.
+- Mission Control: event warnings and radio messages.
+
+Every number shown must carry the correct data chip. Use concise consequence text when the player changes a system.
+
+## C. Tutorials and motivation
+
+- Introduce only one new idea at a time.
+- Provide a small early success in every level.
+- Hints have three strengths: gentle nudge, stronger hint, direct suggestion.
+- Hints do not remove the ability to learn or retry.
+- Contextual prompts should stop appearing after the player has learned the interaction.
+- Avoid long text blocks during active play.
+- Explain failures with a relevant lesson and a clear alternative action.
+
+## D. Level implementation
+
+### Level 1 — First Light
+Learning: sunlight can be converted into electrical energy.
+New system: solar panels and initial power generation.
+Teach the player to place/activate the first solar panel and observe energy generation.
+Goal: establish a safe initial energy supply and understand the solar meter.
+Keep the first interaction very simple.
+
+### Level 2 — Power Storage
+Learning: energy generated during daylight can be stored for later.
+New system: batteries and storage capacity.
+Teach charging during daylight and using stored energy at night.
+Goal: maintain the configured safe battery reserve through a day/night cycle.
+
+### Level 3 — Energy Manager
+Learning: every powered system consumes energy, and priorities matter.
+New system: switchable power loads and load priorities.
+Teach the player to distinguish essential systems from optional systems.
+Goal: keep essential life-support power running while managing optional loads.
+
+### Level 4 — Dust on Mars
+Learning: dust can reduce the sunlight reaching solar panels and reduce panel efficiency.
+New system: panel dust accumulation.
+Show a visual change to the panels and explain the effect on generation.
+Goal: identify when dust is becoming a problem and understand the maintenance response.
+
+### Level 5 — The Great Storm
+Learning: a major dust storm can sharply reduce sunlight.
+New systems: storm forecasts, panel cleaning, and load shedding.
+Show a Mission Control warning before the storm. Let the player prepare.
+Goal: survive the storm without losing essential power.
+Use the NASA tau fact card accurately. Clearly distinguish measured NASA examples from the game storm profile.
+
+### Level 6 — Greenhouse Online
+Learning: a greenhouse can support food production and contribute to life support, but it needs resources and power.
+New system: greenhouse construction and operation.
+Construction may use a real-world timer, but the player must have other meaningful activities while waiting.
+Goal: construct and activate the greenhouse, understand its power cost, and observe its contribution.
+
+### Level 7 — Breathing Matters
+Learning: oxygen is essential, is consumed by the crew, and must be managed as a reserve.
+New system: oxygen monitoring and production/reserve management.
+Show oxygen only when it becomes relevant. Explain the relationship between crew size, consumption, and production.
+Goal: maintain the mission's oxygen safety reserve.
+
+## E. Construction and research in Levels 1–7
+
+Introduce the building and research systems gradually:
+- Early levels teach the first facility build and battery installation.
+- Later levels introduce greenhouse construction and the first research unlocks.
+- Show the duration, requirements, and benefit before confirming a job.
+- Never force a child to wait with no alternative activity.
+- Do not make the mission unwinnable because an optional timer has not finished.
+- Keep initial durations short and use the provisional configuration values.
+
+## F. What-went-wrong and debrief
+
+For failure or near-failure, show:
+- What happened in simple language.
+- A small graph comparing the player's result with a sensible alternative where useful.
+- Up to three lesson points.
+- Retry, return to base, or continue with an available alternative.
+- Same seed on retry unless the player explicitly starts a new run.
+
+## G. Definition of done
+
+Levels 1–7 are playable from briefing to debrief and return to the same persistent base. Tests verify:
+- Correct systems appear at the intended level.
+- Previously unlocked facilities and research persist.
+- A level does not reset the base.
+- Tutorials trigger correctly.
+- The timer service does not block unrelated gameplay.
+- Resource and power systems work.
+- Debrief and retry preserve the expected state.
+- `flutter analyze` clean.
+Update `docs/PROGRESS.md`, `docs/SIM_MODEL.md`, and `docs/DECISIONS.md`.
+
+---
+
+# PROMPT 6 OF 8 — LEVELS 8–15, CREW SPECIALISATION, EVENTS AND FULL SETTLEMENT MANAGEMENT
+
+First read `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, `docs/SIM_MODEL.md`, `docs/DECISIONS.md`, and all relevant campaign data. This is step 6 of 8. Implement the remaining campaign and integrate all previously learned systems.
+
+## A. Crew role specialisation
+
+Create or complete the GAME VALUE crew assignment configuration. Each crew member can perform one assigned task at a time. Unassigned crew members rest or remain available.
+
+### Commander — Unshakable
+- Set power and mission priorities.
+- Coordinate crew tasks.
+- Rally the crew and support morale.
+- Review mission readiness.
+
+### Engineer — Technical Genius
+- Construct and upgrade facilities.
+- Repair damaged systems.
+- Clean solar panels.
+- Perform maintenance.
+- Any speed bonus must be a documented GAME VALUE and must not make other crew roles irrelevant.
+
+### Scientist — Keen Observer
+- Research technology.
+- Scan for ice.
+- Study weather and storm forecasts.
+- Interpret scientific readings.
+- Survey actions must have understandable time/cost trade-offs.
+
+### Medic — Field Medic
+- Check crew condition.
+- Support recovery.
+- Run shelter and safety drills.
+- Help manage health and morale.
+
+Every role must matter in the campaign. No role should be permanently required for every action. Provide alternatives when a crew member is busy.
+
+## B. Crew wellbeing
+
+Track only the crew indicators that contribute meaningfully to gameplay, such as:
+- Health.
+- Morale.
+- Temperature comfort.
+- Fatigue or workload.
+
+These are GAME VALUE simulation systems, not NASA medical claims. Keep the UI understandable. Do not overcomplicate the game with too many simultaneous bars.
+
+If a crew member needs help:
+- Use clear, non-graphic language.
+- Pause or soften the relevant challenge if needed.
+- Explain the cause and possible response.
+- Never show death or permanent crew loss.
+- Never punish the player because the app was closed.
+
+## C. Remaining levels
+
+### Level 8 — Radiation Alert
+Learning: Mars has a radiation environment that must be monitored.
+New system: radiation meter and exposure awareness.
+Goal: understand accumulated exposure and identify when precautions are needed.
+Use NASA data with clear source labels. Do not present game thresholds as NASA safety limits.
+
+### Level 9 — Shelter Protocol
+Learning: shielding and shelter can reduce radiation exposure.
+New systems: shielding facility/upgrades and shelter procedure.
+Goal: prepare the base and respond correctly to a radiation warning or solar particle event.
+
+### Level 10 — Finding Water
+Learning: water ice is not equally accessible everywhere; site selection and scientific surveys matter.
+New system: ice survey and evidence-based site/resource planning.
+Goal: use the Scientist's survey and available site information to identify a viable water strategy.
+Do not claim certainty beyond the source data.
+
+### Level 11 — Ice Operations
+Learning: finding ice is different from extracting, storing, and managing water.
+New system: ice miner, extraction capacity, and water storage.
+Goal: establish a water supply and maintain the required reserve.
+
+### Level 12 — Food and Supplies
+Learning: food must be produced, stored, and consumed over time.
+New system: food storage and supply planning, integrated with greenhouse production.
+Goal: maintain a suitable food reserve and understand the limits of local production.
+
+### Level 13 — Crew Care
+Learning: a settlement depends on both machines and people.
+New system: crew wellbeing, work/rest assignments, temperature comfort, and medical support.
+Goal: keep all crew members in a safe, workable condition while maintaining the base.
+
+### Level 14 — Mission Control
+Learning: long missions require forecasting, maintenance, research, and planning ahead.
+New system: integrated forecasts, maintenance planning, research priorities, and multi-system coordination.
+Goal: prepare the base for a sequence of known and possible challenges.
+Do not introduce an unrelated new science concept; combine existing systems.
+
+### Level 15 — The Final Mission
+Learning: apply the full set of junior astronaut skills to manage a functioning Mars base.
+New system: no major new mechanic. This is the integrated final assessment.
+Combine:
+- Energy generation and storage.
+- Load management.
+- Dust and storms.
+- Greenhouse and oxygen.
+- Radiation and shelter.
+- Water and ice extraction.
+- Food and storage.
+- Crew health, morale, and assignments.
+- Construction, research, repair, and forecasts.
+- Event response and resource planning.
+
+The final mission should be challenging but fair. Provide enough warning and information for a thoughtful player to prepare. Do not make success depend on random luck.
+
+## D. Events
+
+Each event must:
+- Have a warning where appropriate.
+- Have an understandable visual cue.
+- Explain what changed.
+- Explain one way the player could prepare or respond.
+- Be reproducible with the same seed.
+- Avoid unfair clustering of negative events.
+- Never cause permanent crew loss.
+
+Use the existing event data where it applies. Add new event definitions only in the extra data layer. Keep NASA measurements separate from stylized game events.
+
+## E. Persistent base integration
+
+Verify that all 15 levels operate on the same base state:
+- Facility ownership and upgrade levels persist.
+- Research unlocks persist.
+- Resource stores persist or are adjusted by explicitly documented mission transitions.
+- Crew and assignments persist.
+- Site conditions persist.
+- Damage and repairs persist.
+- Campaign progress persists.
+- The player can revisit completed levels for practice without destroying current campaign progress.
+
+If a level uses a special scenario snapshot, store it separately and merge only explicitly defined rewards or consequences back into the persistent base. Never silently overwrite the live base.
+
+## F. Final mission and Junior Astronaut progression
+
+Completing Level 15 unlocks the final certificate. The certificate should reflect campaign completion, not claim official NASA accreditation. Use wording such as “BASE 67 Junior Astronaut Mission Trainer — Campaign Completed.” Do not imply that NASA has certified the player.
+
+## Definition of done
+
+All 15 levels are playable and integrated with the persistent base. Tests cover crew actions, events, level unlocks, state persistence, revisiting levels, and the final mission. Reference strategies can complete the campaign. Naive strategies produce understandable feedback. `flutter analyze` clean. Update all design and progress documentation.
+
+---
+
+# PROMPT 7 OF 8 — BASE PROGRESSION, RESEARCH, TIMERS, REWARDS, NOTEBOOK AND SETTINGS
+
+First read `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md`, and `docs/SIM_MODEL.md`. This is step 7 of 8. Complete the long-term progression systems that make the persistent base meaningful.
+
+## A. Base construction and upgrades
+
+Implement a clear Build interface:
+- Available buildings.
+- Locked buildings and their unlock requirements.
+- Construction cost.
+- Construction duration.
+- Required materials or resources.
+- Facility purpose and benefit.
+- Current level and next upgrade.
+- Active construction queue.
+- Crew member assignment if relevant.
+
+Facilities may include:
+- Solar arrays.
+- Battery storage.
+- Habitat modules.
+- Greenhouse.
+- Oxygen/life-support systems.
+- Radiation shielding.
+- Ice extraction facility.
+- Water storage.
+- Food storage.
+- Workshop/maintenance bay.
+- Research laboratory.
+- Communications.
+- Rover and charging station.
+- Medical and crew-support facilities.
+
+Only implement buildings that have a meaningful gameplay purpose. Avoid creating decorative facilities that add complexity without a learning benefit.
+
+## B. Upgrade progression
+
+Each upgrade must explain:
+- What improves.
+- What it costs.
+- How long it takes.
+- Whether it increases capacity, efficiency, resilience, or unlocks a feature.
+- Whether it introduces a new trade-off.
+
+Do not make upgrades mandatory merely to increase playtime. Balance each level so that the player has a fair path forward.
+
+## C. Research tree
+
+Build a visual research tree with clear prerequisites and outcomes. Suggested branches:
+- Solar energy and batteries.
+- Dust protection and maintenance.
+- Life support and oxygen.
+- Radiation protection.
+- Water extraction.
+- Sustainable agriculture.
+- Crew health and settlement operations.
+
+Use the research durations from configuration, not hard-coded values. Research can continue while the app is closed. Show the Scientist's contribution as a meaningful optional advantage.
+
+## D. Timer and offline progression UI
+
+Show:
+- Current job.
+- Progress.
+- Remaining time.
+- Expected unlock or result.
+- Assigned crew member, if any.
+- Queue position, if applicable.
+
+When a job finishes while the app is closed, show a calm completion notice on the next visit. Do not use push notifications unless the user explicitly approves a local notification feature and its permissions are appropriate.
+
+No paid speed-ups, ad gates, premium currency, loot boxes, daily streaks, or punitive deadlines. Never make children feel that they are losing their base by not returning.
+
+## E. Crew management
+
+Provide a Crew screen showing:
+- Each astronaut's role and trait.
+- Current assignment.
+- Availability.
+- Resting or recovery state.
+- Relevant status indicators.
+- Task options and durations.
+- Simple explanations of role advantages.
+
+Do not require constant tapping or micromanagement. Use sensible defaults and clear assignment feedback.
+
+## F. Campaign map and rewards
+
+Complete the 15-node map and five chapter progression. Implement badges from `badges.json` where applicable, and add new campaign badges only in the extra data layer.
+
+Include:
+- Level completion states.
+- Stars or mission ratings.
+- Chapter completion.
+- Campaign progress indicator.
+- Mission patch editor.
+- Badge collection.
+- Junior Astronaut certificate after Level 15.
+
+The certificate must be a game completion reward, not a real-world qualification or NASA endorsement.
+
+## G. Mars Notebook
+
+Create progressive fact cards for:
+- Sunlight.
+- Solar power.
+- Batteries.
+- Dust and storms.
+- Oxygen.
+- Radiation.
+- Shielding.
+- Water ice.
+- Food and greenhouse systems.
+- Temperature.
+- Gravity.
+- A day/sol on Mars.
+- Crew and settlement operations where reliable sources support the content.
+
+Each card should:
+- Use age-appropriate language.
+- Pull NASA values by fact ID.
+- Show the correct data chip.
+- Show unit and source information.
+- Include a Source button with source title and URL displayed as text for offline use.
+- Never leave an unresolved template placeholder.
+
+## H. Settings, About and Credits
+
+Settings:
+- Sound on/off.
+- Text size.
+- Colour-blind-safe palette.
+- Reduce motion.
+- Replay prologue.
+- Reset campaign with confirmation.
+- Hints always on.
+- Optional simulation speed preference if supported.
+
+About:
+- Explain NASA DATA vs GAME VALUE vs DERIVED.
+- Include “Not yet tested with students.”
+- Explain that BASE 67 is an educational game project and not an official NASA product.
+- Use credits from the source data.
+
+Credits:
+- Read team names and AI tools from a single editable team configuration file.
+- Show TODO placeholders clearly in debug builds.
+- Do not invent team member names or claim unverified contributions.
+
+## I. Save system and migration
+
+Persist:
+- Campaign progress.
+- Base facilities and upgrades.
+- Resources.
+- Construction and repair jobs.
+- Research jobs and completed research.
+- Crew and assignments.
+- Level results.
+- Badges and patch.
+- Notebook unlocks.
+- Settings.
+- Timer timestamps.
+- Save version.
+
+Implement safe migrations. Test old-save compatibility or provide a safe reset path if no old save format exists yet.
+
+## Definition of done
+
+Tests cover every badge rule, research prerequisite, building unlock, timer persistence, offline completion, save migration, notebook template, settings persistence, and certificate unlock. `flutter analyze` clean. Update progress and documentation.
+
+---
+
+# PROMPT 8 OF 8 — FULL QA, ACCESSIBILITY, OFFLINE PROOF, BALANCING AND ANDROID RELEASE
+
+First read `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/SIM_MODEL.md`, and all QA documents. This is the final development step.
+
+## A. Full campaign review
+
+Test the entire 15-level campaign from a fresh save:
+- Complete the prologue.
+- Establish the initial base.
+- Complete each level in order.
+- Verify the same base persists.
+- Verify construction and research unlocks.
+- Verify offline timer progress.
+- Verify resource continuity and mission transitions.
+- Complete the final mission.
+- Unlock the certificate.
+
+Record actual test results. Do not invent playtest results or claim that the game has been tested with children if it has not.
+
+The older 30–45 minute estimate applied to the original six-level prototype and is no longer a valid target for the expanded game. Measure the new campaign honestly. Report:
+- Active gameplay time.
+- Real-world elapsed time including optional construction/research timers.
+- Typical session length from internal test runs.
+- Any level that is too short, too long, confusing, or blocked by a timer.
+
+Do not inflate playtime with empty waiting. A longer campaign should contain meaningful learning and decisions, not artificial delay.
+
+## B. Balance and fairness audit
+
+Check:
+- Every level has a clear objective.
+- The player has a fair path to completion.
+- No required facility or research is hidden behind an impossible timer.
+- No resource can silently reach an unrecoverable state.
+- The player can understand why a resource is rising or falling.
+- Random events are seeded and fair.
+- Crew roles are useful but not mandatory for every small action.
+- Optional timers do not block all meaningful play.
+- Returning after several days does not cause a disaster.
+- The persistent base is never accidentally reset.
+- Retry and replay do not corrupt campaign state.
+
+Tune GAME VALUE files only. Never alter the original NASA data to make the game easier.
+
+## C. Child-friendliness audit
+
+- Review all on-screen text for reading level and clarity.
+- Shorten long instructions.
+- Avoid fear-based urgency.
+- Avoid graphic harm and death language.
+- Ensure that crew members are never permanently lost.
+- Ensure there are no manipulative streaks or punitive absence mechanics.
+- Explain timers and resource costs before confirmation.
+- Confirm that the player can always find the next objective.
+- Ensure the game does not claim official NASA endorsement or certification.
+
+## D. Accessibility
+
+- Tap targets at least 48 dp.
+- Text scaling works at 1.4x without overflow.
+- Colour-blind mode preserves meaning through icons and labels.
+- Reduced motion disables looping and non-essential animation.
+- Semantics labels exist for interactive controls, meters, timers, and map nodes.
+- Ensure the game remains usable on small Android screens.
+
+## E. Offline proof
+
+- Search the codebase for network requests, WebViews, remote assets, and network dependencies.
+- Confirm the release manifest does not request INTERNET permission.
+- Test in airplane mode.
+- Confirm all data, images, fonts, and game logic are bundled.
+- Document the test in `docs/QA_REPORT.md`.
+
+## F. Performance
+
+- Profile on an Android emulator and, if available, a physical Android device.
+- Target smooth 60 fps on the base and mission screens.
+- Test fast simulation speeds and active weather effects.
+- Cache painters and avoid rebuilding the entire base on every tick.
+- Ensure timers and background/foreground transitions do not cause UI freezes.
+
+## G. Data integrity
+
+- Run the Dart data validator.
+- Run the original `check_data.py`.
+- Confirm all NASA fact IDs and source IDs resolve.
+- Confirm all new design values are labelled GAME VALUE.
+- Confirm all derived values have documented formulas.
+- Use Git to verify that original files under `assets/data/` were not modified.
+- Record the actual outputs in `docs/QA_REPORT.md`.
+
+## H. Android release
+
+- App display name: **BASE 67**.
+- Do not use “Outpost Zero” in the app name or release identity.
+- Use the approved package ID already in the project unless a documented change is necessary.
+- Portrait-first layout.
+- Appropriate minimum SDK for the installed Flutter stable version.
+- Create an original app icon or use an owned vector asset.
+- Document release signing steps without exposing signing secrets.
+- Run `flutter build apk --release`.
+- Report the real APK path and file size.
+
+## I. Documentation and submission pack
+
+Update:
+- `README.md`
+- `docs/GAME_BRIEF.md`
+- `docs/PROGRESS.md`
+- `docs/DECISIONS.md`
+- `docs/SIM_MODEL.md`
+- `docs/QA_REPORT.md`
+- `docs/KNOWN_LIMITATIONS.md`
+- `docs/PLAYTEST_PLAN.md`
+- `docs/SUBMISSION_CHECKLIST.md`
+
+The playtest plan must include a script for children aged 10–14, tasks, observations, questions, and an empty results table. Do not invent results.
+
+The submission checklist should include source verification, credits, screenshots to capture, team details still needing human input, and any remaining NASA data checks.
+
+## J. Final report
+
+At the end, report:
+1. What is complete.
+2. What tests were run and their actual results.
+3. Whether the 15-level campaign was completed in testing.
+4. Whether the persistent base and offline timers passed testing.
+5. Whether the release APK built, with actual path and size.
+6. Known limitations and unresolved decisions.
+7. Any tasks that still require a human.
+
+Do not claim a test passed unless it was actually run and passed.
+
+## Final definition of done
+
+`flutter analyze` is clean. All available automated tests pass. The full 15-level campaign has been tested as far as the current implementation allows. Offline behaviour is verified. The release APK builds. Documentation reports real results only.
+
+---
+
+# IMPORTANT GLOBAL RULES FOR CODEX
+
+These apply to all eight prompts:
+
+1. **BASE 67 is the only current game name.** Do not use the obsolete working title “Outpost Zero.”
+2. **One persistent Mars base across all 15 levels.** Do not create a separate disposable base for every level.
+3. **Keep the original data pack read-only.** New design values belong in `assets/data/extra/`.
+4. **Separate NASA DATA, GAME VALUE, and DERIVED values.** Never present a design assumption as a NASA fact.
+5. **Keep Martian simulation time separate from real-world construction/research timers.**
+6. **Offline progression must be safe and fair.** No punishment for closing the app or not returning.
+7. **Do not use monetisation pressure.** No paid speed-ups, ad gates, premium currency, loot boxes, or manipulative streaks.
+8. **Keep the game suitable for ages 10–14.** Explain concepts simply and introduce them progressively.
+9. **Preserve the existing prologue and story unless a specific, documented change is approved.**
+10. **Do not silently invent NASA facts, sources, team names, test results, or student learning outcomes.**
+11. **Use tests for every important mechanic.** Especially persistence, deterministic simulation, timers, offline completion, campaign progression, and resource balancing.
+12. **Update project documentation after every prompt.** Codex must leave the repository in a state that the next prompt can understand.

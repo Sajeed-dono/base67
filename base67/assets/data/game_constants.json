@@ -1,0 +1,85 @@
+{
+  "_meta": {
+    "file": "game_constants.json",
+    "version": "0.3",
+    "data_class": "GAME_VALUE",
+    "note": "Everything here is a game choice or our own formula. Never present it as NASA data. NASA numbers are in nasa_data.json and are referenced by fact id. Show \"GAME VALUE\" or \"DERIVED\" on screen."
+  },
+  "time": {
+    "tick_hours": 1,
+    "mission_sols_default": 30,
+    "daylight_hours": 12.33,
+    "daylight_note": "Half a sol, a game simplification.",
+    "sol_seconds_derived": "nasa_data.sol_hours * 3600 = 88,775 s",
+    "class": "GAME_VALUE"
+  },
+  "solar": {
+    "baseline_clear_tau": 0.5,
+    "daylight_curve": "max(0, sin(pi * hour_of_sol / 12.33))",
+    "generation_formula": "peak_kw * daylight_curve(hour) * site.solar_factor * exp(-tau) * (1 - dust_on_panels)",
+    "direct_light_formula": "exp(-tau)",
+    "uses_nasa_fact_ids": [
+      "solar_irradiance",
+      "tau_3_sunlight"
+    ],
+    "formula_check": "exp(-3) = 0.0498, close to NASA's 5 percent at tau 3.",
+    "class": "GAME_VALUE"
+  },
+  "dust": {
+    "game_peak_tau": 4.0,
+    "game_peak_note": "Reduced on purpose so the level can be survived. The real tau at Opportunity was 10.8 (nasa_data.tau_opportunity_2018).",
+    "panel_dust_gain_pct_per_storm_hour": 0.4,
+    "panel_cleaning_restores_pct": 80,
+    "class": "GAME_VALUE"
+  },
+  "battery": {
+    "safe_min_pct": 20,
+    "capacity_kwh_per_unit": 20,
+    "start_pct": 100,
+    "class": "GAME_VALUE"
+  },
+  "habitat": {
+    "base_load_kw": 1.0,
+    "target_temp_c": 20,
+    "min_safe_temp_c": 10,
+    "cold_time_constant_hours": 8,
+    "class": "GAME_VALUE"
+  },
+  "crew": {
+    "size": 4,
+    "per_person_needs_from": [
+      "crew_oxygen",
+      "crew_water",
+      "crew_food_packaged",
+      "crew_kcal"
+    ],
+    "class": "GAME_VALUE",
+    "note": "Crew size is a game choice. The per-person needs are NASA facts in nasa_data.json."
+  },
+  "radiation": {
+    "every_site_uses_nasa_fact": "rad_gale_surface",
+    "game_mission_limit_msv": 25,
+    "sep_event_spike_msv": 4,
+    "limit_note": "Game limit, not an official NASA limit.",
+    "class": "GAME_VALUE",
+    "note": "NASA measured radiation only at Gale, so all sites use the Gale value."
+  },
+  "derived": {
+    "panel_area_m2": 30,
+    "panel_efficiency": 0.25,
+    "panel_peak_kw": 4.4,
+    "panel_peak_formula": "nasa_data.solar_irradiance (586.2) * 30 m2 * 0.25 = 4396 W",
+    "site_solar_factor_formula": "cos(latitude from nasa_data)",
+    "class": "DERIVED"
+  },
+  "rng": {
+    "algorithm": "mulberry32",
+    "default_seed": 20261105
+  },
+  "display_labels": {
+    "derived": "DERIVED",
+    "game_value": "GAME VALUE",
+    "concept": "Concept mock-up",
+    "not_tested": "Not yet tested with students"
+  }
+}

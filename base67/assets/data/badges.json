@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "file": "badges.json",
+    "version": "0.3",
+    "status": "planned",
+    "note": "Badges, the mission patch and the Junior Astronaut certificate are planned features. Say 'earn' in the video, as the design, not as finished.",
+    "data_class": "GAME_VALUE",
+    "note_nasa": "Game file. Numbers here are game values, not NASA data."
+  },
+  "badges": [
+    {
+      "id": "dust_fighter",
+      "name": "Dust Fighter",
+      "unlock": "Finish L2_storms with the battery never reaching 0",
+      "icon": "badge_dust_fighter.png"
+    },
+    {
+      "id": "night_owl",
+      "name": "Night Owl",
+      "unlock": "Finish L1_power with no night below 20 percent",
+      "icon": "badge_night_owl.png"
+    },
+    {
+      "id": "air_keeper",
+      "name": "Air Keeper",
+      "unlock": "Finish L3_air with oxygen never below 20 kg",
+      "icon": "badge_air_keeper.png"
+    },
+    {
+      "id": "shield_up",
+      "name": "Shield Up",
+      "unlock": "Finish L4_radiation with dose under half the limit",
+      "icon": "badge_shield_up.png"
+    },
+    {
+      "id": "ice_hunter",
+      "name": "Ice Hunter",
+      "unlock": "Finish L5_food_water on a low-ice site",
+      "icon": "badge_ice_hunter.png"
+    },
+    {
+      "id": "commander",
+      "name": "Commander",
+      "unlock": "Finish L6_commander with all four crew alive",
+      "icon": "badge_commander.png"
+    },
+    {
+      "id": "good_failure",
+      "name": "Learned the Hard Way",
+      "unlock": "Read a What-went-wrong card and retry the level",
+      "icon": "badge_good_failure.png"
+    }
+  ],
+  "mission_patch": {
+    "fields": [
+      "name",
+      "color",
+      "emblem"
+    ],
+    "colors": [
+      "orange",
+      "navy",
+      "teal",
+      "white"
+    ],
+    "emblems": [
+      "rover",
+      "sun",
+      "habitat",
+      "star"
+    ]
+  },
+  "certificate": {
+    "title": "Junior Astronaut",
+    "unlock": "Finish L6_commander",
+    "shows": [
+      "player name",
+      "mission patch",
+      "date",
+      "badges earned"
+    ],
+    "image": "certificate.png"
+  }
+}

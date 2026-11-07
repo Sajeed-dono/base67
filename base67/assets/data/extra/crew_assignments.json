@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "file": "crew_assignments.json",
+    "version": "0.2.0",
+    "data_class": "GAME_VALUE",
+    "status": "provisional",
+    "notes": ["Role activities follow the updated GDD. Unspecified task durations and numerical skill bonuses remain unassigned."]
+  },
+  "tasks": [
+    {"id":"commander_set_priorities","role_id":"Commander","name":"Set priorities","time_basis":"instant","timer_id":null,"research_id":null,"prerequisites":[],"skill_effect":"Power priorities and coordination; no numeric bonus assigned."},
+    {"id":"engineer_repair_equipment","role_id":"Engineer","name":"Repair equipment","time_basis":"real","timer_id":"routine_equipment_repair","research_id":null,"prerequisites":[],"skill_effect":"Repair support; no numeric bonus assigned."},
+    {"id":"engineer_clean_panels","role_id":"Engineer","name":"Clean solar panels","time_basis":"unassigned","timer_id":null,"research_id":null,"prerequisites":[],"skill_effect":"Panel maintenance; task duration remains unassigned."},
+    {"id":"scientist_research","role_id":"Scientist","name":"Conduct research","time_basis":"real","timer_id":null,"research_id":"solar_energy_fundamentals","prerequisites":[],"skill_effect":"Research support; no numeric bonus assigned."},
+    {"id":"scientist_survey_ice","role_id":"Scientist","name":"Survey for ice","time_basis":"unassigned","timer_id":null,"research_id":null,"prerequisites":[],"skill_effect":"Evidence gathering; task duration remains unassigned."},
+    {"id":"scientist_observe_weather","role_id":"Scientist","name":"Observe the weather","time_basis":"unassigned","timer_id":null,"research_id":null,"prerequisites":[],"skill_effect":"Forecast support; task duration remains unassigned."},
+    {"id":"medic_check_crew","role_id":"Medic","name":"Check crew wellbeing","time_basis":"instant","timer_id":null,"research_id":null,"prerequisites":[],"skill_effect":"Wellbeing support; no numeric bonus assigned."},
+    {"id":"medic_run_shelter_drill","role_id":"Medic","name":"Run a shelter drill","time_basis":"instant","timer_id":null,"research_id":null,"prerequisites":[],"skill_effect":"Safety practice; no numeric bonus assigned."}
+  ],
+  "restrictions": [
+    {"id":"one_active_task_per_crew_member","description":"A crew member has at most one active assigned task. Reassignment and cancellation rules remain to be designed.","status":"provisional"}
+  ]
+}

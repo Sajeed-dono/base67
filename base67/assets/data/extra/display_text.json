@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "file": "display_text.json",
+    "version": "0.1.0",
+    "data_class": "GAME_VALUE",
+    "status": "provisional",
+    "notes": [
+      "Display-name normalization is a presentation rule. It does not alter original source data."
+    ]
+  },
+  "titles": {
+    "app": "BASE 67"
+  },
+  "replacements": [
+    {
+      "id": "legacy_project_name",
+      "source": "Outpost Zero",
+      "display": "BASE 67"
+    }
+  ]
+}

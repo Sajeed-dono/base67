@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "file": "progression_rules.json",
+    "version": "0.2.0",
+    "data_class": "GAME_VALUE",
+    "status": "provisional",
+    "notes": ["The campaign unlock chain is one-way and does not reset the persistent base. Reward thresholds remain unbalanced."]
+  },
+  "rules": {
+    "persistent_base": true,
+    "unlock_order": "campaign level order",
+    "completion_rewards": [],
+    "note": "Reward quantities and thresholds require balancing."
+  },
+  "level_unlocks": [
+    {"level_id":"L01_first_light","required_completed_level_ids":[]},
+    {"level_id":"L02_power_storage","required_completed_level_ids":["L01_first_light"]},
+    {"level_id":"L03_energy_manager","required_completed_level_ids":["L02_power_storage"]},
+    {"level_id":"L04_dust_on_mars","required_completed_level_ids":["L03_energy_manager"]},
+    {"level_id":"L05_the_great_storm","required_completed_level_ids":["L04_dust_on_mars"]},
+    {"level_id":"L06_greenhouse_online","required_completed_level_ids":["L05_the_great_storm"]},
+    {"level_id":"L07_breathing_matters","required_completed_level_ids":["L06_greenhouse_online"]},
+    {"level_id":"L08_radiation_alert","required_completed_level_ids":["L07_breathing_matters"]},
+    {"level_id":"L09_shelter_protocol","required_completed_level_ids":["L08_radiation_alert"]},
+    {"level_id":"L10_finding_water","required_completed_level_ids":["L09_shelter_protocol"]},
+    {"level_id":"L11_ice_operations","required_completed_level_ids":["L10_finding_water"]},
+    {"level_id":"L12_food_and_supplies","required_completed_level_ids":["L11_ice_operations"]},
+    {"level_id":"L13_crew_care","required_completed_level_ids":["L12_food_and_supplies"]},
+    {"level_id":"L14_mission_control","required_completed_level_ids":["L13_crew_care"]},
+    {"level_id":"L15_the_final_mission","required_completed_level_ids":["L14_mission_control"]}
+  ]
+}

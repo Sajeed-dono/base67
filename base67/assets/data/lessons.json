@@ -1,0 +1,198 @@
+{
+  "_meta": {
+    "file": "lessons.json",
+    "version": "0.3",
+    "note": "The storm_battery_drain entry copies the wording of Sample 2 (the Part 5 lesson card). The lesson line can be reworded to match your level.",
+    "card_layout": "left: two battery curves (what you did vs. alternative). right: three numbered lesson badges.",
+    "curve_colors": {
+      "actual": "red",
+      "alternative": "green"
+    },
+    "data_class": "GAME_VALUE",
+    "note_nasa": "Game file. Numbers here are game values, not NASA data."
+  },
+  "lessons": [
+    {
+      "id": "storm_battery_drain",
+      "title": "What went wrong?",
+      "trigger": "battery_pct < 20 during dust_storm",
+      "curves": {
+        "actual": "Nothing switched off early",
+        "alternative": "Loads shed at hour 2"
+      },
+      "points": [
+        {
+          "n": 1,
+          "head": "The storm blocked the sun.",
+          "body": "Less sunlight means less solar power."
+        },
+        {
+          "n": 2,
+          "head": "Power use stayed the same.",
+          "body": "The battery drained faster than planned."
+        },
+        {
+          "n": 3,
+          "head": "Lesson: rank before the storm.",
+          "body": "Decide what stays on. Keep a power reserve."
+        }
+      ]
+    },
+    {
+      "id": "night_power_gap",
+      "title": "What went wrong?",
+      "trigger": "battery_pct < 20 at night",
+      "curves": {
+        "actual": "Too little battery",
+        "alternative": "One more battery"
+      },
+      "points": [
+        {
+          "n": 1,
+          "head": "The sun set.",
+          "body": "Panels make nothing at night."
+        },
+        {
+          "n": 2,
+          "head": "The battery was too small.",
+          "body": "It ran out before sunrise."
+        },
+        {
+          "n": 3,
+          "head": "Lesson: size the battery for the night.",
+          "body": "Budget for storage, not just panels."
+        }
+      ]
+    },
+    {
+      "id": "oxygen_shortfall",
+      "title": "What went wrong?",
+      "trigger": "oxygen_kg < 10",
+      "curves": {
+        "actual": "Greenhouse starved of power",
+        "alternative": "Greenhouse kept on"
+      },
+      "points": [
+        {
+          "n": 1,
+          "head": "Four people breathe a lot.",
+          "body": "Oxygen use is steady every sol."
+        },
+        {
+          "n": 2,
+          "head": "Plants need power.",
+          "body": "Lights off meant less oxygen made."
+        },
+        {
+          "n": 3,
+          "head": "Lesson: protect life support first.",
+          "body": "Cut other loads before air."
+        }
+      ]
+    },
+    {
+      "id": "radiation_over_limit",
+      "title": "What went wrong?",
+      "trigger": "dose_msv > game_mission_limit_msv",
+      "curves": {
+        "actual": "No shielding, no shelter",
+        "alternative": "Shielding and shelter"
+      },
+      "points": [
+        {
+          "n": 1,
+          "head": "Mars has little air.",
+          "body": "Radiation reaches the ground every day."
+        },
+        {
+          "n": 2,
+          "head": "A solar particle event added a spike.",
+          "body": "Sheltering cuts that spike a lot."
+        },
+        {
+          "n": 3,
+          "head": "Lesson: spend some budget on shielding.",
+          "body": "Small doses add up over many sols."
+        }
+      ]
+    },
+    {
+      "id": "water_shortfall",
+      "title": "What went wrong?",
+      "trigger": "water_kg < 20",
+      "curves": {
+        "actual": "Ice miner mostly off",
+        "alternative": "Ice miner kept running"
+      },
+      "points": [
+        {
+          "n": 1,
+          "head": "Crew drink every sol.",
+          "body": "Water use never stops."
+        },
+        {
+          "n": 2,
+          "head": "Your site had little ice.",
+          "body": "Low-ice sites make less water per sol."
+        },
+        {
+          "n": 3,
+          "head": "Lesson: match your site to your needs.",
+          "body": "Ice-rich sites trade sun for water."
+        }
+      ]
+    },
+    {
+      "id": "food_shortfall",
+      "title": "What went wrong?",
+      "trigger": "food_kg < 10",
+      "curves": {
+        "actual": "Greenhouse lights cut",
+        "alternative": "Greenhouse lights kept on"
+      },
+      "points": [
+        {
+          "n": 1,
+          "head": "Food stock ran down.",
+          "body": "The crew eats every sol."
+        },
+        {
+          "n": 2,
+          "head": "Cutting lights slowed growth.",
+          "body": "Saving power cost food."
+        },
+        {
+          "n": 3,
+          "head": "Lesson: every saving has a cost.",
+          "body": "Check what you give up first."
+        }
+      ]
+    },
+    {
+      "id": "crew_too_cold",
+      "title": "What went wrong?",
+      "trigger": "habitat_temp_c < min_safe_temp_c",
+      "curves": {
+        "actual": "Heater off",
+        "alternative": "Heater on at a lower set point"
+      },
+      "points": [
+        {
+          "n": 1,
+          "head": "The heater was off.",
+          "body": "The habitat cooled toward the outside air."
+        },
+        {
+          "n": 2,
+          "head": "Mars nights are very cold.",
+          "body": "Temperatures fall far below freezing."
+        },
+        {
+          "n": 3,
+          "head": "Lesson: lower the set point, do not switch it off.",
+          "body": "A cooler habitat still saves power."
+        }
+      ]
+    }
+  ]
+}

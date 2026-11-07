@@ -1,0 +1,90 @@
+{
+  "_meta": {
+    "file": "sites.json",
+    "version": "0.3",
+    "data_class": "GAME_VALUE",
+    "notes": [
+      "Coordinates, elevation and temperature are NOT stored here. Read them from nasa_data.json using nasa_fact_ids.",
+      "solar_factor is DERIVED = cos(latitude). ice_tier is a game tier: 'high' follows NASA's ranking of Arcadia Planitia and Deuteronilus Mensae (S13, S14); 'low' for Gale and Meridiani is a game choice because no NASA page read gives their ice."
+    ]
+  },
+  "sites": [
+    {
+      "id": "gale",
+      "name": "Gale Crater",
+      "landmark": "Bradbury Landing, where Curiosity landed",
+      "nasa_fact_ids": {
+        "lat": "gale_lat",
+        "lon": "gale_lon",
+        "elevation": "gale_elevation",
+        "air_temp_high": "gale_air_temp_high",
+        "air_temp_low": "gale_air_temp_low",
+        "radiation": "rad_gale_surface"
+      },
+      "solar_factor": 1.0,
+      "solar_factor_class": "DERIVED",
+      "ice_tier": "low",
+      "ice_tier_class": "GAME_VALUE",
+      "card_blurb": "Lots of sun and the best-measured radiation on Mars, but very little ice in this game.",
+      "image": "gale_crater.jpg",
+      "image_credit_id": "n_p4_gale_photo"
+    },
+    {
+      "id": "arcadia",
+      "name": "Arcadia Planitia",
+      "landmark": "Broad northern plains",
+      "nasa_fact_ids": {
+        "lat": "arcadia_lat",
+        "lon": "arcadia_lon",
+        "ice_depth": "arcadia_ice_depth",
+        "ice_rank": "ice_best_regions",
+        "radiation": "rad_gale_surface",
+        "temp_mean": "temp_mean"
+      },
+      "solar_factor": 0.78,
+      "solar_factor_class": "DERIVED",
+      "ice_tier": "high",
+      "ice_tier_class": "GAME_VALUE",
+      "card_blurb": "Plenty of buried ice for water, but weaker sunlight and a hard cold.",
+      "image": "arcadia_sketch.png",
+      "image_credit_id": "m_p4_site_cards"
+    },
+    {
+      "id": "deuteronilus",
+      "name": "Deuteronilus Mensae",
+      "landmark": "Mesas and glacier-like ice flows",
+      "nasa_fact_ids": {
+        "lat": "deuteronilus_lat",
+        "lon": "deuteronilus_lon",
+        "ice_rank": "ice_best_regions",
+        "radiation": "rad_gale_surface",
+        "temp_mean": "temp_mean"
+      },
+      "solar_factor": 0.74,
+      "solar_factor_class": "DERIVED",
+      "ice_tier": "high",
+      "ice_tier_class": "GAME_VALUE",
+      "card_blurb": "Glacier-like ice close by, and cliffs that give a little natural shelter.",
+      "image": "deuteronilus_sketch.png",
+      "image_credit_id": "m_p4_site_cards"
+    },
+    {
+      "id": "equatorial_plain",
+      "name": "Equatorial Plain (Meridiani Planum)",
+      "landmark": "Flat plains near the equator, where Opportunity landed",
+      "nasa_fact_ids": {
+        "lat": "meridiani_lat",
+        "lon": "meridiani_lon",
+        "radiation": "rad_gale_surface",
+        "temp_mean": "temp_mean"
+      },
+      "solar_factor": 1.0,
+      "solar_factor_class": "DERIVED",
+      "ice_tier": "low",
+      "ice_tier_class": "GAME_VALUE",
+      "card_blurb": "Easy landing and strong sun, but almost no ice nearby in this game.",
+      "image": "equatorial_sketch.png",
+      "image_credit_id": "m_p4_site_cards"
+    }
+  ]
+}

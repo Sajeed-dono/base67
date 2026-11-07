@@ -1,0 +1,9 @@
+I need to make the design of  our game and the story.
+
+
+
+ I's a survival game, we need to optimize our resources wisely. First we have to be able to make the children chose where to land based on the benifits of each land/place. Then then the cost optimization of the resources, how and what will we spend on. There will be four astronauts obviously. Then the storm comes and the solar panel is now not working properly, the base station has said no abandoning the mission, so the players need to chose what options they will pick to conserve energy. They will cast votes, the leader will select it the final decision
+
+
+
+The players will have individual opinions, they should have emojis based on their likeness of the decision displayed on them or some option bars based on the likeness of the decision which the leader will give. The users will be able to chose the decisons and learn from it

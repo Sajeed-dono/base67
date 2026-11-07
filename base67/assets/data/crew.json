@@ -1,0 +1,61 @@
+{
+  "_meta": {
+    "file": "crew.json",
+    "version": "0.3",
+    "status": "planned",
+    "note": "Crew, radio, badges and the certificate are planned features, not in the current prototype. Names and roles are placeholders: change them freely. Only 'Amira is cold' comes from the script.",
+    "art_note": "If crew portraits are AI-generated, record the tool and what it made in credits.json.",
+    "data_class": "GAME_VALUE",
+    "note_nasa": "Game file. Numbers here are game values, not NASA data."
+  },
+  "crew": [
+    {
+      "id": "amira",
+      "name": "Amira",
+      "role": "Flight engineer",
+      "portrait": "crew_amira.png",
+      "status_lines": {
+        "ok": "Amira is checking the panels.",
+        "cold": "Amira is cold.",
+        "hungry": "Amira is hungry.",
+        "worried": "Amira is watching the battery."
+      }
+    },
+    {
+      "id": "diego",
+      "name": "Diego",
+      "role": "Geologist",
+      "portrait": "crew_diego.png",
+      "status_lines": {
+        "ok": "Diego is mapping ice.",
+        "cold": "Diego is cold.",
+        "hungry": "Diego is hungry.",
+        "worried": "Diego is counting water."
+      }
+    },
+    {
+      "id": "mei",
+      "name": "Mei",
+      "role": "Doctor and plant scientist",
+      "portrait": "crew_mei.png",
+      "status_lines": {
+        "ok": "Mei is tending the greenhouse.",
+        "cold": "Mei is cold.",
+        "hungry": "Mei is hungry.",
+        "worried": "Mei is checking radiation."
+      }
+    },
+    {
+      "id": "kwame",
+      "name": "Kwame",
+      "role": "Technician",
+      "portrait": "crew_kwame.png",
+      "status_lines": {
+        "ok": "Kwame is fixing the rover.",
+        "cold": "Kwame is cold.",
+        "hungry": "Kwame is hungry.",
+        "worried": "Kwame is low on spare parts."
+      }
+    }
+  ]
+}

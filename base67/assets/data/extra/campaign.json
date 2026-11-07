@@ -1,0 +1,301 @@
+{
+  "_meta": {
+    "file": "campaign.json",
+    "version": "0.1.0",
+    "data_class": "GAME_VALUE",
+    "status": "provisional",
+    "notes": [
+      "Campaign structure follows docs/GAME_BRIEF.md. Mission success thresholds and rewards remain unbalanced placeholders."
+    ]
+  },
+  "chapters": [
+    {
+      "id": "power_energy",
+      "order": 1,
+      "name": "Power and Energy",
+      "level_ids": [
+        "L01_first_light",
+        "L02_power_storage",
+        "L03_energy_manager"
+      ]
+    },
+    {
+      "id": "martian_weather",
+      "order": 2,
+      "name": "Martian Weather",
+      "level_ids": [
+        "L04_dust_on_mars",
+        "L05_the_great_storm"
+      ]
+    },
+    {
+      "id": "oxygen_life_support",
+      "order": 3,
+      "name": "Oxygen and Life Support",
+      "level_ids": [
+        "L06_greenhouse_online",
+        "L07_breathing_matters"
+      ]
+    },
+    {
+      "id": "radiation_water_food",
+      "order": 4,
+      "name": "Radiation, Water and Food",
+      "level_ids": [
+        "L08_radiation_alert",
+        "L09_shelter_protocol",
+        "L10_finding_water",
+        "L11_ice_operations",
+        "L12_food_and_supplies"
+      ]
+    },
+    {
+      "id": "crew_mission_survival",
+      "order": 5,
+      "name": "Crew Management and Mission Survival",
+      "level_ids": [
+        "L13_crew_care",
+        "L14_mission_control",
+        "L15_the_final_mission"
+      ]
+    }
+  ],
+  "levels": [
+    {
+      "id": "L01_first_light",
+      "order": 1,
+      "chapter_id": "power_energy",
+      "name": "First Light",
+      "learning_objective": "Understand how sunlight can make electrical power.",
+      "mission_objective": "Establish the first safe energy supply for the base.",
+      "new_mechanics": [
+        "solar_panels",
+        "daylight_generation"
+      ],
+      "debrief": "Review when panels made power and what limited their output.",
+      "prerequisite_level_ids": []
+    },
+    {
+      "id": "L02_power_storage",
+      "order": 2,
+      "chapter_id": "power_energy",
+      "name": "Power Storage",
+      "learning_objective": "Explain why stored energy helps through the night.",
+      "mission_objective": "Add battery storage and keep essential systems powered.",
+      "new_mechanics": [
+        "battery_capacity",
+        "charging_storage"
+      ],
+      "debrief": "Compare stored energy before and after the night.",
+      "prerequisite_level_ids": [
+        "L01_first_light"
+      ]
+    },
+    {
+      "id": "L03_energy_manager",
+      "order": 3,
+      "chapter_id": "power_energy",
+      "name": "Energy Manager",
+      "learning_objective": "Recognize that powered systems compete for limited energy.",
+      "mission_objective": "Choose which loads stay on while protecting essential systems.",
+      "new_mechanics": [
+        "power_loads",
+        "load_priorities"
+      ],
+      "debrief": "Review the trade-offs behind the power plan.",
+      "prerequisite_level_ids": [
+        "L02_power_storage"
+      ]
+    },
+    {
+      "id": "L04_dust_on_mars",
+      "order": 4,
+      "chapter_id": "martian_weather",
+      "name": "Dust on Mars",
+      "learning_objective": "Describe how dust on panels can reduce sunlight collection.",
+      "mission_objective": "Inspect panel output and choose a cleaning plan.",
+      "new_mechanics": [
+        "panel_dust",
+        "panel_efficiency"
+      ],
+      "debrief": "Compare clean and dusty panel output.",
+      "prerequisite_level_ids": [
+        "L03_energy_manager"
+      ]
+    },
+    {
+      "id": "L05_the_great_storm",
+      "order": 5,
+      "chapter_id": "martian_weather",
+      "name": "The Great Storm",
+      "learning_objective": "Use a forecast to prepare for a dust storm.",
+      "mission_objective": "Protect essential power during a storm by planning loads and cleaning.",
+      "new_mechanics": [
+        "dust_storm_forecast",
+        "storm_preparation"
+      ],
+      "debrief": "Review which preparations helped during the storm.",
+      "prerequisite_level_ids": [
+        "L04_dust_on_mars"
+      ]
+    },
+    {
+      "id": "L06_greenhouse_online",
+      "order": 6,
+      "chapter_id": "oxygen_life_support",
+      "name": "Greenhouse Online",
+      "learning_objective": "Explain that a greenhouse needs equipment and power to operate.",
+      "mission_objective": "Build and start a greenhouse using available base resources.",
+      "new_mechanics": [
+        "greenhouse_building",
+        "greenhouse_lights"
+      ],
+      "debrief": "Review the greenhouse needs and its first contribution.",
+      "prerequisite_level_ids": [
+        "L05_the_great_storm"
+      ]
+    },
+    {
+      "id": "L07_breathing_matters",
+      "order": 7,
+      "chapter_id": "oxygen_life_support",
+      "name": "Breathing Matters",
+      "learning_objective": "Compare oxygen production, use, and emergency reserves.",
+      "mission_objective": "Keep oxygen reserves within a safe game-defined range.",
+      "new_mechanics": [
+        "oxygen_balance",
+        "emergency_reserves"
+      ],
+      "debrief": "Trace how oxygen entered and left storage.",
+      "prerequisite_level_ids": [
+        "L06_greenhouse_online"
+      ]
+    },
+    {
+      "id": "L08_radiation_alert",
+      "order": 8,
+      "chapter_id": "radiation_water_food",
+      "name": "Radiation Alert",
+      "learning_objective": "Understand why radiation monitoring matters on Mars.",
+      "mission_objective": "Read the radiation monitor and record an exposure plan.",
+      "new_mechanics": [
+        "radiation_monitoring"
+      ],
+      "debrief": "Separate measured NASA facts from game exposure rules.",
+      "prerequisite_level_ids": [
+        "L07_breathing_matters"
+      ]
+    },
+    {
+      "id": "L09_shelter_protocol",
+      "order": 9,
+      "chapter_id": "radiation_water_food",
+      "name": "Shelter Protocol",
+      "learning_objective": "Explain how shelter and shielding can reduce exposure in a game scenario.",
+      "mission_objective": "Prepare the crew and shelter for a solar particle event.",
+      "new_mechanics": [
+        "shelter_drill",
+        "shielding"
+      ],
+      "debrief": "Review the shelter choices and their game effects.",
+      "prerequisite_level_ids": [
+        "L08_radiation_alert"
+      ]
+    },
+    {
+      "id": "L10_finding_water",
+      "order": 10,
+      "chapter_id": "radiation_water_food",
+      "name": "Finding Water",
+      "learning_objective": "Use evidence and site information to plan an ice survey.",
+      "mission_objective": "Choose a survey target and gather evidence before mining.",
+      "new_mechanics": [
+        "ice_survey",
+        "site_evidence"
+      ],
+      "debrief": "Review what the evidence supports and what remains unknown.",
+      "prerequisite_level_ids": [
+        "L09_shelter_protocol"
+      ]
+    },
+    {
+      "id": "L11_ice_operations",
+      "order": 11,
+      "chapter_id": "radiation_water_food",
+      "name": "Ice Operations",
+      "learning_objective": "Explain that extraction capacity limits water collection.",
+      "mission_objective": "Operate an ice system and maintain a useful water reserve.",
+      "new_mechanics": [
+        "ice_mining",
+        "extraction_capacity"
+      ],
+      "debrief": "Review extraction, storage, and energy costs.",
+      "prerequisite_level_ids": [
+        "L10_finding_water"
+      ]
+    },
+    {
+      "id": "L12_food_and_supplies",
+      "order": 12,
+      "chapter_id": "radiation_water_food",
+      "name": "Food and Supplies",
+      "learning_objective": "Plan food use, storage, and greenhouse contributions.",
+      "mission_objective": "Keep food supplies organized while supporting base needs.",
+      "new_mechanics": [
+        "food_storage",
+        "supply_planning"
+      ],
+      "debrief": "Compare stored food with planned use.",
+      "prerequisite_level_ids": [
+        "L11_ice_operations"
+      ]
+    },
+    {
+      "id": "L13_crew_care",
+      "order": 13,
+      "chapter_id": "crew_mission_survival",
+      "name": "Crew Care",
+      "learning_objective": "Balance crew health, morale, temperature, workload, and rest.",
+      "mission_objective": "Assign crew tasks while protecting time for rest and wellbeing.",
+      "new_mechanics": [
+        "crew_assignments",
+        "rest_and_wellbeing"
+      ],
+      "debrief": "Review workload and crew support choices.",
+      "prerequisite_level_ids": [
+        "L12_food_and_supplies"
+      ]
+    },
+    {
+      "id": "L14_mission_control",
+      "order": 14,
+      "chapter_id": "crew_mission_survival",
+      "name": "Mission Control",
+      "learning_objective": "Coordinate forecasts, maintenance, research, and logistics.",
+      "mission_objective": "Plan several base systems together using current forecasts.",
+      "new_mechanics": [
+        "integrated_planning",
+        "maintenance_logistics"
+      ],
+      "debrief": "Review how plans across systems affected the base.",
+      "prerequisite_level_ids": [
+        "L13_crew_care"
+      ]
+    },
+    {
+      "id": "L15_the_final_mission",
+      "order": 15,
+      "chapter_id": "crew_mission_survival",
+      "name": "The Final Mission",
+      "learning_objective": "Apply learned settlement skills to a connected mission challenge.",
+      "mission_objective": "Guide the persistent base through a final combined challenge.",
+      "new_mechanics": [
+        "combined_campaign_challenge"
+      ],
+      "debrief": "Celebrate progress and review the choices that sustained the base.",
+      "prerequisite_level_ids": [
+        "L14_mission_control"
+      ]
+    }
+  ]
+}
