@@ -213,7 +213,7 @@ class HomeBaseScreen extends StatelessWidget {
   }
 
   Widget _baseMap(BuildContext context, List<MarsFacility> facilities) =>
-      InfoCard(
+      MarsPanel(
         padding: 0,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(GameRadii.card),
@@ -273,7 +273,7 @@ class HomeBaseScreen extends StatelessWidget {
       ('Food', 'food_kg'),
       ('Oxygen', 'oxygen_kg'),
     ];
-    return InfoCard(
+    return MarsPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -303,7 +303,7 @@ class HomeBaseScreen extends StatelessWidget {
   Widget _crewPanel(BuildContext context) {
     const roles = CrewRole.values;
     const sourceRoles = ['Commander', 'Engineer', 'Scientist', 'Medic'];
-    return InfoCard(
+    return MarsPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -329,7 +329,7 @@ class HomeBaseScreen extends StatelessWidget {
   }
 
   Widget _nextMission(BuildContext context, String nextTitle, String chapter) =>
-      InfoCard(
+      MarsPanel(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -465,12 +465,22 @@ class _NavTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 66,
-      child: OutlinedButton(
+      child: FilledButton(
         onPressed: onTap,
+        style: FilledButton.styleFrom(
+          backgroundColor: GameColors.paper,
+          foregroundColor: GameColors.ink,
+          elevation: 3,
+          side: const BorderSide(color: GameColors.ink, width: 2),
+          shape: BeveledRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 19),
+            Icon(icon, size: 19, color: GameColors.rust),
             const SizedBox(width: 6),
             Flexible(
               child: FittedBox(

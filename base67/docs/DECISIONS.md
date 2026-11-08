@@ -12,7 +12,7 @@
 
 ## Unresolved supplied-material gaps
 
-- No repository `docs/source/` or `docs/reference/` existed. The two supplied PDFs and the supplied story text were copied into `docs/source/`; no visual-reference assets were supplied in the external pack, so `docs/reference/` is empty.
+- The supplied PDFs and story text were copied into `docs/source/`. The five visual references were supplied later in `docs/reference/` and reviewed during the Prompt 2 visual reference pass.
 - The data pack did not contain a separate video script. `docs/source/Base 67 Game design and story.txt` is the only supplied story text and is retained as-is.
 - The original starter had no deterministic RNG implementation. `lib/sim/seeded_rng.dart` now implements the configured Mulberry32 generator; the default seed remains read from `game_constants.json`. The playable simulation remains deferred.
 
@@ -38,7 +38,7 @@
 
 ## Prompt 2 visual and navigation decisions
 
-- `docs/reference/` contains no visual files. Prompt 2 therefore uses its written Mars map direction: warm rust terrain, a deep dusk sky, a compact illustrated settlement, rounded cards, and clear campaign nodes. No external artwork or font was added.
+- The initial Prompt 2 implementation used its written visual direction because reference images were not yet present. Five style references were later added to `docs/reference/` and reviewed in the visual polish pass below. No external artwork or font was added.
 - The UI uses bundled/platform Roboto typography and local vector drawing through Flutter painters. Text size settings use the four specified factors; reduced-motion mode disables the CrewBean breathing loop and removes route fades.
 - Home Base and Campaign Map read the existing campaign save. Resource quantities, capacities, costs, and effects remain unset when no saved or approved value exists; this step does not add balance figures or simulation behavior.
 - The prologue story and decision flow remain unchanged. Its scene text area can scroll on small screens at larger text sizes, and its app route provides a Home Base handoff after the final scene.
@@ -46,8 +46,8 @@
 
 ## Prompt 2 visual polish pass
 
-- Rechecked `docs/reference/`; it is empty, so there were no visual files to compare. This pass follows the written palette and map direction in the brief and Prompt 2.
-- Home Base and Campaign Map use deep navy page backgrounds, with rust-orange, sand, and teal accents. Red remains for danger markers. Status icons and shapes continue to accompany state colors.
-- Campaign progress is drawn as a winding 15-node map grouped by the campaign's five chapters. Locked nodes keep the lock icon and level name without objective copy.
-- Home Base uses edge-to-edge phone content, equal-size navigation tiles, and a dash plus GAME VALUE chip for missing resource amounts. Role badges use enlarged, role-specific shapes.
-- This is presentation-only. No campaign data, original data-pack file, save schema, balance value, or simulation logic changed.
+- References `dribbble_01.png.png` through `dribbble_05.png.png` were reviewed as style guidance only. Their angular navy frames, cream panels, orange highlights, and compact industrial control styling informed this pass; their artwork, icons, and characters were not copied.
+- Home Base and Campaign Map use angular navy-outlined panels, cream surfaces, bevels, and stronger shadows. The original vector Mars map now includes a subtle cartographic grid and corner markers.
+- Campaign chapter headers use rust number plates and dark panels; the existing winding 15-node route uses a layered track and outlined circular nodes. The brief's chapter grouping and palette remain authoritative.
+- Home Base navigation buttons use beveled high-contrast surfaces and rust icon accents. This pass changed presentation only; campaign data, original data-pack files, save schema, balance values, and simulation logic were not changed.
+- `flutter analyze` found no issues and all 17 tests passed after the visual changes. The live browser-control host was unavailable, so a separate screenshot comparison of rendered screens remains for owner review.

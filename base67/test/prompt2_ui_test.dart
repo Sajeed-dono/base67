@@ -36,6 +36,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 50));
         expect(find.text('Your Mars settlement'), findsOneWidget);
+        expect(find.byType(MarsPanel), findsWidgets);
         expect(tester.takeException(), isNull);
 
         await tester.pumpWidget(
@@ -50,6 +51,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 50));
         expect(find.text('One base. Fifteen missions.'), findsOneWidget);
+        expect(find.byType(MarsPanel), findsWidgets);
         expect(
           find.byKey(const ValueKey('campaign-node-L01_first_light')),
           findsOneWidget,

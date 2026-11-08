@@ -82,7 +82,7 @@ class CampaignMapScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
               ],
-              const InfoCard(
+              const MarsPanel(
                 child: Row(
                   children: [
                     Icon(Icons.flag_rounded, color: GameColors.teal),
@@ -127,29 +127,56 @@ class _ChapterMap extends StatelessWidget {
     final points = _pathPoints(levelIds.length);
     const rowHeight = _chapterRowHeight;
     final height = levelIds.length * rowHeight;
-    return InfoCard(
+    return MarsPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                _chapterIcon(chapterIndex),
-                color: _chapterColor(chapterIndex),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'CHAPTER ${chapterIndex + 1} · $title',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: GameColors.ink,
-                    fontWeight: FontWeight.w900,
+          Material(
+            color: GameColors.night,
+            shape: BeveledRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                children: [
+                  Material(
+                    color: GameColors.rust,
+                    shape: BeveledRectangleBorder(
+                      borderRadius: BorderRadius.circular(7),
+                      side: const BorderSide(color: GameColors.sand, width: 1),
+                    ),
+                    child: SizedBox(
+                      width: 40,
+                      height: 38,
+                      child: Center(
+                        child: Text(
+                          '${chapterIndex + 1}'.padLeft(2, '0'),
+                          style: const TextStyle(
+                            color: GameColors.sand,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Icon(_chapterIcon(chapterIndex), color: GameColors.tealLight),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: GameColors.sand,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -222,6 +249,7 @@ class _ChapterMap extends StatelessWidget {
                 number: number,
                 state: state,
                 size: 52,
+                strongOutline: true,
                 onTap: isOpen ? () => openLevel(id) : null,
               ),
               const SizedBox(height: 2),
@@ -299,9 +327,27 @@ class _WindingPathPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
+        ..color = GameColors.ink.withValues(alpha: .35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 15
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = GameColors.sand
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 11
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+    canvas.drawPath(
+      path,
+      Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 8
+        ..strokeWidth = 5
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );
@@ -311,14 +357,6 @@ class _WindingPathPainter extends CustomPainter {
   bool shouldRepaint(covariant _WindingPathPainter oldDelegate) =>
       points != oldDelegate.points || color != oldDelegate.color;
 }
-
-Color _chapterColor(int index) => const [
-  GameColors.rust,
-  GameColors.colorBlindSafeBlue,
-  GameColors.teal,
-  Color(0xFF806C49),
-  Color(0xFF6C7890),
-][index % 5];
 
 IconData _chapterIcon(int index) => const [
   Icons.bolt_rounded,

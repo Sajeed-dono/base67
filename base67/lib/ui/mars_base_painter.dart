@@ -69,11 +69,41 @@ class MarsBasePainter extends CustomPainter {
       Paint()..color = const Color(0xFFD58A61).withValues(alpha: .60),
     );
     _drawDistantHills(canvas, size);
+    _drawCartographicGrid(canvas, size);
     _drawPath(canvas, size);
     for (final facility in facilities) {
       _drawFacility(canvas, size, facility);
     }
     _drawLights(canvas, size);
+  }
+
+  void _drawCartographicGrid(Canvas canvas, Size size) {
+    final grid = Paint()
+      ..color = GameColors.ink.withValues(alpha: .085)
+      ..strokeWidth = .8;
+    const step = 36.0;
+    for (var x = step; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), grid);
+    }
+    for (var y = step; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
+    }
+    final marker = Paint()
+      ..color = GameColors.sand.withValues(alpha: .72)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    const inset = 14.0;
+    const length = 12.0;
+    for (final (x, direction) in [(inset, 1.0), (size.width - inset, -1.0)]) {
+      for (final (y, vertical) in [(inset, 1.0), (size.height - inset, -1.0)]) {
+        canvas.drawLine(
+          Offset(x, y),
+          Offset(x + length * direction, y),
+          marker,
+        );
+        canvas.drawLine(Offset(x, y), Offset(x, y + length * vertical), marker);
+      }
+    }
   }
 
   void _drawDistantHills(Canvas canvas, Size size) {

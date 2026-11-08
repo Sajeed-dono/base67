@@ -48,6 +48,27 @@ class InfoCard extends StatelessWidget {
   );
 }
 
+/// Angular, high-contrast panel used by the Home Base and Campaign Map.
+class MarsPanel extends StatelessWidget {
+  const MarsPanel({super.key, required this.child, this.padding = 16});
+
+  final Widget child;
+  final double padding;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: GameColors.paper,
+    elevation: 4,
+    shadowColor: GameColors.ink.withValues(alpha: .3),
+    shape: BeveledRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: const BorderSide(color: GameColors.ink, width: 2),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: Padding(padding: EdgeInsets.all(padding), child: child),
+  );
+}
+
 enum MapPinState { locked, available, completed, mastered }
 
 class MapPin extends StatelessWidget {
@@ -58,6 +79,7 @@ class MapPin extends StatelessWidget {
     this.label,
     this.onTap,
     this.size = 56,
+    this.strongOutline = false,
   });
 
   final int number;
@@ -65,6 +87,7 @@ class MapPin extends StatelessWidget {
   final String? label;
   final VoidCallback? onTap;
   final double size;
+  final bool strongOutline;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +113,11 @@ class MapPin extends StatelessWidget {
         height: size,
         child: Material(
           color: color,
-          shape: const CircleBorder(),
+          shape: CircleBorder(
+            side: strongOutline
+                ? const BorderSide(color: GameColors.ink, width: 3)
+                : BorderSide.none,
+          ),
           elevation: state == MapPinState.available ? 4 : 1,
           child: InkWell(
             customBorder: const CircleBorder(),
