@@ -137,8 +137,11 @@ class HomeBaseScreen extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
 
     return Scaffold(
+      backgroundColor: GameColors.night,
       appBar: AppBar(
         title: Text(repository.appTitle),
+        backgroundColor: GameColors.night,
+        foregroundColor: GameColors.sand,
         actions: [
           IconButton(
             tooltip: 'Campaign Map',
@@ -156,10 +159,10 @@ class HomeBaseScreen extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1080),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              GameSpacing.page,
+            padding: EdgeInsets.fromLTRB(
+              width >= 720 ? 20 : 0,
               0,
-              GameSpacing.page,
+              width >= 720 ? 20 : 0,
               28,
             ),
             children: [
@@ -355,62 +358,38 @@ class HomeBaseScreen extends StatelessWidget {
         ),
       );
 
-  Widget _navigationGrid(BuildContext context) => Wrap(
-    spacing: 10,
-    runSpacing: 10,
-    children: [
-      _NavTile(
-        label: 'Campaign Map',
-        icon: Icons.route_rounded,
-        onTap: () => navigate('/campaign'),
+  Widget _navigationGrid(BuildContext context) {
+    const actions = <(String, IconData, String)>[
+      ('Campaign Map', Icons.route_rounded, '/campaign'),
+      ('Build', Icons.home_work_rounded, '/build'),
+      ('Research', Icons.science_rounded, '/research'),
+      ('Crew', Icons.groups_rounded, '/crew'),
+      ('Mars Notebook', Icons.menu_book_rounded, '/notebook'),
+      ('Badges', Icons.military_tech_rounded, '/badges'),
+      ('Mission Patch', Icons.shield_rounded, '/patch'),
+      ('Settings', Icons.tune_rounded, '/settings'),
+      ('About', Icons.info_outline_rounded, '/about'),
+      ('Credits', Icons.favorite_outline_rounded, '/credits'),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) => GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: actions.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: constraints.maxWidth < 520 ? 2 : 4,
+          mainAxisExtent: 66,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+        ),
+        itemBuilder: (context, index) => _NavTile(
+          label: actions[index].$1,
+          icon: actions[index].$2,
+          onTap: () => navigate(actions[index].$3),
+        ),
       ),
-      _NavTile(
-        label: 'Build',
-        icon: Icons.home_work_rounded,
-        onTap: () => navigate('/build'),
-      ),
-      _NavTile(
-        label: 'Research',
-        icon: Icons.science_rounded,
-        onTap: () => navigate('/research'),
-      ),
-      _NavTile(
-        label: 'Crew',
-        icon: Icons.groups_rounded,
-        onTap: () => navigate('/crew'),
-      ),
-      _NavTile(
-        label: 'Mars Notebook',
-        icon: Icons.menu_book_rounded,
-        onTap: () => navigate('/notebook'),
-      ),
-      _NavTile(
-        label: 'Badges',
-        icon: Icons.military_tech_rounded,
-        onTap: () => navigate('/badges'),
-      ),
-      _NavTile(
-        label: 'Mission Patch',
-        icon: Icons.shield_rounded,
-        onTap: () => navigate('/patch'),
-      ),
-      _NavTile(
-        label: 'Settings',
-        icon: Icons.tune_rounded,
-        onTap: () => navigate('/settings'),
-      ),
-      _NavTile(
-        label: 'About',
-        icon: Icons.info_outline_rounded,
-        onTap: () => navigate('/about'),
-      ),
-      _NavTile(
-        label: 'Credits',
-        icon: Icons.favorite_outline_rounded,
-        onTap: () => navigate('/credits'),
-      ),
-    ],
-  );
+    );
+  }
 }
 
 class _Header extends StatelessWidget {
@@ -427,13 +406,21 @@ class _Header extends StatelessWidget {
         Text(
           'HOME BASE',
           style: Theme.of(context).textTheme.labelLarge
-              ?.copyWith(color: GameColors.teal, letterSpacing: 1.3),
+              ?.copyWith(color: GameColors.tealLight, letterSpacing: 1.3),
         ),
         Text(
           'Your Mars settlement',
-          style: Theme.of(context).textTheme.headlineMedium,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.headlineMedium
+              ?.copyWith(color: GameColors.sand),
         ),
-        Text('$chapterName · Next: $nextTitle'),
+        Text(
+          '$chapterName · Next: $nextTitle',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: Colors.white),
+        ),
       ],
     ),
   );
@@ -457,7 +444,7 @@ class _ResourceAmount extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(name, style: Theme.of(context).textTheme.titleSmall),
-        Text(amount == null ? 'Not set yet' : amount!.toStringAsFixed(1)),
+        Text(amount == null ? '—' : amount!.toStringAsFixed(1)),
         const DataChip(DataClass.game),
       ],
     ),
@@ -476,14 +463,23 @@ class _NavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
     return SizedBox(
-      width: width < 400 ? (width - 2 * GameSpacing.page - 10) / 2 : 156,
-      height: 54,
-      child: OutlinedButton.icon(
+      height: 66,
+      child: OutlinedButton(
         onPressed: onTap,
-        icon: Icon(icon, size: 20),
-        label: Text(label, maxLines: 2, textAlign: TextAlign.center),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 19),
+            const SizedBox(width: 6),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(label, maxLines: 1, softWrap: false),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

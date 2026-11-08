@@ -5,6 +5,9 @@ import '../data/repositories/game_data_repository.dart';
 import '../ui/game_widgets.dart';
 import '../ui/theme.dart';
 
+const _chapterRowHeight = 108.0;
+const _campaignNodeHeight = 104.0;
+
 class CampaignMapScreen extends StatelessWidget {
   const CampaignMapScreen({
     super.key,
@@ -27,7 +30,6 @@ class CampaignMapScreen extends StatelessWidget {
         (repository.campaign['levels'] as List?)
             ?.cast<Map<String, dynamic>>() ??
         const [];
-    final width = MediaQuery.sizeOf(context).width;
     final nextId = levels
         .where(
           (level) =>
@@ -38,7 +40,12 @@ class CampaignMapScreen extends StatelessWidget {
         .firstOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Campaign Map')),
+      backgroundColor: GameColors.night,
+      appBar: AppBar(
+        title: const Text('Campaign Map'),
+        backgroundColor: GameColors.night,
+        foregroundColor: GameColors.sand,
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900),
@@ -52,37 +59,42 @@ class CampaignMapScreen extends StatelessWidget {
             children: [
               Text(
                 'One base. Fifteen missions.',
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(context).textTheme.headlineMedium
+                    ?.copyWith(color: GameColors.sand),
               ),
               const SizedBox(height: 6),
               Text(
-                '${save.completedLevelIds.length} of ${levels.length} missions completed · Your progress stays with your base.',
-              ),
-              const SizedBox(height: 12),
-              const DaveBubble(
-                message: 'Follow the path at your own pace. Locked missions open as you complete the earlier goals.',
+                '${save.completedLevelIds.length} of ${levels.length} missions completed. Your progress stays with your base.',
+                style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
-              for (
-                var chapterIndex = 0;
-                chapterIndex < chapters.length;
-                chapterIndex++
-              ) ...[
-                _ChapterSection(
-                  title: chapters[chapterIndex]['name'] as String? ?? 'Chapter',
-                  chapterIndex: chapterIndex,
+              for (var i = 0; i < chapters.length; i++) ...[
+                _ChapterMap(
+                  title: chapters[i]['name'] as String? ?? 'Chapter',
+                  chapterIndex: i,
                   levelIds:
-                      (chapters[chapterIndex]['level_ids'] as List?)
-                          ?.cast<String>() ??
+                      (chapters[i]['level_ids'] as List?)?.cast<String>() ??
                       const [],
                   levels: levels,
                   save: save,
                   nextLevelId: nextId,
-                  wide: width >= 720,
                   openLevel: openLevel,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
               ],
+              const InfoCard(
+                child: Row(
+                  children: [
+                    Icon(Icons.flag_rounded, color: GameColors.teal),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Follow the winding path. Locked missions open as you complete earlier goals.',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -91,15 +103,14 @@ class CampaignMapScreen extends StatelessWidget {
   }
 }
 
-class _ChapterSection extends StatelessWidget {
-  const _ChapterSection({
+class _ChapterMap extends StatelessWidget {
+  const _ChapterMap({
     required this.title,
     required this.chapterIndex,
     required this.levelIds,
     required this.levels,
     required this.save,
     required this.nextLevelId,
-    required this.wide,
     required this.openLevel,
   });
 
@@ -109,22 +120,18 @@ class _ChapterSection extends StatelessWidget {
   final List<Map<String, dynamic>> levels;
   final CampaignSave save;
   final String? nextLevelId;
-  final bool wide;
   final ValueChanged<String> openLevel;
 
   @override
-  Widget build(BuildContext context) => InfoCard(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: _chapterColor(chapterIndex).withValues(alpha: .12),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
+  Widget build(BuildContext context) {
+    final points = _pathPoints(levelIds.length);
+    const rowHeight = _chapterRowHeight;
+    final height = levelIds.length * rowHeight;
+    return InfoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
               Icon(
                 _chapterIcon(chapterIndex),
@@ -134,27 +141,116 @@ class _ChapterSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   'CHAPTER ${chapterIndex + 1} · $title',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: GameColors.ink,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: height,
+            child: LayoutBuilder(
+              builder: (context, constraints) => Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _WindingPathPainter(
+                        points: points,
+                        color: GameColors.rust.withValues(alpha: .55),
+                      ),
+                    ),
+                  ),
+                  for (var i = 0; i < levelIds.length; i++)
+                    _positionedNode(
+                      context,
+                      constraints.maxWidth,
+                      points[i],
+                      i,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _positionedNode(
+    BuildContext context,
+    double width,
+    Offset point,
+    int index,
+  ) {
+    final id = levelIds[index];
+    final level = levels.firstWhere((item) => item['id'] == id);
+    final number = levels.indexWhere((item) => item['id'] == id) + 1;
+    final isOpen = save.unlockedLevelIds.contains(id);
+    final state = _stateFor(id);
+    final title = level['name'] as String? ?? 'Mission $number';
+    final nodeWidth = width < 380 ? 118.0 : 144.0;
+    const nodeHeight = _campaignNodeHeight;
+    final left = (point.dx * width - nodeWidth / 2).clamp(
+      0.0,
+      width - nodeWidth,
+    );
+    final top = point.dy * levelIds.length * _chapterRowHeight - nodeHeight / 2;
+    return Positioned(
+      left: left,
+      top: top,
+      width: nodeWidth,
+      height: nodeHeight,
+      child: Semantics(
+        button: isOpen,
+        label: isOpen
+            ? 'Level $number, $title, ${state.name}'
+            : 'Locked: $title',
+        child: InkWell(
+          key: ValueKey('campaign-node-$id'),
+          borderRadius: BorderRadius.circular(16),
+          onTap: isOpen ? () => openLevel(id) : null,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              MapPin(
+                number: number,
+                state: state,
+                size: 52,
+                onTap: isOpen ? () => openLevel(id) : null,
+              ),
+              const SizedBox(height: 2),
+              SizedBox(
+                width: nodeWidth - 4,
+                height: 28,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    softWrap: false,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: state == MapPinState.locked
+                          ? GameColors.muted
+                          : GameColors.ink,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        for (var index = 0; index < levelIds.length; index++)
-          _LevelRow(
-            level: levels.firstWhere((item) => item['id'] == levelIds[index]),
-            number:
-                levels.indexWhere((item) => item['id'] == levelIds[index]) + 1,
-            state: _stateFor(levelIds[index]),
-            offset: wide && index.isOdd ? 36 : 0,
-            open: save.unlockedLevelIds.contains(levelIds[index]),
-            highlighted: levelIds[index] == nextLevelId,
-            onTap: () => openLevel(levelIds[index]),
-          ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 
   MapPinState _stateFor(String id) {
     if (save.completedLevelIds.contains(id)) {
@@ -165,97 +261,69 @@ class _ChapterSection extends StatelessWidget {
     if (save.unlockedLevelIds.contains(id)) return MapPinState.available;
     return MapPinState.locked;
   }
-
-  Color _chapterColor(int index) => const [
-    GameColors.rust,
-    GameColors.colorBlindSafeBlue,
-    GameColors.teal,
-    Color(0xFF7553A6),
-    Color(0xFF8A6B2F),
-  ][index % 5];
-
-  IconData _chapterIcon(int index) => const [
-    Icons.bolt_rounded,
-    Icons.cloud_rounded,
-    Icons.spa_rounded,
-    Icons.shield_rounded,
-    Icons.groups_rounded,
-  ][index % 5];
 }
 
-class _LevelRow extends StatelessWidget {
-  const _LevelRow({
-    required this.level,
-    required this.number,
-    required this.state,
-    required this.offset,
-    required this.open,
-    required this.highlighted,
-    required this.onTap,
-  });
-
-  final Map<String, dynamic> level;
-  final int number;
-  final MapPinState state;
-  final double offset;
-  final bool open;
-  final bool highlighted;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.only(left: offset, bottom: 4),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        MapPin(
-          number: number,
-          state: state,
-          label: level['name'] as String?,
-          onTap: open ? onTap : null,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Material(
-            color: highlighted
-                ? GameColors.tealLight.withValues(alpha: .4)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
-              onTap: open ? onTap : null,
-              borderRadius: BorderRadius.circular(14),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 9,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      level['name'] as String? ?? 'Mission $number',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      open
-                          ? (level['mission_objective'] as String? ?? '')
-                          : 'Complete the earlier mission to unlock this goal.',
-                    ),
-                    if (highlighted)
-                      const Text(
-                        'NEXT GOAL',
-                        style: TextStyle(
-                          color: GameColors.teal,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
+List<Offset> _pathPoints(int count) {
+  const xPositions = <double>[.23, .77, .30, .72, .24];
+  if (count == 1) return const [Offset(.5, .5)];
+  return List.generate(
+    count,
+    (i) => Offset(xPositions[i % xPositions.length], (i + .5) / count),
   );
 }
+
+class _WindingPathPainter extends CustomPainter {
+  const _WindingPathPainter({required this.points, required this.color});
+
+  final List<Offset> points;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+    final path = Path();
+    var current = Offset(
+      points.first.dx * size.width,
+      points.first.dy * size.height,
+    );
+    path.moveTo(current.dx, current.dy);
+    for (var i = 1; i < points.length; i++) {
+      final next = Offset(
+        points[i].dx * size.width,
+        points[i].dy * size.height,
+      );
+      final middleY = (current.dy + next.dy) / 2;
+      path.cubicTo(current.dx, middleY, next.dx, middleY, next.dx, next.dy);
+      current = next;
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 8
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _WindingPathPainter oldDelegate) =>
+      points != oldDelegate.points || color != oldDelegate.color;
+}
+
+Color _chapterColor(int index) => const [
+  GameColors.rust,
+  GameColors.colorBlindSafeBlue,
+  GameColors.teal,
+  Color(0xFF806C49),
+  Color(0xFF6C7890),
+][index % 5];
+
+IconData _chapterIcon(int index) => const [
+  Icons.bolt_rounded,
+  Icons.cloud_rounded,
+  Icons.spa_rounded,
+  Icons.shield_rounded,
+  Icons.groups_rounded,
+][index % 5];

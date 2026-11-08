@@ -50,12 +50,38 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 50));
         expect(find.text('One base. Fifteen missions.'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('campaign-node-L01_first_light')),
+          findsOneWidget,
+        );
+        expect(
+          find.text('Complete the earlier mission to unlock this goal.'),
+          findsNothing,
+        );
         await tester.scrollUntilVisible(
           find.text('The Final Mission'),
           500,
           scrollable: find.byType(Scrollable).first,
         );
         expect(find.text('The Final Mission'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('campaign-node-L15_the_final_mission')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(
+          _shell(
+            viewport,
+            HomeBaseScreen(
+              save: const CampaignSave(),
+              repository: repository,
+              navigate: (_) {},
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(find.text('Not set yet'), findsNothing);
+        expect(find.text('—'), findsWidgets);
         expect(tester.takeException(), isNull);
         _resetViewport(tester);
       },

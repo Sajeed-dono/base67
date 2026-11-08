@@ -111,7 +111,18 @@ class _CrewBeanState extends State<CrewBean>
             painter,
             if (widget.label != null) ...[
               const SizedBox(height: 3),
-              Text(widget.label!, textAlign: TextAlign.center),
+              SizedBox(
+                width: widget.size,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    widget.label!,
+                    maxLines: 1,
+                    softWrap: false,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
             ],
           ],
         ),
@@ -337,14 +348,28 @@ class CrewBeanPainter extends CustomPainter {
   }
 
   void _drawBadge(Canvas canvas) {
-    final badge = Paint()..color = GameColors.gold;
-    final center = const Offset(33, 69);
+    final center = const Offset(34, 69);
+    canvas.drawCircle(center, 12, Paint()..color = GameColors.sand);
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..color = GameColors.ink
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    final badge = Paint()
+      ..color = GameColors.rust
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
     switch (role) {
       case CrewRole.commander:
         final points = <Offset>[];
         for (var index = 0; index < 10; index++) {
           final angle = -math.pi / 2 + index * math.pi / 5;
-          final radius = index.isEven ? 7.0 : 3.5;
+          final radius = index.isEven ? 8.0 : 4.0;
           points.add(
             Offset(
               center.dx + radius * math.cos(angle),
@@ -353,41 +378,41 @@ class CrewBeanPainter extends CustomPainter {
           );
         }
         final star = Path()..addPolygon(points, true);
-        canvas.drawPath(star, badge);
+        canvas.drawPath(star, Paint()..color = GameColors.rust);
       case CrewRole.engineer:
-        canvas.drawCircle(center, 5, badge);
-        canvas.drawCircle(center, 2, Paint()..color = suitColor);
-        canvas.drawLine(
-          center,
-          const Offset(28, 75),
-          Paint()
-            ..color = GameColors.ink
-            ..strokeWidth = 3
-            ..strokeCap = StrokeCap.round,
-        );
+        canvas.drawCircle(const Offset(36, 64), 4, badge);
+        canvas.drawLine(const Offset(36, 68), const Offset(31, 76), badge);
+        canvas.drawLine(const Offset(31, 76), const Offset(27, 73), badge);
+        canvas.drawLine(const Offset(31, 76), const Offset(35, 78), badge);
       case CrewRole.scientist:
+        final flask = Path()
+          ..moveTo(31, 61)
+          ..lineTo(37, 61)
+          ..moveTo(33, 61)
+          ..lineTo(33, 67)
+          ..lineTo(28, 75)
+          ..quadraticBezierTo(27, 78, 31, 78)
+          ..lineTo(38, 78)
+          ..quadraticBezierTo(41, 78, 39, 75)
+          ..lineTo(35, 67)
+          ..lineTo(35, 61);
+        canvas.drawPath(flask, badge);
+        canvas.drawLine(const Offset(30, 73), const Offset(38, 73), badge);
+      case CrewRole.medic:
+        final cross = Paint()..color = GameColors.teal;
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            const Rect.fromLTWH(29, 64, 8, 11),
+            const Rect.fromLTWH(31, 62, 6, 14),
             const Radius.circular(2),
           ),
-          badge,
-        );
-        canvas.drawRect(const Rect.fromLTWH(31, 61, 4, 4), badge);
-      case CrewRole.medic:
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            const Rect.fromLTWH(30, 64, 7, 13),
-            const Radius.circular(1),
-          ),
-          badge,
+          cross,
         );
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            const Rect.fromLTWH(27, 67, 13, 7),
-            const Radius.circular(1),
+            const Rect.fromLTWH(27, 66, 14, 6),
+            const Radius.circular(2),
           ),
-          badge,
+          cross,
         );
     }
   }

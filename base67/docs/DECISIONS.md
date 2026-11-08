@@ -43,3 +43,11 @@
 - Home Base and Campaign Map read the existing campaign save. Resource quantities, capacities, costs, and effects remain unset when no saved or approved value exists; this step does not add balance figures or simulation behavior.
 - The prologue story and decision flow remain unchanged. Its scene text area can scroll on small screens at larger text sizes, and its app route provides a Home Base handoff after the final scene.
 - Routes for later mission systems are present as presentation shells. This Prompt 2 work does not implement the simulation, mission outcomes, construction actions, or research effects.
+
+## Prompt 2 visual polish pass
+
+- Rechecked `docs/reference/`; it is empty, so there were no visual files to compare. This pass follows the written palette and map direction in the brief and Prompt 2.
+- Home Base and Campaign Map use deep navy page backgrounds, with rust-orange, sand, and teal accents. Red remains for danger markers. Status icons and shapes continue to accompany state colors.
+- Campaign progress is drawn as a winding 15-node map grouped by the campaign's five chapters. Locked nodes keep the lock icon and level name without objective copy.
+- Home Base uses edge-to-edge phone content, equal-size navigation tiles, and a dash plus GAME VALUE chip for missing resource amounts. Role badges use enlarged, role-specific shapes.
+- This is presentation-only. No campaign data, original data-pack file, save schema, balance value, or simulation logic changed.

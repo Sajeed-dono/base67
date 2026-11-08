@@ -40,10 +40,17 @@ Updated: 2026-11-08
 
 ## Visual references
 
-- `docs/reference/` contains no files. Prompt 2 uses the sequence's written visual direction; this gap is recorded in `docs/DECISIONS.md`.
+- `docs/reference/` was checked again for this visual polish pass and still contains no files. No screenshot references were available to compare; the changes follow the brief and Prompt 2's written visual direction.
+
+## Prompt 2 visual polish pass
+
+- Home Base and Campaign Map now use a deep navy page background with rust, sand, and teal accents. Danger red remains reserved for danger indicators; node states also use icons and shapes.
+- Campaign Map now draws the 15 mission nodes along a winding path inside five chapter groups. Locked nodes show the lock and mission name only; node labels scale to a single line so words cannot split.
+- Home Base uses near edge-to-edge width on phones. The base map stays first and full width, followed by reserves, crew, next mission, and an equal-size navigation grid. Missing resource values show a dash with the GAME VALUE chip.
+- Crew labels scale to fit without splitting. Role badges are larger and use distinct star, wrench, flask, and cross marks.
+- Prompt 2 UI tests cover Home Base and Campaign Map at 360 dp and tablet widths with 1.4× text, plus route smoke checks. The original-data checksum test remains part of the full suite.
 
 ## Validation for Prompt 2
 
-- `flutter analyze`: exit code 0; no issues found.
-- `flutter test --no-pub --reporter expanded`: exit code 0; all 17 tests passed.
+- Final after the visual polish pass: `flutter analyze` exited 0 with no issues; `flutter test --no-pub --reporter compact` exited 0 with all 17 tests passing.
 - The original-pack checksum test passed in the full suite. No files in the original `assets/data/` pack were edited.
