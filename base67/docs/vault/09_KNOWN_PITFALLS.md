@@ -17,3 +17,4 @@
 | 13 | Timer and research values are not approved | Keep them provisional and logged in `docs/DECISIONS.md` |
 | 14 | Agents sometimes report plans as results | Follow `07_ANTI_HALLUCINATION_PROTOCOL.md` |
 | 15 | Long exact-source dialogue can overflow setup screens on narrow phones with enlarged text | Keep the wording intact, place long dialogue in a bounded scroll viewport using a shared theme spacing token, and cover phone/tablet sizes with enlarged-text widget tests |
+| 16 | Owner reported an Android Gradle “different roots” failure with the project on `H:` and Pub cache on `C:` | `kotlin.incremental=false` in `android/gradle.properties` is the reported workaround; if it persists, set `PUB_CACHE` to a directory on the same drive as the project. Build behavior has not been verified in this documentation session |

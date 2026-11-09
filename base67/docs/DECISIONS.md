@@ -63,3 +63,11 @@
 - Styling rule for all screens: every color, text style, spacing value, and corner shape must come from `lib/ui/theme.dart` or shared widgets in `lib/ui/game_widgets.dart`. `test/prompt3_prologue_test.dart` checks `lib/prologue/**` and `lib/game/**` for hard-coded `Color(0x...)` and numeric `fontSize` literals. Exemptions are `lib/ui/**`, which contains theme tokens, reusable widgets, `CustomPainter` scenery, and CrewBean character art.
 - `CrewBean` suit color, visor tint, and face marks are cosmetic settings stored per role. The four BASE 67 roles and their story traits remain Commander, Engineer, Scientist, and Medic. Original `assets/data/crew.json` entries and status-line templates remain unchanged.
 - Long landing-site and cargo dialogue uses a bounded, scrollable viewport sized by `GameSpacing.messageViewport` so small screens and enlarged text do not overflow; the source dialogue wording is preserved.
+
+## Android build toolchain note
+
+- Owner-reported Android Gradle build failure: project files on `H:` and the Pub cache on `C:` produced a “different roots” error. The owner added `kotlin.incremental=false` to `android/gradle.properties` as the workaround; this setting is present in the working tree. If the cross-drive issue persists, the fallback is to set `PUB_CACHE` to a directory on the same drive as the project. This session recorded the report only; it did not run or verify an Android build.
+
+## Interim Android portrait lock (not a numbered prompt)
+
+- Set `android:screenOrientation="portrait"` on the main activity and request `DeviceOrientation.portraitUp` during Flutter startup before `runApp`. These two controls keep the Android activity and Flutter UI in portrait without changing the design, adding a package or asset, or starting sound work. `flutter analyze` reported no issues and all 24 tests passed. A device build and physical-device orientation check were not run.

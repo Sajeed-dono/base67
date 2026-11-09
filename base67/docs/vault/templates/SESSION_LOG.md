@@ -5,6 +5,8 @@
 | (start) | (owner) | Vault created | Vault files added to repo | n/a |
 | 2026-11-08 | Codex | Prompt 2 visual reference pass | Updated Home Base and Campaign Map styling; analyzer clean; 17 tests passed | Handoff below |
 | 2026-11-09 | Codex | Prompt 3 prologue and setup | Locally implemented and verified; analyzer clean; 24 tests passed; owner commit pending | Handoff below |
+| 2026-11-09 | Codex | Interim Android Gradle note | Documented owner-reported cross-drive workaround and same-drive Pub-cache fallback; no build run | Handoff below |
+| 2026-11-09 | Codex | Interim Android portrait lock | Added manifest and Flutter startup portrait requests; analyzer clean; 24 tests passed | Handoff below |
 
 (Paste each filled-in SESSION_HANDOFF_TEMPLATE below the table.)
 
@@ -122,3 +124,88 @@
 
 ## Next safe step
 - Owner reviews and commits Prompt 3; Prompt 4 remains not started.
+
+---
+
+**Date and tool:** 2026-11-09; Codex
+**Prompt worked on:** Interim Android portrait lock; not a numbered prompt
+**Read before starting:** `AGENTS.md`; `docs/vault/00_START_HERE.md`; vault files `01`–`11`; `docs/PROGRESS.md`; `docs/DECISIONS.md`; `docs/GAME_BRIEF.md`; `SESSION_HANDOFF_TEMPLATE.md`; `SESSION_LOG.md`
+
+## Done (with evidence)
+- Added `android:screenOrientation="portrait"` to the main Android activity in `android/app/src/main/AndroidManifest.xml`.
+- Updated `lib/main.dart` to request `DeviceOrientation.portraitUp` before starting the app.
+- Recorded the interim task and its scope in `docs/DECISIONS.md`; updated `docs/PROGRESS.md` without starting sound or Prompt 4.
+
+## Partly done
+- Portrait is requested in the Android manifest and Flutter startup, but real-device behavior remains unverified because no Android build or device run was part of this step.
+
+## Not done
+- Sound integration and Prompt 4 were not started.
+- No package, asset, visual redesign, or test file was added.
+
+## Files changed
+- `android/app/src/main/AndroidManifest.xml` — lock the main activity to portrait.
+- `lib/main.dart` — request portrait orientation before `runApp`.
+- `docs/DECISIONS.md` — record this as an interim, non-numbered task.
+- `docs/PROGRESS.md` — record the verified interim status and preserve the Prompt 4 gate.
+- `docs/vault/templates/SESSION_LOG.md` — append this handoff.
+
+## Real command results
+- `flutter analyze`: `No issues found! (ran in 13.7s)`; exit code 0.
+- `flutter test`: `All tests passed!`; 24 tests; exit code 0.
+- `check_data.py`: not run; no data files were touched.
+- `git diff` on original data: (to be checked after this handoff update).
+
+## Decisions made and provisional values added
+- Apply portrait orientation both natively and before Flutter's first frame. No new provisional values. Recorded in `docs/DECISIONS.md`: yes.
+
+## Conflicts found between documents
+- None for this task.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- None. Physical-device orientation remains unverified.
+
+## Next safe step
+- Owner may verify portrait behavior on an Android phone; sound and Prompt 4 remain gated.
+
+---
+
+**Date and tool:** 2026-11-09; Codex
+**Prompt worked on:** Interim Android build workaround documentation; no numbered prompt
+**Read before starting:** `AGENTS.md`; `docs/vault/00_START_HERE.md`; vault files `01`–`11`; `docs/PROGRESS.md`; `docs/DECISIONS.md`; `docs/GAME_BRIEF.md`; `SESSION_HANDOFF_TEMPLATE.md`; `SESSION_LOG.md`
+
+## Done (with evidence)
+- Recorded the owner-reported “different roots” Android Gradle failure and the existing `kotlin.incremental=false` setting in `android/gradle.properties` in `docs/DECISIONS.md` and `docs/vault/09_KNOWN_PITFALLS.md`.
+- Recorded the fallback of setting `PUB_CACHE` to a directory on the project drive.
+- Corrected `docs/PROGRESS.md` to reflect the committed Prompt 3 HEAD `c61af76`; Prompt 4 remains not started.
+
+## Partly done
+- The Android Gradle workaround was documented but not verified by running a build.
+
+## Not done
+- No Flutter analysis, tests, or Android build were run; this was a documentation-only request.
+- No numbered prompt was started.
+
+## Files changed
+- `docs/DECISIONS.md` — recorded the workaround as owner-reported and unverified.
+- `docs/vault/09_KNOWN_PITFALLS.md` — added the cross-drive troubleshooting entry.
+- `docs/PROGRESS.md` — aligned Prompt 3 status with the committed HEAD and noted Prompt 4 remains unstarted.
+- `docs/vault/templates/SESSION_LOG.md` — logged this documentation-only handoff.
+
+## Real command results
+- `flutter analyze`: not run.
+- `flutter test`: not run.
+- `check_data.py`: not run; no data files were touched.
+- `git diff` on original data: not run; no data files were touched.
+
+## Decisions made and provisional values added
+- Document the user's reported workaround without claiming a successful build. Add a same-drive `PUB_CACHE` as fallback. Recorded in `docs/DECISIONS.md`: yes.
+
+## Conflicts found between documents
+- The previous `docs/PROGRESS.md` line said Prompt 3's owner commit was pending, but the user reported it committed and Git showed `c61af76` at `main` and `origin/main`; aligned the status with that evidence.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- None.
+
+## Next safe step
+- If the cross-drive Gradle error recurs, try a same-drive Pub cache and verify by running an Android build in an approved implementation session.

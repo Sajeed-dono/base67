@@ -5,7 +5,8 @@ Updated: 2026-11-09
 ## Current prompt and gate
 
 - Prompt 2 status: **COMPLETE** — visual reference pass reviewed by the owner and committed as `43e15ac`.
-- Current activity: **Prompt 3 of 8 — implementation complete and locally verified; owner commit is pending**.
+- Prompt 3 status: **COMPLETE** — committed as `c61af76` (analyzer and 24 tests were recorded in the Prompt 3 handoff).
+- Current activity: **Interim Android portrait lock implemented and locally verified; no numbered prompt is in progress**.
 - Prompt 4 status: **NOT STARTED**.
 - This step implemented presentation, navigation, and accessibility support. It did not implement the simulation or mission outcomes.
 
@@ -67,4 +68,10 @@ Updated: 2026-11-09
 - The eight-scene dialogue uses `docs/source/BASE_67_Prologue_Preview.pdf`. The prompt's named `docs/source/BASE_67.pdf` was not found; `docs/source/BASE 67.pdf` is a different earlier script. The source correction is logged in decisions and open questions.
 - `test/prompt3_prologue_test.dart` covers token enforcement, save/load and schema migration, cargo over-budget rejection, the editable random site timeout, and completing the prologue with fake inputs through Home Base. It lists the `lib/ui/**` exemptions (theme, shared widgets, CustomPainter scenery, and CrewBean art).
 - Latest validation: `flutter analyze` exited 0 (`No issues found!`, 0.9s); `flutter test` exited 0 (`All tests passed!`, 24 tests). Crew, site, and cargo layouts pass at 360 dp and 1024 dp with 1.4× text; long site and cargo dialogue scrolls within the shared theme-token viewport.
-- Prompt 3 is locally implemented and verified. It remains pending owner commit per the vault's completion gate. Prompt 4 is **NOT STARTED**.
+- Prompt 3 is complete and committed as `c61af76`; the recorded validation is clean analysis and 24 passing tests. Prompt 4 is **NOT STARTED**.
+
+## Interim Android portrait lock (not a numbered prompt)
+
+- Android activity orientation is set to portrait in `android/app/src/main/AndroidManifest.xml`; Flutter also requests `DeviceOrientation.portraitUp` before `runApp` in `lib/main.dart`.
+- `flutter analyze` exited 0 (`No issues found!`, 13.7s); `flutter test` exited 0 (`All tests passed!`, 24 tests).
+- This verifies Flutter analysis and tests only; no Android build or physical-device orientation check was run. Sound and Prompt 4 remain unstarted.
