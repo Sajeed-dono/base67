@@ -8,7 +8,7 @@
 - Construction costs, research effects, resource rates, crew bonuses, and star thresholds lack approved design values. The GDD's suggested timer and research durations are now represented in extra config files as provisional GAME VALUE proposals; they are not final balances.
 - Real-world timer policy uses UTC start/deadline timestamps. On rollback, elapsed time is clamped at zero and saved deadlines remain; completion is idempotent. A trustworthy monotonic clock across process/device restarts is unavailable in ordinary local app code, so this defensive policy favors no duplicate rewards or corrupted save over granting early completion.
 - The app stays local-only. `provider` and `shared_preferences` are added for upcoming state and simple saves; no cloud service is used. A future save exceeding small key/value storage needs should move to a local database with an explicit migration.
-- Android's main/release manifest contains no INTERNET permission. The debug manifest currently includes INTERNET for Flutter debugging; it is debug-only and does not enter the release manifest.
+- Android's main manifest contains no INTERNET permission. Both `android/app/src/debug/AndroidManifest.xml` and `android/app/src/profile/AndroidManifest.xml` request INTERNET for Flutter tooling in their respective build variants. These variant manifests are not used by release builds; a merged release manifest has not been verified in this follow-up.
 
 ## Unresolved supplied-material gaps
 
@@ -71,3 +71,7 @@
 ## Interim Android portrait lock (not a numbered prompt)
 
 - Set `android:screenOrientation="portrait"` on the main activity and request `DeviceOrientation.portraitUp` during Flutter startup before `runApp`. These two controls keep the Android activity and Flutter UI in portrait without changing the design, adding a package or asset, or starting sound work. `flutter analyze` reported no issues and all 24 tests passed. A device build and physical-device orientation check were not run.
+
+## Interim portrait-lock follow-up (not a numbered prompt)
+
+- Set the Android launcher label to `BASE 67` to match the project identity. Retain the owner's existing `META_PROMPT.md` addition unchanged; its emulator-test statement is owner-provided evidence. Complete the live session log with fresh raw command output. This follow-up is prepared for review without committing or pushing; sound and Prompt 4 remain unstarted.

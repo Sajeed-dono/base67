@@ -7,6 +7,7 @@
 | 2026-11-09 | Codex | Prompt 3 prologue and setup | Locally implemented and verified; analyzer clean; 24 tests passed; owner commit pending | Handoff below |
 | 2026-11-09 | Codex | Interim Android Gradle note | Documented owner-reported cross-drive workaround and same-drive Pub-cache fallback; no build run | Handoff below |
 | 2026-11-09 | Codex | Interim Android portrait lock | Added manifest and Flutter startup portrait requests; analyzer clean; 24 tests passed | Handoff below |
+| 2026-11-09 | Codex | Interim portrait-lock follow-up | Corrected launcher label and permission note; refreshed command evidence; awaiting review without commit | Handoff at bottom |
 
 (Paste each filled-in SESSION_HANDOFF_TEMPLATE below the table.)
 
@@ -154,7 +155,7 @@
 - `flutter analyze`: `No issues found! (ran in 13.7s)`; exit code 0.
 - `flutter test`: `All tests passed!`; 24 tests; exit code 0.
 - `check_data.py`: not run; no data files were touched.
-- `git diff` on original data: (to be checked after this handoff update).
+- Follow-up check on 2026-11-09: `git diff --name-only -- assets/data` returned no paths. This is fresh working-tree evidence, not a reconstruction of the original session. Raw `git status` and `git diff --stat` follow-up output is appended below with the other command output.
 
 ## Decisions made and provisional values added
 - Apply portrait orientation both natively and before Flutter's first frame. No new provisional values. Recorded in `docs/DECISIONS.md`: yes.
@@ -209,3 +210,122 @@
 
 ## Next safe step
 - If the cross-drive Gradle error recurs, try a same-drive Pub cache and verify by running an Android build in an approved implementation session.
+
+---
+
+**Date and tool:** 2026-11-09; Codex
+**Prompt worked on:** Interim portrait-lock follow-up; not a numbered prompt
+**Read before starting:** `AGENTS.md`; `docs/vault/00_START_HERE.md`; vault files `01`–`11`; `docs/PROGRESS.md`; `docs/DECISIONS.md`; `docs/GAME_BRIEF.md`; `SESSION_HANDOFF_TEMPLATE.md`; `SESSION_LOG.md`
+
+## Done (with evidence)
+- Confirmed this is the live session log: START_HERE explicitly directs entries here, existing completed handoffs are present, and no other live session log was found. The blank form is `SESSION_HANDOFF_TEMPLATE.md`.
+- Changed the Android launcher label from `base67` to `BASE 67`.
+- Corrected Decisions to document INTERNET permissions in both debug and profile manifests; the main manifest has none.
+- Replaced the portrait-lock entry's pending original-data diff placeholder with a dated follow-up result and a reference to the fresh raw command output below.
+- Retained the owner's existing `META_PROMPT.md` addition unchanged.
+
+## Partly done
+- A merged release manifest, Android build, and physical-device portrait behavior were not verified here. The emulator-test claim in META_PROMPT is owner-provided evidence.
+
+## Not done
+- No commit or push was made. Sound and Prompt 4 remain unstarted.
+
+## Files changed
+- `android/app/src/main/AndroidManifest.xml` — launcher label.
+- `docs/DECISIONS.md` — debug/profile permission note and interim follow-up decision.
+- `docs/PROGRESS.md` — interim review status and fresh validation.
+- `docs/vault/templates/SESSION_LOG.md` — completed portrait evidence and appended this handoff.
+- `docs/vault/META_PROMPT.md` — existing owner addition included in the review diff; not edited by Codex.
+
+## Real command results
+These are raw outputs captured in this follow-up, not reconstructed historical results. Git output snapshots are taken before embedding those snapshots into this log, so the final log insertion changes the subsequent diff-stat totals.
+
+Command: `flutter analyze` (exit code 0)
+```text
+Analyzing base67...                                             
+No issues found! (ran in 22.6s)
+```
+
+Command: `flutter test` (exit code 0)
+```text
+00:00 +0: loading H:/projects/base67/test/data_integrity_test.dart
+00:00 +0: H:/projects/base67/test/display_text_test.dart: legacy source display text resolves to the current game title
+00:00 +1: H:/projects/base67/test/data_integrity_test.dart: all bundled source and campaign data loads and validates
+00:00 +2: H:/projects/base67/test/original_pack_test.dart: original data pack files match supplied source checksums
+00:00 +3: H:/projects/base67/test/original_pack_test.dart: original data pack files match supplied source checksums
+00:00 +4: H:/projects/base67/test/progression_test.dart: same seed produces the same deterministic sequence
+00:00 +5: H:/projects/base67/test/progression_test.dart: campaign save round-trips its persistent state
+00:00 +6: H:/projects/base67/test/progression_test.dart: campaign save store restores through local key-value storage
+00:00 +7: H:/projects/base67/test/progression_test.dart: offline timer completion is due and reward completion is idempotent
+00:00 +8: H:/projects/base67/test/prompt3_prologue_test.dart: (setUpAll)
+00:00 +8: H:/projects/base67/test/prompt2_ui_test.dart: (setUpAll)
+00:00 +8: H:/projects/base67/test/prompt2_ui_test.dart: Home Base and Campaign Map fit 360dp at 1.4x text
+00:00 +9: H:/projects/base67/test/prompt2_ui_test.dart: Home Base and Campaign Map fit 360dp at 1.4x text
+00:00 +10: H:/projects/base67/test/prompt2_ui_test.dart: Home Base and Campaign Map fit 360dp at 1.4x text
+00:01 +11: H:/projects/base67/test/prompt2_ui_test.dart: Home Base and Campaign Map fit 360dp at 1.4x text
+00:01 +12: H:/projects/base67/test/prompt2_ui_test.dart: Home Base and Campaign Map fit 360dp at 1.4x text
+00:01 +13: H:/projects/base67/test/prompt3_prologue_test.dart: crew, site and cargo setup fit 360dp at 1.4x text
+00:01 +14: H:/projects/base67/test/widget_test.dart: Home Base and Campaign Map routes open
+00:01 +15: H:/projects/base67/test/widget_test.dart: Home Base and Campaign Map routes open
+00:01 +16: H:/projects/base67/test/widget_test.dart: Home Base and Campaign Map routes open
+00:01 +17: H:/projects/base67/test/widget_test.dart: Home Base and Campaign Map routes open
+00:01 +18: H:/projects/base67/test/widget_test.dart: Home Base and Campaign Map routes open
+00:01 +19: H:/projects/base67/test/prompt3_prologue_test.dart: crew, site and cargo setup fit 1024dp at 1.4x text
+00:01 +20: H:/projects/base67/test/prompt2_ui_test.dart: all navigation screens open at 360dp with 1.4x text
+00:01 +21: H:/projects/base67/test/prompt2_ui_test.dart: all navigation screens open at 360dp with 1.4x text
+00:02 +22: H:/projects/base67/test/prompt3_prologue_test.dart: fake taps finish prologue and arrive at the persistent base
+00:02 +23: H:/projects/base67/test/prompt2_ui_test.dart: all navigation screens open at 1024dp with 1.4x text
+00:02 +24: H:/projects/base67/test/prompt2_ui_test.dart: (tearDownAll)
+00:02 +24: All tests passed!
+```
+
+Command: `git -c safe.directory=H:/projects status` (exit code 0)
+```text
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   android/app/src/main/AndroidManifest.xml
+	modified:   docs/DECISIONS.md
+	modified:   docs/PROGRESS.md
+	modified:   docs/vault/META_PROMPT.md
+	modified:   docs/vault/templates/SESSION_LOG.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+Command: `git -c safe.directory=H:/projects diff --stat` (exit code 0)
+```text
+warning: in the working copy of 'base67/docs/DECISIONS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'base67/docs/PROGRESS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'base67/docs/vault/META_PROMPT.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'base67/docs/vault/templates/SESSION_LOG.md', LF will be replaced by CRLF the next time Git touches it
+ base67/android/app/src/main/AndroidManifest.xml |  2 +-
+ base67/docs/DECISIONS.md                        |  6 +-
+ base67/docs/PROGRESS.md                         |  8 ++-
+ base67/docs/vault/META_PROMPT.md                |  6 ++
+ base67/docs/vault/templates/SESSION_LOG.md      | 86 ++++++++++++++++++++++++-
+ 5 files changed, 104 insertions(+), 4 deletions(-)
+```
+
+Command: `git -c safe.directory=H:/projects diff --name-only -- assets/data` (exit code 0; empty output)
+```text
+```
+
+- Initial `git diff --check`: failed (exit code 1). It flagged trailing spaces in the verbatim analyzer output and a new blank line at EOF. The EOF blank line is removed below; the analyzer output is retained verbatim as requested, including its trailing spaces.
+
+- `check_data.py`: not run; no data files were edited.
+
+## Decisions made and provisional values added
+- Use the existing live log, correct the launcher name and build-variant documentation, and preserve the owner's META_PROMPT addition. Recorded in Decisions: yes. No new provisional values.
+
+## Conflicts found between documents
+- Decisions described INTERNET as debug-only despite the profile manifest also requesting it; corrected the note.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- None. The existing device-verification limitation is retained above.
+
+## Next safe step
+- Owner reviews the full diff and raw outputs; wait for approval before committing.

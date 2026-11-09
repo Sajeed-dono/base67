@@ -41,3 +41,9 @@ After each prompt is verified, edit only the "Current state" part of the box abo
 ```
 Project: BASE 67, kid-friendly (10-14) offline Android Mars settlement game in Flutter for NASA Space Apps 2026. One persistent base, 15 levels, 5 chapters, real-world timers (no pay-to-skip), NASA data labelled NASA DATA / GAME VALUE / DERIVED. Code is written by Codex from 8 prompts pasted one at a time; I paste its reports to you for review. Read docs/vault/00_START_HERE.md, docs/PROGRESS.md, docs/DECISIONS.md and docs/GAME_BRIEF.md in the repo (github.com/Sajeed-dono/base67). Rules: original data pack read-only; no NASA number in code; never claim tests passed unless run; do not invent anything; one prompt at a time. I am a Windows beginner: give exact steps. Ask me for the latest PROGRESS.md before advising.
 ```
+   ## Current state (a snapshot written on 2026-11-09; docs/PROGRESS.md overrides it)
+   - Prompts 1, 2 and 3 are complete and committed: foundation and data layer; visual design with Home Base and Campaign Map; prologue, crew, landing site and cargo setup.
+   - Interim task done: Android portrait lock, tested on the emulator. Android builds need kotlin.incremental=false in android/gradle.properties.
+   - Prompt 4 (simulation engine) and later are not started. Sound integration plan is not yet approved.
+   - Coding tool: Codex (GitHub Copilot was briefly tried and not needed).
+   - Timer and research values are provisional. docs/reference has five style screenshots.
