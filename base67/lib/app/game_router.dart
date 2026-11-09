@@ -107,6 +107,21 @@ class _GameRouterState extends State<GameRouter> {
     if (mounted) setState(() => _save = updated);
   }
 
+  Future<void> _completePrologue(CampaignSave updated) async {
+    await widget.store.save(updated);
+    if (!mounted) return;
+    setState(() => _save = updated);
+    final nav = _navigatorKey.currentState!;
+    nav.popUntil((route) => route.isFirst);
+    nav.pushReplacementNamed('/home');
+  }
+
+  Future<void> _resetCampaign() async {
+    const fresh = CampaignSave();
+    await widget.store.save(fresh);
+    if (mounted) setState(() => _save = fresh);
+  }
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     navigatorKey: _navigatorKey,
@@ -132,7 +147,9 @@ class _GameRouterState extends State<GameRouter> {
     final page = switch (path) {
       '/splash' => _SplashScreen(
         openHome: () {
-          _navigatorKey.currentState!.pushReplacementNamed('/home');
+          _navigatorKey.currentState!.pushReplacementNamed(
+            _save.prologueComplete ? '/home' : '/prologue',
+          );
         },
         openPrologue: () {
           _navigatorKey.currentState!.pushNamed('/prologue');
@@ -153,11 +170,9 @@ class _GameRouterState extends State<GameRouter> {
         },
       ),
       '/prologue' => Prologue(
-        onComplete: () {
-          final nav = _navigatorKey.currentState!;
-          nav.popUntil((route) => route.isFirst);
-          nav.pushReplacementNamed('/home');
-        },
+        repository: widget.repository,
+        initialSave: _save,
+        onComplete: _completePrologue,
       ),
       '/briefing' => _BriefingScreen(
         repository: widget.repository,
@@ -168,7 +183,13 @@ class _GameRouterState extends State<GameRouter> {
           _navigatorKey.currentState!.pushNamed(route);
         },
       ),
-      '/settings' => _SettingsScreen(save: _save, update: _updateSettings),
+      '/settings' => _SettingsScreen(
+        save: _save,
+        update: _updateSettings,
+        replayPrologue: () =>
+            _navigatorKey.currentState!.pushNamed('/prologue'),
+        resetCampaign: _resetCampaign,
+      ),
       '/data-check' when kDebugMode => DataCheckScreen(
         repository: widget.repository,
       ),
@@ -561,9 +582,16 @@ class _NotebookScreen extends StatelessWidget {
 }
 
 class _SettingsScreen extends StatelessWidget {
-  const _SettingsScreen({required this.save, required this.update});
+  const _SettingsScreen({
+    required this.save,
+    required this.update,
+    required this.replayPrologue,
+    required this.resetCampaign,
+  });
   final CampaignSave save;
   final Future<void> Function(String key, Object? value) update;
+  final VoidCallback replayPrologue;
+  final Future<void> Function() resetCampaign;
 
   @override
   Widget build(BuildContext context) {
@@ -601,6 +629,18 @@ class _SettingsScreen extends StatelessWidget {
             message: 'Your preferences are saved on this device.',
           ),
           const SizedBox(height: 18),
+          GameButton(
+            label: 'Replay prologue',
+            icon: Icons.replay_rounded,
+            secondary: true,
+            onPressed: replayPrologue,
+          ),
+          const SizedBox(height: GameSpacing.sm),
+          GameButton(
+            label: 'Reset campaign',
+            icon: Icons.restart_alt_rounded,
+            onPressed: () => _confirmReset(context),
+          ),
           if (kDebugMode) ...[
             GameButton(
               label: 'Debug Design Gallery',
@@ -618,6 +658,29 @@ class _SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmReset(BuildContext context) async {
+    final reset = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset this campaign?'),
+        content: const Text(
+          'This removes the saved crew, base, and mission progress from this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep campaign'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Reset campaign'),
+          ),
+        ],
+      ),
+    );
+    if (reset == true) await resetCampaign();
   }
 }
 

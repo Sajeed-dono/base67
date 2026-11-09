@@ -25,6 +25,7 @@ abstract final class GameSpacing {
   static const double lg = 24;
   static const double xl = 32;
   static const double page = 18;
+  static const double messageViewport = 180;
 }
 
 abstract final class GameRadii {

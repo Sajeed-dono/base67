@@ -10,5 +10,8 @@ Update this file every session. Remove an item only when it is resolved, and rec
 | 5 | Meridiani latitude read as 1.95 S from a page that prints -1.95 | Open | Team | Keep, flag in the UI notes |
 | 6 | Team member names, tool credits and AI credit lines in `credits.json` | TODO | Team | Leave clear TODO markers; never invent names |
 | 7 | Student playtest of the game | Not done | Team | Keep the "not tested with students" label |
-| 8 | Owner visual review of the Home Base and Campaign Map reference pass | Open | Project owner | Keep the current Prompt 2 screens; do not start the prologue re-skin without explicit approval |
 | 9 | Anything an agent could not verify in a session | Add here | Agent | State it plainly in the handoff |
+| 10 | Prompt 3 cites `docs/source/BASE_67.pdf`, which is not found; owner to correct the vault/source reference if another canonical file is intended | Open | Project owner | Keep using `docs/source/BASE_67_Prologue_Preview.pdf`, which contains the eight-scene prologue |
+| 11 | The source gives no age range for the crew setup field | Open | Project owner | Keep a positive whole number with a one- or two-digit technical limit; do not invent an age range |
+
+- Owner may request a visual redesign pass after the game is feature complete; all styling must stay token-based so this stays cheap.

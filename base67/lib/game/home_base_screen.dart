@@ -50,6 +50,12 @@ class HomeBaseScreen extends StatelessWidget {
         available: isAvailable('L13_crew_care'),
       ),
       MarsFacility(
+        'landing_craft',
+        'Lander',
+        const Offset(.16, .84),
+        level: save.buildingLevels['landing_craft'] ?? 0,
+      ),
+      MarsFacility(
         'solar_array',
         'Solar',
         const Offset(.23, .75),
@@ -184,6 +190,8 @@ class HomeBaseScreen extends StatelessWidget {
                 const SizedBox(height: 14),
                 _crewPanel(context),
                 const SizedBox(height: 14),
+                _equipmentSummary(context),
+                const SizedBox(height: 14),
                 _nextMission(context, nextTitle, chapterName),
               ],
               const SizedBox(height: 16),
@@ -243,7 +251,7 @@ class HomeBaseScreen extends StatelessWidget {
                         'gale' => 'Gale Crater',
                         'arcadia' => 'Arcadia Planitia',
                         'deuteronilus' => 'Deuteronilus Mensae',
-                        'equatorial' => 'Equatorial Plain',
+                        'equatorial_plain' => 'Equatorial Plain',
                         final site => site,
                       }, style: Theme.of(context).textTheme.titleMedium),
                     ),
@@ -261,6 +269,8 @@ class HomeBaseScreen extends StatelessWidget {
       _resourceSummary(context),
       const SizedBox(height: 14),
       _crewPanel(context),
+      const SizedBox(height: 14),
+      _equipmentSummary(context),
       const SizedBox(height: 14),
       _nextMission(context, nextTitle, 'Current Chapter'),
     ],
@@ -318,11 +328,47 @@ class HomeBaseScreen extends StatelessWidget {
                 CrewBean(
                   role: roles[i],
                   label: save.crewNames[sourceRoles[i]] ?? sourceRoles[i],
+                  suitColorIndex:
+                      save.crewAppearance[sourceRoles[i]]?['suit'] ?? 0,
+                  visorTintIndex:
+                      save.crewAppearance[sourceRoles[i]]?['visor'] ?? 0,
+                  faceStyleIndex:
+                      save.crewAppearance[sourceRoles[i]]?['face'] ?? 0,
                   size: 60,
                   reducedMotion: save.settings['reduceMotion'] == true,
                 ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _equipmentSummary(BuildContext context) {
+    final equipment =
+        (repository.document('equipment.json')?['equipment'] as List? ??
+                const [])
+            .whereType<Map<String, dynamic>>();
+    final names = {for (final item in equipment) item['id']: item['name']};
+    final inventory = save.inventory.entries
+        .where((entry) => entry.value > 0)
+        .toList();
+    return MarsPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Landing equipment',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: GameSpacing.xs),
+          if (inventory.isEmpty)
+            const Text('Equipment appears here after cargo is confirmed.')
+          else
+            for (final item in inventory)
+              Text('${names[item.key] ?? item.key}: ${item.value}'),
+          const SizedBox(height: GameSpacing.xs),
+          const DataChip(DataClass.game),
         ],
       ),
     );

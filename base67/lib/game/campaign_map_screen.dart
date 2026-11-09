@@ -263,11 +263,10 @@ class _ChapterMap extends StatelessWidget {
                     maxLines: 1,
                     softWrap: false,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: state == MapPinState.locked
                           ? GameColors.muted
                           : GameColors.ink,
-                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
                   ),

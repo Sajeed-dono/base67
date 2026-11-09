@@ -19,11 +19,13 @@ void main() {
     await tester.tap(find.text('Watch the prologue'));
     await _finishRouteTransition(tester);
     expect(find.textContaining('THE LAST YEAR'), findsOneWidget);
-    expect(find.text('tap to continue'), findsOneWidget);
+    expect(find.textContaining('Tap to continue'), findsOneWidget);
   });
 
   testWidgets('Home Base and Campaign Map routes open', (tester) async {
-    await tester.pumpWidget(_router(repository));
+    await tester.pumpWidget(
+      _router(repository, save: const CampaignSave(prologueComplete: true)),
+    );
     await tester.tap(find.text('Open Home Base'));
     await _finishRouteTransition(tester);
     expect(find.text('Your Mars settlement'), findsOneWidget);
@@ -50,10 +52,13 @@ void main() {
   });
 }
 
-GameRouter _router(GameDataRepository repository) => GameRouter(
+GameRouter _router(
+  GameDataRepository repository, {
+  CampaignSave save = const CampaignSave(),
+}) => GameRouter(
   repository: repository,
   store: CampaignSaveStore(_MemoryStringStore()),
-  save: const CampaignSave(),
+  save: save,
 );
 
 Future<void> _finishRouteTransition(WidgetTester tester) async {

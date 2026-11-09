@@ -50,16 +50,19 @@ class TimerJobSave {
 
 class CampaignSave {
   const CampaignSave({
-    this.version = 1,
+    this.version = 2,
     this.completedLevelIds = const {},
     this.unlockedLevelIds = const {'L01_first_light'},
     this.completedActivityIds = const {},
     this.crewNames = const {},
+    this.crewAges = const {},
+    this.crewAppearance = const {},
     this.selectedSiteId,
     this.startingCargo = const {},
     this.inventory = const {},
     this.buildingLevels = const {},
     this.resources = const {},
+    this.resourceCapacities = const {},
     this.completedResearchIds = const {},
     this.timerJobs = const [],
     this.levelResults = const {},
@@ -70,6 +73,7 @@ class CampaignSave {
     this.deterministicSeed,
     this.eventHistory = const [],
     this.settings = const {},
+    this.prologueComplete = false,
   });
 
   final int version;
@@ -77,11 +81,14 @@ class CampaignSave {
   final Set<String> unlockedLevelIds;
   final Set<String> completedActivityIds;
   final Map<String, String> crewNames;
+  final Map<String, int> crewAges;
+  final Map<String, Map<String, int>> crewAppearance;
   final String? selectedSiteId;
   final Map<String, int> startingCargo;
   final Map<String, int> inventory;
   final Map<String, int> buildingLevels;
   final Map<String, double> resources;
+  final Map<String, double> resourceCapacities;
   final Set<String> completedResearchIds;
   final List<TimerJobSave> timerJobs;
   final Map<String, Object?> levelResults;
@@ -92,6 +99,7 @@ class CampaignSave {
   final int? deterministicSeed;
   final List<String> eventHistory;
   final Map<String, Object?> settings;
+  final bool prologueComplete;
 
   Map<String, dynamic> toJson() => {
     'version': version,
@@ -99,11 +107,14 @@ class CampaignSave {
     'unlockedLevelIds': _sorted(unlockedLevelIds),
     'completedActivityIds': _sorted(completedActivityIds),
     'crewNames': crewNames,
+    'crewAges': crewAges,
+    'crewAppearance': crewAppearance,
     'selectedSiteId': selectedSiteId,
     'startingCargo': startingCargo,
     'inventory': inventory,
     'buildingLevels': buildingLevels,
     'resources': resources,
+    'resourceCapacities': resourceCapacities,
     'completedResearchIds': _sorted(completedResearchIds),
     'timerJobs': timerJobs.map((job) => job.toJson()).toList(),
     'levelResults': levelResults,
@@ -114,10 +125,11 @@ class CampaignSave {
     'deterministicSeed': deterministicSeed,
     'eventHistory': eventHistory,
     'settings': settings,
+    'prologueComplete': prologueComplete,
   };
 
   factory CampaignSave.fromJson(Map<String, dynamic> json) => CampaignSave(
-    version: json['version'] as int? ?? 1,
+    version: (json['version'] as int? ?? 1) < 2 ? 2 : json['version'] as int,
     completedLevelIds: _set(json['completedLevelIds']),
     unlockedLevelIds: _set(
       json['unlockedLevelIds'],
@@ -125,11 +137,14 @@ class CampaignSave {
     ),
     completedActivityIds: _set(json['completedActivityIds']),
     crewNames: _stringMap(json['crewNames']),
+    crewAges: _intMap(json['crewAges']),
+    crewAppearance: _nestedIntMap(json['crewAppearance']),
     selectedSiteId: json['selectedSiteId'] as String?,
     startingCargo: _intMap(json['startingCargo']),
     inventory: _intMap(json['inventory']),
     buildingLevels: _intMap(json['buildingLevels']),
     resources: _doubleMap(json['resources']),
+    resourceCapacities: _doubleMap(json['resourceCapacities']),
     completedResearchIds: _set(json['completedResearchIds']),
     timerJobs: (json['timerJobs'] as List? ?? const [])
         .whereType<Map<String, dynamic>>()
@@ -143,6 +158,7 @@ class CampaignSave {
     deterministicSeed: json['deterministicSeed'] as int?,
     eventHistory: _listOfStrings(json['eventHistory']),
     settings: _objectMap(json['settings']),
+    prologueComplete: json['prologueComplete'] as bool? ?? false,
   );
 
   String encode() => jsonEncode(toJson());
@@ -156,27 +172,49 @@ class CampaignSave {
     Set<String>? completedActivityIds,
     List<TimerJobSave>? timerJobs,
     Map<String, Object?>? settings,
+    Map<String, String>? crewNames,
+    Map<String, int>? crewAges,
+    Map<String, Map<String, int>>? crewAppearance,
+    String? selectedSiteId,
+    Map<String, int>? startingCargo,
+    Map<String, int>? inventory,
+    Map<String, int>? buildingLevels,
+    Map<String, double>? resources,
+    Map<String, double>? resourceCapacities,
+    Set<String>? completedResearchIds,
+    Map<String, Object?>? levelResults,
+    Set<String>? badgeIds,
+    Set<String>? notebookFactIds,
+    String? missionPatchId,
+    String? playerDisplayName,
+    int? deterministicSeed,
+    List<String>? eventHistory,
+    bool? prologueComplete,
   }) => CampaignSave(
     version: version,
     completedLevelIds: completedLevelIds ?? this.completedLevelIds,
     unlockedLevelIds: unlockedLevelIds ?? this.unlockedLevelIds,
     completedActivityIds: completedActivityIds ?? this.completedActivityIds,
-    crewNames: crewNames,
-    selectedSiteId: selectedSiteId,
-    startingCargo: startingCargo,
-    inventory: inventory,
-    buildingLevels: buildingLevels,
-    resources: resources,
-    completedResearchIds: completedResearchIds,
+    crewNames: crewNames ?? this.crewNames,
+    crewAges: crewAges ?? this.crewAges,
+    crewAppearance: crewAppearance ?? this.crewAppearance,
+    selectedSiteId: selectedSiteId ?? this.selectedSiteId,
+    startingCargo: startingCargo ?? this.startingCargo,
+    inventory: inventory ?? this.inventory,
+    buildingLevels: buildingLevels ?? this.buildingLevels,
+    resources: resources ?? this.resources,
+    resourceCapacities: resourceCapacities ?? this.resourceCapacities,
+    completedResearchIds: completedResearchIds ?? this.completedResearchIds,
     timerJobs: timerJobs ?? this.timerJobs,
-    levelResults: levelResults,
-    badgeIds: badgeIds,
-    notebookFactIds: notebookFactIds,
-    missionPatchId: missionPatchId,
-    playerDisplayName: playerDisplayName,
-    deterministicSeed: deterministicSeed,
-    eventHistory: eventHistory,
+    levelResults: levelResults ?? this.levelResults,
+    badgeIds: badgeIds ?? this.badgeIds,
+    notebookFactIds: notebookFactIds ?? this.notebookFactIds,
+    missionPatchId: missionPatchId ?? this.missionPatchId,
+    playerDisplayName: playerDisplayName ?? this.playerDisplayName,
+    deterministicSeed: deterministicSeed ?? this.deterministicSeed,
+    eventHistory: eventHistory ?? this.eventHistory,
     settings: settings ?? this.settings,
+    prologueComplete: prologueComplete ?? this.prologueComplete,
   );
 
   static List<String> _sorted(Set<String> values) => values.toList()..sort();
@@ -186,6 +224,12 @@ class CampaignSave {
       (value as List? ?? const []).whereType<String>().toList();
   static Map<String, String> _stringMap(Object? value) =>
       Map<String, String>.from(value as Map? ?? const {});
+  static Map<String, Map<String, int>> _nestedIntMap(Object? value) => {
+    for (final entry in (value as Map? ?? const {}).entries)
+      entry.key as String: Map<String, int>.from(
+        entry.value as Map? ?? const {},
+      ),
+  };
   static Map<String, int> _intMap(Object? value) =>
       Map<String, int>.from(value as Map? ?? const {});
   static Map<String, double> _doubleMap(Object? value) => {

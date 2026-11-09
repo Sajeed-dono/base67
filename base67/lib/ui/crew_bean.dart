@@ -33,12 +33,20 @@ const crewSuitColors = <Color>[
   Color(0xFFB64C48),
 ];
 
+const crewVisorColors = <Color>[
+  GameColors.tealLight,
+  GameColors.sand,
+  GameColors.colorBlindSafeBlue,
+];
+
 class CrewBean extends StatefulWidget {
   const CrewBean({
     super.key,
     required this.role,
     this.mood = CrewMood.okay,
     this.suitColorIndex = 0,
+    this.visorTintIndex = 0,
+    this.faceStyleIndex = 0,
     this.reducedMotion = false,
     this.size = 88,
     this.label,
@@ -47,6 +55,8 @@ class CrewBean extends StatefulWidget {
   final CrewRole role;
   final CrewMood mood;
   final int suitColorIndex;
+  final int visorTintIndex;
+  final int faceStyleIndex;
   final bool reducedMotion;
   final double size;
   final String? label;
@@ -95,6 +105,9 @@ class _CrewBeanState extends State<CrewBean>
           role: widget.role,
           mood: widget.mood,
           suitColor: color,
+          visorTint:
+              crewVisorColors[widget.visorTintIndex % crewVisorColors.length],
+          faceStyleIndex: widget.faceStyleIndex,
           breath: widget.reducedMotion ? 0 : _breath.value,
         ),
       ),
@@ -136,12 +149,16 @@ class CrewBeanPainter extends CustomPainter {
     required this.role,
     required this.mood,
     required this.suitColor,
+    required this.visorTint,
+    required this.faceStyleIndex,
     required this.breath,
   });
 
   final CrewRole role;
   final CrewMood mood;
   final Color suitColor;
+  final Color visorTint;
+  final int faceStyleIndex;
   final double breath;
 
   @override
@@ -155,7 +172,7 @@ class CrewBeanPainter extends CustomPainter {
     final trim = Paint()..color = Colors.white.withValues(alpha: 0.92);
     final dark = Paint()..color = GameColors.ink;
     final shadow = Paint()..color = GameColors.ink.withValues(alpha: 0.15);
-    final visor = Paint()..color = const Color(0xFF9BD8D7);
+    final visor = Paint()..color = visorTint;
     final stroke = Paint()
       ..color = GameColors.ink.withValues(alpha: 0.45)
       ..style = PaintingStyle.stroke
@@ -239,10 +256,24 @@ class CrewBeanPainter extends CustomPainter {
       trim,
     );
     _drawMood(canvas);
+    _drawFaceStyle(canvas);
     _drawBadge(canvas);
     _drawMoodDetails(canvas);
     canvas.restore();
     canvas.restore();
+  }
+
+  void _drawFaceStyle(Canvas canvas) {
+    final mark = Paint()..color = GameColors.sand.withValues(alpha: .78);
+    switch (faceStyleIndex % 3) {
+      case 1:
+        canvas.drawCircle(const Offset(38, 53), 1.6, mark);
+        canvas.drawCircle(const Offset(65, 53), 1.6, mark);
+      case 2:
+        canvas.drawCircle(const Offset(40, 41), 1.3, mark);
+        canvas.drawCircle(const Offset(64, 41), 1.3, mark);
+        canvas.drawCircle(const Offset(52, 56), 1.3, mark);
+    }
   }
 
   void _drawMood(Canvas canvas) {
@@ -422,5 +453,7 @@ class CrewBeanPainter extends CustomPainter {
       role != oldDelegate.role ||
       mood != oldDelegate.mood ||
       suitColor != oldDelegate.suitColor ||
+      visorTint != oldDelegate.visorTint ||
+      faceStyleIndex != oldDelegate.faceStyleIndex ||
       breath != oldDelegate.breath;
 }

@@ -1,12 +1,12 @@
 # BASE 67 Development Progress
 
-Updated: 2026-11-08
+Updated: 2026-11-09
 
 ## Current prompt and gate
 
-- Prompt 2 status: **COMPLETE** — its definition of done was met and verified.
-- Current activity: **Prompt 2 visual reference pass IN PROGRESS** — Home Base and Campaign Map edits are complete; owner visual review remains open.
-- Prompt 3 status: **NOT STARTED** — requires explicit owner approval.
+- Prompt 2 status: **COMPLETE** — visual reference pass reviewed by the owner and committed as `43e15ac`.
+- Current activity: **Prompt 3 of 8 — implementation complete and locally verified; owner commit is pending**.
+- Prompt 4 status: **NOT STARTED**.
 - This step implemented presentation, navigation, and accessibility support. It did not implement the simulation or mission outcomes.
 
 ## Foundation status
@@ -56,3 +56,15 @@ Updated: 2026-11-08
 
 - Final after the visual polish pass: `flutter analyze` exited 0 (`No issues found!`); `flutter test --no-pub --reporter compact` exited 0 (`All tests passed!`, 17 tests).
 - The original-pack checksum test passed in the full suite. No files in the original `assets/data/` pack were edited.
+
+## Prompt 3 implementation status
+
+- The prologue now saves four named roles, whole-number ages, suit/visor/face choices, landing site, starting cargo and inventory, initial habitat and landing craft, campaign state, resource stores/capacities, research, jobs, patch/name fields, deterministic seed, event history, settings, and schema version 2 in the existing local campaign save.
+- Crew age accepts a positive one- or two-digit whole number. The source supplies no age range; this technical limit remains provisional and is listed in `docs/vault/10_OPEN_QUESTIONS.md`.
+- The site screen keeps its 60-second countdown. Expiry picks a deterministic random site, explains the choice, and lets the player change it before confirming. Site numeric facts are repository lookups with NASA DATA chips; GAME VALUE site risk is shown separately.
+- Cargo reads Level 1's allowed equipment and budget from the original read-only data. The budget and costs are in points. Cargo validation, available equipment, locked equipment, and repository-backed solar/battery previews are implemented. No timer or research values were added.
+- Completing the prologue saves state and routes to the persistent Home Base with First Light available. Settings now offers replay without clearing campaign state and a reset action behind confirmation.
+- The eight-scene dialogue uses `docs/source/BASE_67_Prologue_Preview.pdf`. The prompt's named `docs/source/BASE_67.pdf` was not found; `docs/source/BASE 67.pdf` is a different earlier script. The source correction is logged in decisions and open questions.
+- `test/prompt3_prologue_test.dart` covers token enforcement, save/load and schema migration, cargo over-budget rejection, the editable random site timeout, and completing the prologue with fake inputs through Home Base. It lists the `lib/ui/**` exemptions (theme, shared widgets, CustomPainter scenery, and CrewBean art).
+- Latest validation: `flutter analyze` exited 0 (`No issues found!`, 0.9s); `flutter test` exited 0 (`All tests passed!`, 24 tests). Crew, site, and cargo layouts pass at 360 dp and 1024 dp with 1.4× text; long site and cargo dialogue scrolls within the shared theme-token viewport.
+- Prompt 3 is locally implemented and verified. It remains pending owner commit per the vault's completion gate. Prompt 4 is **NOT STARTED**.

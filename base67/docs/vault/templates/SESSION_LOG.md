@@ -4,6 +4,7 @@
 |---|---|---|---|---|
 | (start) | (owner) | Vault created | Vault files added to repo | n/a |
 | 2026-11-08 | Codex | Prompt 2 visual reference pass | Updated Home Base and Campaign Map styling; analyzer clean; 17 tests passed | Handoff below |
+| 2026-11-09 | Codex | Prompt 3 prologue and setup | Locally implemented and verified; analyzer clean; 24 tests passed; owner commit pending | Handoff below |
 
 (Paste each filled-in SESSION_HANDOFF_TEMPLATE below the table.)
 
@@ -28,6 +29,7 @@
 - `docs/PROGRESS.md` — clarified prompt gate and recorded this pass.
 - `docs/DECISIONS.md` — recorded reference usage and visual choices.
 - `docs/vault/10_OPEN_QUESTIONS.md` — resolved reference availability and retained owner sign-off.
+- `docs/vault/09_KNOWN_PITFALLS.md` — narrow-screen long dialogue overflow lesson.
 - `docs/vault/templates/SESSION_LOG.md` — appended this handoff.
 - `lib/game/home_base_screen.dart` — applied reference panel and control styling.
 - `lib/game/campaign_map_screen.dart` — applied chapter, path, panel, and node styling.
@@ -52,3 +54,71 @@
 
 ## Next safe step
 - Owner reviews the updated Home Base and Campaign Map; Prompt 3 remains gated on explicit approval.
+
+---
+
+**Date and tool:** 2026-11-09; Codex
+**Prompt worked on:** Prompt 3 of 8 — Prologue, Crew Creation, Landing Site and First Base Setup
+**Read before starting:** `AGENTS.md`; `docs/vault/00_START_HERE.md`; vault files `01`–`11`; `docs/PROGRESS.md`; `docs/DECISIONS.md`; `docs/GAME_BRIEF.md`; `docs/prompts/PROMPT_03_PROLOGUE_AND_SETUP.md`; `SESSION_HANDOFF_TEMPLATE.md`; `SESSION_LOG.md`; `docs/source/BASE_67_Prologue_Preview.pdf`; BASE 67 UI/UX skill.
+
+## Done (with evidence)
+- Added schema version 2 setup state to `CampaignSave`, including crew names/ages/appearance, site, cargo/inventory, resource stores/capacities, and prologue completion. `test/prompt3_prologue_test.dart` verifies save/load and legacy schema migration.
+- Connected Prologue completion to local save and Home Base routing in `lib/app/game_router.dart`. The fake-input widget test finishes all scenes, confirms Home Base, First Light availability, and preserved campaign state.
+- Kept the 60-second landing-site countdown. The expiry test verifies a seeded random choice, explanation, and editable site selection before confirmation.
+- Cargo validation reads original Level 1 equipment rules and points from the repository. The over-budget test confirms loadout confirmation is disabled.
+- Added token enforcement for `Color(0x...)` and numeric `fontSize` literals under `lib/prologue/**` and `lib/game/**`. Its exemptions are `lib/ui/**`: theme tokens, shared widgets, CustomPainter scenery, and CrewBean character art.
+- Added `GameSpacing.messageViewport` and scrollable dialogue bubbles for landing-site and cargo setup; these layouts pass at 360 dp and 1024 dp with 1.4× text without changing the dialogue.
+- Added Settings replay and confirmed reset, reduced-motion-aware original scenery animation, and appearance preview controls.
+- Updated the Prompt 2 status to owner-reviewed/committed and the Prompt 3 status to locally complete/verified with owner commit pending.
+- No original `assets/data/` file changed; `git diff --name-only -- assets/data` returned no paths.
+
+## Partly done
+- Prompt 3 implementation is locally verified but not committed. The vault's completion gate requires owner commit/push before marking the prompt fully complete.
+- Crew age has a positive one/two-digit technical constraint; the source specifies no age range. This remains provisional.
+
+## Not done
+- Prompt 4 was not started.
+- `python check_data.py` was not run because no data files were touched.
+
+## Files changed
+- `docs/PROGRESS.md` — Prompt status and verified Prompt 3 implementation evidence.
+- `docs/DECISIONS.md` — PDF source mismatch, age, persistence, site/cargo choices, styling token rule and test exemptions.
+- `docs/vault/10_OPEN_QUESTIONS.md` — source-reference correction, age range question, requested redesign-pass line.
+- `docs/vault/templates/SESSION_LOG.md` — appended this handoff.
+- `lib/app/campaign_save.dart` — setup fields, resource capacities and schema migration.
+- `lib/app/game_router.dart` — save-on-completion, replay and confirmed reset.
+- `lib/prologue/prologue.dart` — source dialogue and crew/site/cargo setup.
+- `lib/ui/prologue_scenery.dart` — original, reduced-motion-aware painted scene effects.
+- `lib/ui/crew_bean.dart` — visor and cosmetic face customization.
+- `lib/ui/theme.dart` — shared dialogue viewport spacing token.
+- `lib/game/home_base_screen.dart` — initial habitat/lander, crew appearance and landing equipment display.
+- `lib/game/campaign_map_screen.dart` — replaced the hard-coded node font size with theme typography.
+- `test/prompt3_prologue_test.dart` — save, cargo, site timeout, integration, and token rule tests.
+- `test/widget_test.dart` — updates for the first-run prologue route and returning-player Home Base flow.
+
+## Real command results
+- `flutter analyze`: `No issues found! (ran in 0.9s)`; exit code 0.
+- `flutter test`: `All tests passed!`; 24 tests; exit code 0.
+- `python check_data.py`: not run; no data files were touched.
+- `git diff --name-only -- assets/data`: empty.
+- `git diff --check`: no whitespace errors; Git emitted line-ending normalization warnings for the repository's LF/CRLF settings.
+
+## Decisions made and provisional values added
+- Used `docs/source/BASE_67_Prologue_Preview.pdf` because the Prompt 3 path `docs/source/BASE_67.pdf` is not found; `docs/source/BASE 67.pdf` is a different earlier script. Prompt files were not changed.
+- Kept age as a positive one/two-digit whole number without inventing an age range.
+- Kept the existing 60-second countdown and deterministic random pick, still changeable before confirmation.
+- Kept all NASA site values in repository lookups and data chips. No NASA number was added to Dart.
+- Added no timer or research values.
+- Recorded in `docs/DECISIONS.md`: yes. The exact owner visual-redesign line and open source/age questions are in `10_OPEN_QUESTIONS.md`.
+
+## Conflicts found between documents
+- Prompt 3 names `docs/source/BASE_67.pdf`, which is absent. Used `docs/source/BASE_67_Prologue_Preview.pdf`, whose contents include all eight scenes. Recorded this and left the prompt unchanged.
+- The prior status text still showed Prompt 2 owner review in progress despite owner review and commit `43e15ac`; corrected it.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- Owner may correct the Prompt 3 source PDF path if another canonical document was intended.
+- Owner may define an age range; until then the field has only a technical one/two-digit positive whole-number limit.
+- Added the exact requested visual redesign/token-based styling line.
+
+## Next safe step
+- Owner reviews and commits Prompt 3; Prompt 4 remains not started.

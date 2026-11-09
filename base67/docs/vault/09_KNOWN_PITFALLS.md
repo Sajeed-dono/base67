@@ -16,3 +16,4 @@
 | 12 | The old project name exists inside original data files | Do not edit them; show BASE 67 through `display_text.json` and keep a test that no UI string contains the old name |
 | 13 | Timer and research values are not approved | Keep them provisional and logged in `docs/DECISIONS.md` |
 | 14 | Agents sometimes report plans as results | Follow `07_ANTI_HALLUCINATION_PROTOCOL.md` |
+| 15 | Long exact-source dialogue can overflow setup screens on narrow phones with enlarged text | Keep the wording intact, place long dialogue in a bounded scroll viewport using a shared theme spacing token, and cover phone/tablet sizes with enlarged-text widget tests |
