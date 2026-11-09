@@ -137,4 +137,35 @@ No-production reserve estimates at four crew are **DERIVED, unverified**:
 
 These are continuous depletion estimates, not survival guarantees. None is below five sols; other systems can pause earlier. Campaign balance, physical accuracy, NASA source verification and student testing remain unverified.
 
-4B must resolve material resupply versus production. No construction economy, timer selection or refund values are written in 4A; later costs require existing facility IDs.
+At the 4A boundary material sourcing, construction economy, timer selection and refunds were deferred. The approved 4B-1 rules below now resolve deterministic resupply; costs remain limited to existing facility IDs.
+
+
+## 4B-1 real-time progression (unwired)
+
+All new economy, prerequisite, timing, role and recovery rules here are **GAME VALUE, provisional**, not NASA facts or verified engineering/campaign balance. Pure lib/sim rules are unchanged. The service accepts immutable configuration/state and caller UTC; it reads no device clock, disk, Flutter, UI or audio. Repository document adaptation and persistent schema migration are 4B-2 work.
+
+### Inputs and effects
+
+Five extra documents define recipes: buildings, research, timer_rules, crew_assignments, progression_rules. Required baseline construction costs total 62 material units: solar 5, batteries 4, power control 4, maintenance 4, greenhouse 8, life support 6, shelter 7, miner/storage 6, food storage 4, habitat 8, mission control 6. All 11 are provisionally required from their existing introduction level; existing owned facilities need no repurchase. Upgrades for six existing 4A-supported facilities cost twice base, max one tier. Timed repair costs 2 materials + 1 spare, restoring one damaged unit. Research has zero cost, follows the prerequisite graph in research.json, and activates the existing additive-bonus ID. No output/rate/bonus is recomputed by progression.
+
+Timer duration selects the configured lower bound, stored as duration_seconds; fixed research suggestions are unchanged. Previously missing support timers use 300-900 seconds, initially 300. Jobs snapshot recipe, cost and effect through their immutable recipe plus paid-resource record. Construction increments installed count once, upgrade sets its separate tier, repair decreases damaged count by one bounded at zero, and research inserts its ID in a set. Only existing facilities have recipes; rover remains a reference timer only.
+
+### State transitions and clocks
+
+- Enqueue: store unique job/recipe/optional crew ID, without cost or crew lock. Explicit activation rechecks introduction level, building/research prerequisites, role, crew/target exclusivity, ownership/tier/damage and funds; unmet requirements give a blocked reason without deductions.
+- Activation: resources' = resources - snapshotted cost; create start receipt and UTC start/end. One astronaut ID has one active job; assignment is derived from active jobs and disappears on cancellation/completion.
+- Effective UTC = max(caller UTC, lastObservedUtc); endUTC = effectiveStartUTC + configuredDuration. Remaining = max(0, endUTC - effectiveUTC). Saved deadlines are never recalculated on rollback. Device forward changes can finish work early (accepted limitation).
+- Reconcile active jobs in deadline/ID order. The existing TimerCompletion guard requires active, due and absent completion ID. Apply effect + completed ID + job status + receipt as one aggregate transition. Queued work never starts retroactively. No simulation time advances and no oxygen/water/food is consumed offline.
+- Cancel reconciles due work first. If still active, refund = paidCost * configuredFraction (0.5), floored for materials/spares; divisible resources keep their fractional amount. Lost time never carries into retries. Queued/blocked refund zero; completed/cancelled work cannot refund again. Material overflow is pending, not discarded. Restricted salvage refunds remain restricted.
+
+These are in-memory transitions only; receipts, last observed UTC, payments and pending balances must all be persisted together in 4B-2. Replacement-service tests prove pure continuation, not app restart/disk durability. No 4B-1 CampaignSave schema or storage changes.
+
+### Resupply, capacity and salvage
+
+Resupply = 80 initial + 10 * number of first completions among levels 1-14. Start/per-mission receipts and one catch-up receipt make grants deterministic and nonrepeatable. Caller-confirmed campaign results are inputs; no mission rules are implemented. Delivery = min(pending, max(0, 200 - currentMaterials)); undelivered balance stays pending. Tests cover full storage, spending/refund delivery, catch-up and replay.
+
+With no active job, find the cheapest eligible required unbuilt facility with built prerequisites; tie-break by ID. Shortfall = max(0, cost - currentMaterials). A salvage grant is min(shortfall, cap 8), once per current-level receipt. Earmark it for REQUIRED construction only; optional upgrades/research cannot consume the credit. Existing credits count toward material availability so moving levels without spending cannot create another grant. Required construction consumes restricted funds first, with deterministic credit-ID order. This recovery applies neither to optional work nor to repair parts or damaged-but-already-built facilities.
+
+Affordability evidence: 80 - 62 = 18 without any mission rewards; 80 + 14*10 - 62 = 158 after baseline construction and all eligible rewards. Every configured baseline facility can be afforded before its level reward. This checks the current config, not future mission success, optional upgrades or arbitrary losses.
+
+Bounded recovery limitations retained as tests: 26 solar cancellations yield 2 materials; salvage +3 restores affordability once. Cancelling a fully salvaged solar build leaves 2 and exhausts that level receipt. Several missing facilities with zero funds can require more than one recovery in one level, which is not allowed. Missing repair spares cannot be salvaged. Further owner policy is needed for an unconditional no-soft-lock guarantee; no unauthorized recovery is implemented.

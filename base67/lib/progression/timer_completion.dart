@@ -10,6 +10,29 @@ class TimerCompletion {
     required DateTime nowUtc,
   }) => !nowUtc.toUtc().isBefore(deadlineUtc.toUtc());
 
+  /// Shared by legacy saves and the unwired progression service. The caller
+  /// commits the effect and receipt in the same state transition.
+  static bool canComplete({
+    required String id,
+    required String status,
+    required Set<String> completedIds,
+    required DateTime? deadlineUtc,
+    required DateTime nowUtc,
+    bool rewardApplied = false,
+  }) =>
+      status == 'active' &&
+      !rewardApplied &&
+      !completedIds.contains(id) &&
+      deadlineUtc != null &&
+      isDue(deadlineUtc: deadlineUtc, nowUtc: nowUtc);
+
+  static DateTime effectiveUtc(DateTime nowUtc, DateTime? lastObservedUtc) {
+    final now = nowUtc.toUtc();
+    return lastObservedUtc != null && now.isBefore(lastObservedUtc.toUtc())
+        ? lastObservedUtc.toUtc()
+        : now;
+  }
+
   static CampaignSave completeJobOnce({
     required CampaignSave save,
     required String jobId,
@@ -18,9 +41,14 @@ class TimerCompletion {
     final index = save.timerJobs.indexWhere((job) => job.id == jobId);
     if (index < 0 || save.completedActivityIds.contains(jobId)) return save;
     final job = save.timerJobs[index];
-    if (job.status != 'active' ||
-        job.rewardApplied ||
-        !isDue(deadlineUtc: job.expectedCompletionAtUtc, nowUtc: nowUtc)) {
+    if (!canComplete(
+      id: job.id,
+      status: job.status,
+      completedIds: save.completedActivityIds,
+      deadlineUtc: job.expectedCompletionAtUtc,
+      nowUtc: nowUtc,
+      rewardApplied: job.rewardApplied,
+    )) {
       return save;
     }
     final updatedJobs = [...save.timerJobs];

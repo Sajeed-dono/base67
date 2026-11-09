@@ -1,36 +1,165 @@
 {
   "_meta": {
     "file": "timer_rules.json",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "data_class": "GAME_VALUE",
     "status": "provisional",
     "notes": [
-      "All ranges below are proposed GAME VALUE pacing ranges from the updated GDD. They are not NASA facts, engineering estimates, or final balance."
+      "All ranges below are proposed GAME VALUE pacing ranges from the updated GDD. They are not NASA facts, engineering estimates, or final balance.",
+      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim."
     ]
   },
   "clock": {
     "basis": "UTC timestamps",
-    "categories": ["construction", "upgrade", "research", "major_repair", "selected_extraction"],
+    "categories": [
+      "construction",
+      "upgrade",
+      "research",
+      "major_repair",
+      "selected_extraction"
+    ],
     "offline_completion": true,
-    "clock_rollback": "Clamp elapsed time at zero, retain the saved completion deadline, and never issue a completion reward more than once.",
-    "martian_clock_separate": true
+    "clock_rollback": "Keep UTC deadlines; use max(caller UTC, last observed UTC) so remaining time never increases; never repeat completion.",
+    "martian_clock_separate": true,
+    "clock_forward": "Moving the device clock forward can complete timers early; accepted offline-only limitation.",
+    "due_completion_beats_cancellation": true
   },
   "timers": [
-    {"id":"solar_panel_installation","category":"construction","duration_seconds_min":300,"duration_seconds_max":900,"status":"provisional"},
-    {"id":"battery_construction","category":"construction","duration_seconds_min":900,"duration_seconds_max":1800,"status":"provisional"},
-    {"id":"greenhouse_construction","category":"construction","duration_seconds_min":1800,"duration_seconds_max":3600,"status":"provisional"},
-    {"id":"routine_equipment_repair","category":"major_repair","duration_seconds_min":300,"duration_seconds_max":1200,"status":"provisional"},
-    {"id":"ice_extraction_facility","category":"selected_extraction","duration_seconds_min":900,"duration_seconds_max":2700,"status":"provisional"},
-    {"id":"oxygen_system_upgrade","category":"upgrade","duration_seconds_min":1800,"duration_seconds_max":3600,"status":"provisional"},
-    {"id":"habitat_expansion","category":"construction","duration_seconds_min":3600,"duration_seconds_max":10800,"status":"provisional"},
-    {"id":"advanced_radiation_shielding","category":"construction","duration_seconds_min":7200,"duration_seconds_max":14400,"status":"provisional"},
-    {"id":"rover_construction","category":"construction","duration_seconds_min":7200,"duration_seconds_max":18000,"status":"provisional"},
-    {"id":"research_solar_energy_fundamentals","category":"research","duration_seconds_min":600,"duration_seconds_max":600,"status":"provisional"},
-    {"id":"research_advanced_battery_systems","category":"research","duration_seconds_min":1800,"duration_seconds_max":1800,"status":"provisional"},
-    {"id":"research_dust_protection_technology","category":"research","duration_seconds_min":2700,"duration_seconds_max":2700,"status":"provisional"},
-    {"id":"research_oxygen_production","category":"research","duration_seconds_min":3600,"duration_seconds_max":3600,"status":"provisional"},
-    {"id":"research_radiation_protection","category":"research","duration_seconds_min":7200,"duration_seconds_max":7200,"status":"provisional"},
-    {"id":"research_advanced_water_extraction","category":"research","duration_seconds_min":7200,"duration_seconds_max":7200,"status":"provisional"},
-    {"id":"research_sustainable_mars_agriculture","category":"research","duration_seconds_min":10800,"duration_seconds_max":10800,"status":"provisional"}
+    {
+      "id": "solar_panel_installation",
+      "category": "construction",
+      "duration_seconds_min": 300,
+      "duration_seconds_max": 900,
+      "status": "provisional",
+      "duration_seconds": 300
+    },
+    {
+      "id": "battery_construction",
+      "category": "construction",
+      "duration_seconds_min": 900,
+      "duration_seconds_max": 1800,
+      "status": "provisional",
+      "duration_seconds": 900
+    },
+    {
+      "id": "greenhouse_construction",
+      "category": "construction",
+      "duration_seconds_min": 1800,
+      "duration_seconds_max": 3600,
+      "status": "provisional",
+      "duration_seconds": 1800
+    },
+    {
+      "id": "routine_equipment_repair",
+      "category": "major_repair",
+      "duration_seconds_min": 300,
+      "duration_seconds_max": 1200,
+      "status": "provisional",
+      "duration_seconds": 300
+    },
+    {
+      "id": "ice_extraction_facility",
+      "category": "selected_extraction",
+      "duration_seconds_min": 900,
+      "duration_seconds_max": 2700,
+      "status": "provisional",
+      "duration_seconds": 900
+    },
+    {
+      "id": "oxygen_system_upgrade",
+      "category": "upgrade",
+      "duration_seconds_min": 1800,
+      "duration_seconds_max": 3600,
+      "status": "provisional",
+      "duration_seconds": 1800
+    },
+    {
+      "id": "habitat_expansion",
+      "category": "construction",
+      "duration_seconds_min": 3600,
+      "duration_seconds_max": 10800,
+      "status": "provisional",
+      "duration_seconds": 3600
+    },
+    {
+      "id": "advanced_radiation_shielding",
+      "category": "construction",
+      "duration_seconds_min": 7200,
+      "duration_seconds_max": 14400,
+      "status": "provisional",
+      "duration_seconds": 7200
+    },
+    {
+      "id": "rover_construction",
+      "category": "construction",
+      "duration_seconds_min": 7200,
+      "duration_seconds_max": 18000,
+      "status": "provisional",
+      "duration_seconds": 7200
+    },
+    {
+      "id": "research_solar_energy_fundamentals",
+      "category": "research",
+      "duration_seconds_min": 600,
+      "duration_seconds_max": 600,
+      "status": "provisional",
+      "duration_seconds": 600
+    },
+    {
+      "id": "research_advanced_battery_systems",
+      "category": "research",
+      "duration_seconds_min": 1800,
+      "duration_seconds_max": 1800,
+      "status": "provisional",
+      "duration_seconds": 1800
+    },
+    {
+      "id": "research_dust_protection_technology",
+      "category": "research",
+      "duration_seconds_min": 2700,
+      "duration_seconds_max": 2700,
+      "status": "provisional",
+      "duration_seconds": 2700
+    },
+    {
+      "id": "research_oxygen_production",
+      "category": "research",
+      "duration_seconds_min": 3600,
+      "duration_seconds_max": 3600,
+      "status": "provisional",
+      "duration_seconds": 3600
+    },
+    {
+      "id": "research_radiation_protection",
+      "category": "research",
+      "duration_seconds_min": 7200,
+      "duration_seconds_max": 7200,
+      "status": "provisional",
+      "duration_seconds": 7200
+    },
+    {
+      "id": "research_advanced_water_extraction",
+      "category": "research",
+      "duration_seconds_min": 7200,
+      "duration_seconds_max": 7200,
+      "status": "provisional",
+      "duration_seconds": 7200
+    },
+    {
+      "id": "research_sustainable_mars_agriculture",
+      "category": "research",
+      "duration_seconds_min": 10800,
+      "duration_seconds_max": 10800,
+      "status": "provisional",
+      "duration_seconds": 10800
+    },
+    {
+      "id": "support_facility_construction",
+      "category": "construction",
+      "duration_seconds_min": 300,
+      "duration_seconds_max": 900,
+      "status": "provisional",
+      "duration_seconds": 300
+    }
   ]
 }

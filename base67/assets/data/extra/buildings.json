@@ -1,25 +1,321 @@
 {
   "_meta": {
     "file": "buildings.json",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "data_class": "GAME_VALUE",
     "status": "provisional",
     "notes": [
       "Facility list and upgrade themes follow the updated GDD. Construction costs and numeric upgrade effects remain unbalanced.",
-      "Duration references use provisional ranges from the GDD and are not NASA facts."
+      "Duration references use provisional ranges from the GDD and are not NASA facts.",
+      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim."
     ]
   },
   "buildings": [
-    {"id":"solar_array","name":"Solar Array","introduced_level_id":"L01_first_light","required_equipment_ids":["solar_panel"],"prerequisite_building_ids":[],"construction_timer_id":"solar_panel_installation","upgrade_options":["more panels","improved dust tolerance","higher output"]},
-    {"id":"battery_bank","name":"Battery Bank","introduced_level_id":"L02_power_storage","required_equipment_ids":["battery"],"prerequisite_building_ids":[],"construction_timer_id":"battery_construction","upgrade_options":["more storage capacity","improved efficiency"]},
-    {"id":"power_control_station","name":"Power Control Station","introduced_level_id":"L03_energy_manager","required_equipment_ids":[],"prerequisite_building_ids":["solar_array","battery_bank"],"construction_timer_id":null,"upgrade_options":["better forecasts","clearer load priorities"]},
-    {"id":"maintenance_bay","name":"Maintenance Bay","introduced_level_id":"L04_dust_on_mars","required_equipment_ids":["spare_part"],"prerequisite_building_ids":[],"construction_timer_id":null,"upgrade_options":["faster repairs","more repair capacity"]},
-    {"id":"greenhouse","name":"Greenhouse","introduced_level_id":"L06_greenhouse_online","required_equipment_ids":["greenhouse"],"prerequisite_building_ids":["solar_array","battery_bank"],"construction_timer_id":"greenhouse_construction","upgrade_options":["more growing capacity","improved efficiency"]},
-    {"id":"life_support_module","name":"Life Support Module","introduced_level_id":"L07_breathing_matters","required_equipment_ids":[],"prerequisite_building_ids":[],"construction_timer_id":"oxygen_system_upgrade","upgrade_options":["improved reserve capacity","improved monitoring"]},
-    {"id":"radiation_shelter","name":"Radiation Shelter","introduced_level_id":"L09_shelter_protocol","required_equipment_ids":["shielding"],"prerequisite_building_ids":[],"construction_timer_id":"advanced_radiation_shielding","upgrade_options":["stronger protection","improved shelter capacity"]},
-    {"id":"ice_miner_water_storage","name":"Ice Miner and Water Storage","introduced_level_id":"L11_ice_operations","required_equipment_ids":["ice_miner"],"prerequisite_building_ids":[],"construction_timer_id":"ice_extraction_facility","upgrade_options":["improved extraction","more storage capacity"]},
-    {"id":"food_storage","name":"Food Storage","introduced_level_id":"L12_food_and_supplies","required_equipment_ids":[],"prerequisite_building_ids":[],"construction_timer_id":null,"upgrade_options":["larger reserve","clearer inventory"]},
-    {"id":"crew_habitat","name":"Crew Habitat","introduced_level_id":"L13_crew_care","required_equipment_ids":[],"prerequisite_building_ids":[],"construction_timer_id":"habitat_expansion","upgrade_options":["improved comfort","recovery support"]},
-    {"id":"mission_control_hub","name":"Mission Control Hub","introduced_level_id":"L14_mission_control","required_equipment_ids":[],"prerequisite_building_ids":[],"construction_timer_id":null,"upgrade_options":["longer forecasts","improved event planning"]}
+    {
+      "id": "solar_array",
+      "name": "Solar Array",
+      "introduced_level_id": "L01_first_light",
+      "required_equipment_ids": [
+        "solar_panel"
+      ],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "solar_panel_installation",
+      "upgrade_options": [
+        "more panels",
+        "improved dust tolerance",
+        "higher output"
+      ],
+      "cost": {
+        "materials": 5
+      },
+      "upgrade_cost": {
+        "materials": 10
+      },
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "solar_panel_installation",
+      "max_upgrade_tier": 1,
+      "required_progression": true,
+      "required_from_level_id": "L01_first_light"
+    },
+    {
+      "id": "battery_bank",
+      "name": "Battery Bank",
+      "introduced_level_id": "L02_power_storage",
+      "required_equipment_ids": [
+        "battery"
+      ],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "battery_construction",
+      "upgrade_options": [
+        "more storage capacity",
+        "improved efficiency"
+      ],
+      "cost": {
+        "materials": 4
+      },
+      "upgrade_cost": {
+        "materials": 8
+      },
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "battery_construction",
+      "max_upgrade_tier": 1,
+      "required_progression": true,
+      "required_from_level_id": "L02_power_storage"
+    },
+    {
+      "id": "power_control_station",
+      "name": "Power Control Station",
+      "introduced_level_id": "L03_energy_manager",
+      "required_equipment_ids": [],
+      "prerequisite_building_ids": [
+        "solar_array",
+        "battery_bank"
+      ],
+      "construction_timer_id": "support_facility_construction",
+      "upgrade_options": [
+        "better forecasts",
+        "clearer load priorities"
+      ],
+      "cost": {
+        "materials": 4
+      },
+      "upgrade_cost": null,
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "support_facility_construction",
+      "max_upgrade_tier": 0,
+      "required_progression": true,
+      "required_from_level_id": "L03_energy_manager"
+    },
+    {
+      "id": "maintenance_bay",
+      "name": "Maintenance Bay",
+      "introduced_level_id": "L04_dust_on_mars",
+      "required_equipment_ids": [
+        "spare_part"
+      ],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "support_facility_construction",
+      "upgrade_options": [
+        "faster repairs",
+        "more repair capacity"
+      ],
+      "cost": {
+        "materials": 4
+      },
+      "upgrade_cost": null,
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "support_facility_construction",
+      "max_upgrade_tier": 0,
+      "required_progression": true,
+      "required_from_level_id": "L04_dust_on_mars"
+    },
+    {
+      "id": "greenhouse",
+      "name": "Greenhouse",
+      "introduced_level_id": "L06_greenhouse_online",
+      "required_equipment_ids": [
+        "greenhouse"
+      ],
+      "prerequisite_building_ids": [
+        "solar_array",
+        "battery_bank"
+      ],
+      "construction_timer_id": "greenhouse_construction",
+      "upgrade_options": [
+        "more growing capacity",
+        "improved efficiency"
+      ],
+      "cost": {
+        "materials": 8
+      },
+      "upgrade_cost": {
+        "materials": 16
+      },
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "greenhouse_construction",
+      "max_upgrade_tier": 1,
+      "required_progression": true,
+      "required_from_level_id": "L06_greenhouse_online"
+    },
+    {
+      "id": "life_support_module",
+      "name": "Life Support Module",
+      "introduced_level_id": "L07_breathing_matters",
+      "required_equipment_ids": [],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "oxygen_system_upgrade",
+      "upgrade_options": [
+        "improved reserve capacity",
+        "improved monitoring"
+      ],
+      "cost": {
+        "materials": 6
+      },
+      "upgrade_cost": {
+        "materials": 12
+      },
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "oxygen_system_upgrade",
+      "max_upgrade_tier": 1,
+      "required_progression": true,
+      "required_from_level_id": "L07_breathing_matters"
+    },
+    {
+      "id": "radiation_shelter",
+      "name": "Radiation Shelter",
+      "introduced_level_id": "L09_shelter_protocol",
+      "required_equipment_ids": [
+        "shielding"
+      ],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "advanced_radiation_shielding",
+      "upgrade_options": [
+        "stronger protection",
+        "improved shelter capacity"
+      ],
+      "cost": {
+        "materials": 7
+      },
+      "upgrade_cost": null,
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "advanced_radiation_shielding",
+      "max_upgrade_tier": 0,
+      "required_progression": true,
+      "required_from_level_id": "L09_shelter_protocol"
+    },
+    {
+      "id": "ice_miner_water_storage",
+      "name": "Ice Miner and Water Storage",
+      "introduced_level_id": "L11_ice_operations",
+      "required_equipment_ids": [
+        "ice_miner"
+      ],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "ice_extraction_facility",
+      "upgrade_options": [
+        "improved extraction",
+        "more storage capacity"
+      ],
+      "cost": {
+        "materials": 6
+      },
+      "upgrade_cost": {
+        "materials": 12
+      },
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "ice_extraction_facility",
+      "max_upgrade_tier": 1,
+      "required_progression": true,
+      "required_from_level_id": "L11_ice_operations"
+    },
+    {
+      "id": "food_storage",
+      "name": "Food Storage",
+      "introduced_level_id": "L12_food_and_supplies",
+      "required_equipment_ids": [],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "support_facility_construction",
+      "upgrade_options": [
+        "larger reserve",
+        "clearer inventory"
+      ],
+      "cost": {
+        "materials": 4
+      },
+      "upgrade_cost": {
+        "materials": 8
+      },
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "support_facility_construction",
+      "max_upgrade_tier": 1,
+      "required_progression": true,
+      "required_from_level_id": "L12_food_and_supplies"
+    },
+    {
+      "id": "crew_habitat",
+      "name": "Crew Habitat",
+      "introduced_level_id": "L13_crew_care",
+      "required_equipment_ids": [],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "habitat_expansion",
+      "upgrade_options": [
+        "improved comfort",
+        "recovery support"
+      ],
+      "cost": {
+        "materials": 8
+      },
+      "upgrade_cost": null,
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "habitat_expansion",
+      "max_upgrade_tier": 0,
+      "required_progression": true,
+      "required_from_level_id": "L13_crew_care"
+    },
+    {
+      "id": "mission_control_hub",
+      "name": "Mission Control Hub",
+      "introduced_level_id": "L14_mission_control",
+      "required_equipment_ids": [],
+      "prerequisite_building_ids": [],
+      "construction_timer_id": "support_facility_construction",
+      "upgrade_options": [
+        "longer forecasts",
+        "improved event planning"
+      ],
+      "cost": {
+        "materials": 6
+      },
+      "upgrade_cost": null,
+      "repair_cost": {
+        "materials": 2,
+        "spare_part": 1
+      },
+      "repair_timer_id": "routine_equipment_repair",
+      "upgrade_timer_id": "support_facility_construction",
+      "max_upgrade_tier": 0,
+      "required_progression": true,
+      "required_from_level_id": "L14_mission_control"
+    }
   ]
 }

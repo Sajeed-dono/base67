@@ -414,3 +414,253 @@ Command: `git -c safe.directory=H:/projects diff --name-only -- assets/data` (ex
 
 ## Next safe step
 - Owner reviews 4A, then commits and pushes if accepted. 4B stays gated on that commit/push and approval.
+
+
+---
+
+**Date and tool:** 2026-11-09; Codex
+**Prompt worked on:** Prompt 4B-1 only — unwired progression service, configuration and tests
+**Read before starting:** AGENTS.md; START_HERE; vault 01–11; PROGRESS; DECISIONS; GAME_BRIEF; Prompt 4; SIM_MODEL; existing campaign save, timer completion, original progression tests and extra configuration; SESSION_HANDOFF_TEMPLATE. The earlier 4A log is historical; current HEAD and local origin/main both identify f0a179f (no fetch).
+
+## Done (with evidence)
+- Added immutable progression configuration, jobs, state and receipts in lib/progression/progression_service.dart; extended the existing TimerCompletion guards. Explicit UTC input and observed-time floor; no simulation calls, disk, UI, audio or wall-clock reads. Construction, one existing-effect upgrade tier, selected timed repairs, research prerequisites, queues, crew exclusivity, payments/refunds and deterministic resupply/recovery are covered by new tests.
+- Added five extra JSON updates only, all new numbers/rules marked GAME VALUE, provisional. Baseline facilities cost 62, initial 80 leaves 18 without rewards; with first-completion rewards the baseline ends at 158. Tests verify affordability before each level reward.
+- Generated test/fixtures/pre_4b_f0a179f.json with the unchanged CURRENT CampaignSave serializer at commit f0a179f before any schema change. It is synthetic, NOT a real player save; this note is inside settings. Schema 2 round-trips exactly; timerJobs is empty. Current app creates no jobs; installed/older/manual saves cannot be verified here.
+- Added 39 tests; unchanged existing tests also ran. No test skipped or assertion weakened. Initial focused test failure was a new test setup using the last campaign level while expecting level-1 cheapest-facility recovery; corrected its fixture to level 1 without changing assertions. Added separate cheapest-facility, per-level and multi-requirement counterexamples. Initial 17 analyzer brace-style findings were fixed in production code.
+- Sandbox Flutter batch wrappers stalled without output while acquiring the SDK cache lock and were interrupted; direct cached Dart generated the fixture. Subsequent approved SDK-access analysis/tests actually ran with the raw results below.
+
+## Partly done
+- 4B-1 locally verified; owner review and commit/push pending. Prompt 4 as a whole is incomplete. Recipe/state receipts are in memory only, ready for the 4B-2 persistent aggregate; replacing a service in tests is not a physical app-restart persistence test.
+- Salvage rescues the 26-cancellation level-1 sequence (80 → 2, shortfall grant 3 → 5) once. Repeatedly requesting recovery cannot farm a receipt; changing level while enough funds remain does not grant; optional work cannot spend restricted credit.
+
+## Not done
+- Unrescued sequences: cancel a fully salvage-funded 5-unit build (refund 2, receipt exhausted); exhaust funds with multiple missing required facilities in one level (one recovery builds cheapest battery but leaves solar/control unpaid); lack repair spare parts (outside construction salvage). Cap remains one grant/level, at most 8 units, as documented. No unconditional no-soft-lock claim; owner must decide whether to extend policy.
+- No schema 3, migration, storage/controller/router wiring, UI/prologue/sim changes, package, sound, Prompt 5, commit or push. No Android build/device check. 4B-2 is gated on owner commit/push of 4B-1 and its approval.
+
+## Files changed
+- lib/progression/progression_service.dart (new); lib/progression/timer_completion.dart.
+- assets/data/extra/buildings.json, research.json, timer_rules.json, crew_assignments.json, progression_rules.json only.
+- test/progression_service_test.dart and progression_economy_test.dart (new); test/fixtures/pre_4b_f0a179f.json (new).
+- docs/SIM_MODEL.md, DECISIONS.md, PROGRESS.md; vault/09_KNOWN_PITFALLS.md, vault/10_OPEN_QUESTIONS.md and this live log.
+
+## Real command results
+
+`flutter analyze` — exit 0:
+```text
+Analyzing base67...                                             
+No issues found! (ran in 1.2s)
+```
+
+`flutter test --reporter expanded --concurrency=1` — exit 0:
+```text
+00:00 +0: loading H:/projects/base67/test/data_integrity_test.dart
+00:00 +0: H:/projects/base67/test/data_integrity_test.dart: all bundled source and campaign data loads and validates
+00:00 +1: loading H:/projects/base67/test/display_text_test.dart
+00:00 +1: H:/projects/base67/test/display_text_test.dart: legacy source display text resolves to the current game title
+00:00 +2: H:/projects/base67/test/display_text_test.dart: no Dart UI source contains the obsolete game name
+00:00 +3: loading H:/projects/base67/test/original_pack_test.dart
+00:00 +3: H:/projects/base67/test/original_pack_test.dart: original data pack files match supplied source checksums
+00:01 +4: loading H:/projects/base67/test/progression_economy_test.dart
+00:01 +4: H:/projects/base67/test/progression_economy_test.dart: resupply start 80, capacity 200, +10 once for levels 1-14; level 15 and replays grant nothing
+00:01 +5: H:/projects/base67/test/progression_economy_test.dart: one-time catch-up is deterministic, receipted and compatible with partially claimed missions
+00:01 +6: H:/projects/base67/test/progression_economy_test.dart: all 11 baseline facilities are affordable before each mission reward; total cost 62
+00:01 +7: H:/projects/base67/test/progression_economy_test.dart: starting materials alone cover the baseline without mission rewards
+00:01 +8: H:/projects/base67/test/progression_economy_test.dart: full storage retains grants and refunds and releases overflow when materials are spent
+00:01 +9: H:/projects/base67/test/progression_economy_test.dart: repeated cancellation counterexample is rescued once at level 1 without farming
+00:01 +10: H:/projects/base67/test/progression_economy_test.dart: salvage is earmarked: optional upgrades cannot spend the grant
+00:01 +11: H:/projects/base67/test/progression_economy_test.dart: salvage requires no active job; queued or blocked jobs hold no crew or materials
+00:01 +12: H:/projects/base67/test/progression_economy_test.dart: once-per-level salvage cannot be farmed by cancelling salvage-funded work; reports remaining dead end
+00:01 +13: H:/projects/base67/test/progression_economy_test.dart: per-level salvage cap cannot rescue multiple requirements after resources were exhausted
+00:01 +14: H:/projects/base67/test/progression_economy_test.dart: salvage never grants for optional research/upgrades once required facilities exist
+00:01 +15: H:/projects/base67/test/progression_economy_test.dart: earmarks reject even affordable optional upgrade and research costs
+00:01 +16: H:/projects/base67/test/progression_economy_test.dart: salvage reaches the configured 8-unit cap for a greenhouse shortfall
+00:01 +17: H:/projects/base67/test/progression_economy_test.dart: required-construction salvage does not rescue missing repair parts
+00:01 +18: H:/projects/base67/test/progression_economy_test.dart: each later level has a distinct receipt but returning to an old level does not reset it
+00:01 +19: loading H:/projects/base67/test/progression_service_test.dart
+00:01 +19: H:/projects/base67/test/progression_service_test.dart: provisional configuration resolves only existing facility IDs and sim research effects
+00:01 +20: H:/projects/base67/test/progression_service_test.dart: config rejects non-finite, negative, fractional and over-capacity costs
+00:01 +21: H:/projects/base67/test/progression_service_test.dart: config rejects unknown prerequisites, cycles, and unavailable future prerequisites
+00:01 +22: H:/projects/base67/test/progression_service_test.dart: config rejects invalid timers, refunds and salvage caps
+00:01 +23: H:/projects/base67/test/progression_service_test.dart: queue costs nothing, reserves no crew and starts only through explicit activation
+00:01 +24: H:/projects/base67/test/progression_service_test.dart: duplicate requests and activation never deduct twice or reuse a cancelled ID
+00:01 +25: H:/projects/base67/test/progression_service_test.dart: construction completes once across a replacement service and repeated completion attempts
+00:01 +26: H:/projects/base67/test/progression_service_test.dart: crew exclusivity, wrong roles and target conflicts are rechecked on activation
+00:01 +27: H:/projects/base67/test/progression_service_test.dart: locked, missing prerequisites and unknown facilities are blocked without costs
+00:01 +28: H:/projects/base67/test/progression_service_test.dart: insufficient resources leave a blocked job unpaid and crew free
+00:01 +29: H:/projects/base67/test/progression_service_test.dart: offline interval completes jobs without changing survival quantities or running simulation
+00:01 +30: H:/projects/base67/test/progression_service_test.dart: rollback cannot increase remaining duration, shift deadlines or repeat completion
+00:01 +31: H:/projects/base67/test/progression_service_test.dart: forward clock completes early as the accepted device-clock limitation
+00:01 +32: H:/projects/base67/test/progression_service_test.dart: cancellation floors indivisible refunds, loses time and frees crew immediately
+00:01 +33: H:/projects/base67/test/progression_service_test.dart: queued and blocked cancellation refund nothing; completed and missing jobs cannot cancel
+00:01 +34: H:/projects/base67/test/progression_service_test.dart: research prerequisites, single activation and duplicate completion use existing IDs
+00:01 +35: H:/projects/base67/test/progression_service_test.dart: upgrade applies a single tier without changing installed unit count
+00:01 +36: H:/projects/base67/test/progression_service_test.dart: timed repair restores one damaged unit once and floors spare-part refund
+00:01 +37: H:/projects/base67/test/progression_service_test.dart: receipts, config, jobs and collections are immutable and repeatable
+00:01 +38: H:/projects/base67/test/progression_service_test.dart: shared completion guard preserves legacy ledger and rewardApplied protection
+00:01 +39: H:/projects/base67/test/progression_service_test.dart: queued work rechecks changed crew membership before charging costs
+00:01 +40: H:/projects/base67/test/progression_service_test.dart: fractional divisible resources refund exactly and invalid balances are rejected
+00:01 +41: H:/projects/base67/test/progression_service_test.dart: completion at a shared deadline is ordered by stable job IDs
+00:01 +42: H:/projects/base67/test/progression_service_test.dart: synthetic fixture was encoded by unchanged pre-4B serializer and has no app-created jobs
+00:01 +43: loading H:/projects/base67/test/progression_test.dart
+00:02 +43: H:/projects/base67/test/progression_test.dart: same seed produces the same deterministic sequence
+00:02 +44: H:/projects/base67/test/progression_test.dart: campaign save round-trips its persistent state
+00:02 +45: H:/projects/base67/test/progression_test.dart: campaign save store restores through local key-value storage
+00:02 +46: H:/projects/base67/test/progression_test.dart: offline timer completion is due and reward completion is idempotent
+00:02 +47: loading H:/projects/base67/test/prompt2_ui_test.dart
+00:02 +47: H:/projects/base67/test/prompt2_ui_test.dart: (setUpAll)
+00:02 +47: H:/projects/base67/test/prompt2_ui_test.dart: Home Base and Campaign Map fit 360dp at 1.4x text
+00:03 +48: H:/projects/base67/test/prompt2_ui_test.dart: Home Base and Campaign Map fit 800dp at 1.4x text
+00:03 +49: H:/projects/base67/test/prompt2_ui_test.dart: reusable cards and controls build with accessible targets
+00:03 +50: H:/projects/base67/test/prompt2_ui_test.dart: CrewBean draws all roles and moods without motion when requested
+00:03 +51: H:/projects/base67/test/prompt2_ui_test.dart: ModalSheet opens as a focused bottom panel
+00:03 +52: H:/projects/base67/test/prompt2_ui_test.dart: all navigation screens open at 360dp with 1.4x text
+00:04 +53: H:/projects/base67/test/prompt2_ui_test.dart: all navigation screens open at 1024dp with 1.4x text
+00:04 +54: H:/projects/base67/test/prompt2_ui_test.dart: (tearDownAll)
+00:04 +54: loading H:/projects/base67/test/prompt3_prologue_test.dart
+00:04 +54: H:/projects/base67/test/prompt3_prologue_test.dart: (setUpAll)
+00:04 +54: H:/projects/base67/test/prompt3_prologue_test.dart: screen and game files use shared color and typography tokens
+00:04 +55: H:/projects/base67/test/prompt3_prologue_test.dart: prologue setup round-trips saved crew, site, cargo, and campaign
+00:04 +56: H:/projects/base67/test/prompt3_prologue_test.dart: cargo points reject a loadout above the Level 1 budget
+00:05 +57: H:/projects/base67/test/prompt3_prologue_test.dart: crew, site and cargo setup fit 360dp at 1.4x text
+00:05 +58: H:/projects/base67/test/prompt3_prologue_test.dart: crew, site and cargo setup fit 1024dp at 1.4x text
+00:05 +59: H:/projects/base67/test/prompt3_prologue_test.dart: expired site countdown picks randomly and stays editable
+00:05 +60: H:/projects/base67/test/prompt3_prologue_test.dart: fake taps finish prologue and arrive at the persistent base
+00:06 +61: H:/projects/base67/test/prompt3_prologue_test.dart: (tearDownAll)
+00:06 +61: loading H:/projects/base67/test/sim/config_test.dart
+00:06 +61: H:/projects/base67/test/sim/config_test.dart: (setUpAll)
+00:06 +61: H:/projects/base67/test/sim/config_test.dart: simulation source excludes platform, audio, wall time and unseeded RNG
+00:06 +62: H:/projects/base67/test/sim/config_test.dart: loader resolves source facts, units and provisional inputs
+00:06 +63: H:/projects/base67/test/sim/config_test.dart: invalid config fails at load rather than corrupting a running engine
+00:06 +64: H:/projects/base67/test/sim/config_test.dart: missing facts and incompatible units are rejected by the adapter
+00:06 +65: H:/projects/base67/test/sim/config_test.dart: snapshots, config and modifier collections cannot be mutated
+00:06 +66: H:/projects/base67/test/sim/config_test.dart: spare inventory does not construct a maintenance facility
+00:06 +67: H:/projects/base67/test/sim/config_test.dart: (tearDownAll)
+00:06 +67: loading H:/projects/base67/test/sim/determinism_test.dart
+00:07 +67: H:/projects/base67/test/sim/determinism_test.dart: (setUpAll)
+00:07 +67: H:/projects/base67/test/sim/determinism_test.dart: same seed, configuration and inputs give exactly the same complete trace
+00:07 +68: H:/projects/base67/test/sim/determinism_test.dart: RNG state restores exactly after a split sequence
+00:07 +69: H:/projects/base67/test/sim/determinism_test.dart: sol boundaries advance without drift and random checks consume a stable sequence
+00:07 +70: H:/projects/base67/test/sim/determinism_test.dart: immutable snapshot continuation matches uninterrupted stepping
+00:07 +71: H:/projects/base67/test/sim/determinism_test.dart: scripted event fires at its sub-tick boundary only once
+00:07 +72: H:/projects/base67/test/sim/determinism_test.dart: run uses the baseline policy and stops safely instead of simulating absence
+00:07 +73: H:/projects/base67/test/sim/determinism_test.dart: (tearDownAll)
+00:07 +73: loading H:/projects/base67/test/sim/model_test.dart
+00:07 +73: H:/projects/base67/test/sim/model_test.dart: (setUpAll)
+00:07 +73: H:/projects/base67/test/sim/model_test.dart: four crew reserves last about 8.20, 9.73 and 10.18 sols without production
+00:07 +74: H:/projects/base67/test/sim/model_test.dart: consumption is crew-scaled and uses source Earth-day hours
+00:07 +75: H:/projects/base67/test/sim/model_test.dart: one engine tick deducts source-backed crew needs without production
+00:07 +76: H:/projects/base67/test/sim/model_test.dart: partial power serves essential loads first and safely reports the deficit
+00:07 +77: H:/projects/base67/test/sim/model_test.dart: heater uses source control range and cooling traces a safe pause
+00:07 +78: H:/projects/base67/test/sim/model_test.dart: radiation threshold pauses without removing crew
+00:07 +79: H:/projects/base67/test/sim/model_test.dart: resource trace accounts for event water and bounded storage overflow
+00:07 +80: H:/projects/base67/test/sim/model_test.dart: invalid tick durations return a finite unchanged-time trace
+00:07 +81: H:/projects/base67/test/sim/model_test.dart: disabled batteries retain charge but cannot discharge into a shortage
+00:07 +82: H:/projects/base67/test/sim/model_test.dart: an unbuilt upgraded storage facility grants no capacity bonus
+00:07 +83: H:/projects/base67/test/sim/model_test.dart: solar equation uses irradiance, area, efficiency, site, tau and dust
+00:07 +84: H:/projects/base67/test/sim/model_test.dart: battery drains at night and never overcharges at noon
+00:07 +85: H:/projects/base67/test/sim/model_test.dart: upgrade and research bonuses add and their order does not matter
+00:07 +86: H:/projects/base67/test/sim/model_test.dart: existing storage facilities expand capacity without granting resources
+00:07 +87: H:/projects/base67/test/sim/model_test.dart: powered greenhouse and miner produce at repository rates
+00:07 +88: H:/projects/base67/test/sim/model_test.dart: facility state notBuilt remains finite and respects availability
+00:07 +89: H:/projects/base67/test/sim/model_test.dart: facility state operating remains finite and respects availability
+00:07 +90: H:/projects/base67/test/sim/model_test.dart: facility state off remains finite and respects availability
+00:07 +91: H:/projects/base67/test/sim/model_test.dart: facility state damaged remains finite and respects availability
+00:07 +92: H:/projects/base67/test/sim/model_test.dart: facility state underConstruction remains finite and respects availability
+00:07 +93: H:/projects/base67/test/sim/model_test.dart: facility state outOfResources remains finite and respects availability
+00:07 +94: H:/projects/base67/test/sim/model_test.dart: empty storage and shortages clamp, trace, pause and retain every crew member
+00:07 +95: H:/projects/base67/test/sim/model_test.dart: corrupt numeric state is clamped and never escapes as NaN or infinity
+00:07 +96: H:/projects/base67/test/sim/model_test.dart: load shedding disables optional production and spares essential life support
+00:07 +97: H:/projects/base67/test/sim/model_test.dart: storm interpolation, dust buildup and completed cleaning use configured values
+00:07 +98: H:/projects/base67/test/sim/model_test.dart: shelter reduces SEP dose, shielding reduces exposure and disabled shielding does not
+00:07 +99: H:/projects/base67/test/sim/model_test.dart: repair consumes one spare once and sheltered crew cannot repair
+00:07 +100: H:/projects/base67/test/sim/model_test.dart: (tearDownAll)
+00:07 +100: loading H:/projects/base67/test/widget_test.dart
+00:08 +100: H:/projects/base67/test/widget_test.dart: (setUpAll)
+00:08 +100: H:/projects/base67/test/widget_test.dart: splash opens the preserved prologue route
+00:08 +101: H:/projects/base67/test/widget_test.dart: Home Base and Campaign Map routes open
+00:08 +102: H:/projects/base67/test/widget_test.dart: (tearDownAll)
+00:08 +102: All tests passed!
+```
+
+`python check_data.py` from assets/data — exit 0:
+```text
+facts: 40 | sources: 24 | ALL OK
+```
+
+## Decisions made and provisional values added
+- Recorded in DECISIONS and SIM_MODEL: approved split, economy, prerequisites, cost/timer/refund rules, 8-unit per-level salvage cap and tested limits, required-only credit accounting, explicit clocks/crew, and synthetic fixture provenance. Every new gameplay value/rule is GAME VALUE, provisional.
+- Moving the device clock forward can complete timers early; accepted limit. No retroactive simulation, consumption or queued-job activation offline.
+- For 4B-2 only: each state change writes one whole blob under the existing key, last good backup retained until read-back verifies; failed migration must leave the original untouched and never create a blank save. Ambiguous legacy jobs must free crew with no cost/effect and a logged exit, not silent removal.
+
+## Conflicts found between documents
+- PROGRESS still said 4A commit/push pending; corrected based on f0a179f HEAD/local origin/main and owner's instructions. Original 4A session entry retained as history. Owner split supersedes broader Prompt 4 integration in this phase.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- Bounded salvage counterexamples and future recovery choice; 4B-2 storage/migration verification. Material source decision recorded as resolved provisionally, final balance still unverified.
+
+## Next safe step
+- Owner reviews 4B-1 and the recovery limitations, then commits/pushes if accepted. Do not start 4B-2 or Prompt 5 without approval.
+
+
+## Git evidence snapshot
+
+Captured after code, documentation, full analysis/tests and handoff content, immediately before appending these Git output blocks. Appending this evidence changes SESSION_LOG's diff-stat count; final Git output is also reported to the owner. Untracked files are listed by status but omitted by ordinary diff --stat.
+
+`git status` — exit 0:
+```text
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   assets/data/extra/buildings.json
+	modified:   assets/data/extra/crew_assignments.json
+	modified:   assets/data/extra/progression_rules.json
+	modified:   assets/data/extra/research.json
+	modified:   assets/data/extra/timer_rules.json
+	modified:   docs/DECISIONS.md
+	modified:   docs/PROGRESS.md
+	modified:   docs/SIM_MODEL.md
+	modified:   docs/vault/09_KNOWN_PITFALLS.md
+	modified:   docs/vault/10_OPEN_QUESTIONS.md
+	modified:   docs/vault/templates/SESSION_LOG.md
+	modified:   lib/progression/timer_completion.dart
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	lib/progression/progression_service.dart
+	test/fixtures/
+	test/progression_economy_test.dart
+	test/progression_service_test.dart
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+`git diff --stat` — exit 0:
+```text
+warning: in the working copy of 'base67/docs/vault/templates/SESSION_LOG.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'base67/lib/main.dart', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'base67/lib/progression/timer_completion.dart', LF will be replaced by CRLF the next time Git touches it
+ base67/assets/data/extra/buildings.json         | 322 +++++++++++++++++++++++-
+ base67/assets/data/extra/crew_assignments.json  | 111 +++++++-
+ base67/assets/data/extra/progression_rules.json | 151 +++++++++--
+ base67/assets/data/extra/research.json          | 137 +++++++++-
+ base67/assets/data/extra/timer_rules.json       | 171 +++++++++++--
+ base67/docs/DECISIONS.md                        |  17 ++
+ base67/docs/PROGRESS.md                         |  18 +-
+ base67/docs/SIM_MODEL.md                        |  33 ++-
+ base67/docs/vault/09_KNOWN_PITFALLS.md          |   1 +
+ base67/docs/vault/10_OPEN_QUESTIONS.md          |   7 +-
+ base67/docs/vault/templates/SESSION_LOG.md      | 187 ++++++++++++++
+ base67/lib/progression/timer_completion.dart    |  34 ++-
+ 12 files changed, 1106 insertions(+), 83 deletions(-)
+```
+
+`git diff HEAD -- assets/data ':(exclude)assets/data/extra/**'` — exit 0; raw stdout is empty:
+```text
+
+```
+
+No untracked original-pack files were found either. Protected application/prologue/UI/sim/config-loader/dependency/existing-test diff is empty (Git prints only a line-ending warning for lib/main.dart; no change is listed). New file line counts: progression_service.dart 848; progression_service_test.dart 604; progression_economy_test.dart 383; pre_4b_f0a179f.json 1. TimerCompletion is 77 lines. All 4 new files remain untracked for owner review. No commit or push.
+

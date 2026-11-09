@@ -1,10 +1,13 @@
 {
   "_meta": {
     "file": "progression_rules.json",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "data_class": "GAME_VALUE",
     "status": "provisional",
-    "notes": ["The campaign unlock chain is one-way and does not reset the persistent base. Reward thresholds remain unbalanced."]
+    "notes": [
+      "The campaign unlock chain is one-way and does not reset the persistent base. Reward thresholds remain unbalanced.",
+      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim."
+    ]
   },
   "rules": {
     "persistent_base": true,
@@ -13,20 +16,132 @@
     "note": "Reward quantities and thresholds require balancing."
   },
   "level_unlocks": [
-    {"level_id":"L01_first_light","required_completed_level_ids":[]},
-    {"level_id":"L02_power_storage","required_completed_level_ids":["L01_first_light"]},
-    {"level_id":"L03_energy_manager","required_completed_level_ids":["L02_power_storage"]},
-    {"level_id":"L04_dust_on_mars","required_completed_level_ids":["L03_energy_manager"]},
-    {"level_id":"L05_the_great_storm","required_completed_level_ids":["L04_dust_on_mars"]},
-    {"level_id":"L06_greenhouse_online","required_completed_level_ids":["L05_the_great_storm"]},
-    {"level_id":"L07_breathing_matters","required_completed_level_ids":["L06_greenhouse_online"]},
-    {"level_id":"L08_radiation_alert","required_completed_level_ids":["L07_breathing_matters"]},
-    {"level_id":"L09_shelter_protocol","required_completed_level_ids":["L08_radiation_alert"]},
-    {"level_id":"L10_finding_water","required_completed_level_ids":["L09_shelter_protocol"]},
-    {"level_id":"L11_ice_operations","required_completed_level_ids":["L10_finding_water"]},
-    {"level_id":"L12_food_and_supplies","required_completed_level_ids":["L11_ice_operations"]},
-    {"level_id":"L13_crew_care","required_completed_level_ids":["L12_food_and_supplies"]},
-    {"level_id":"L14_mission_control","required_completed_level_ids":["L13_crew_care"]},
-    {"level_id":"L15_the_final_mission","required_completed_level_ids":["L14_mission_control"]}
-  ]
+    {
+      "level_id": "L01_first_light",
+      "required_completed_level_ids": []
+    },
+    {
+      "level_id": "L02_power_storage",
+      "required_completed_level_ids": [
+        "L01_first_light"
+      ]
+    },
+    {
+      "level_id": "L03_energy_manager",
+      "required_completed_level_ids": [
+        "L02_power_storage"
+      ]
+    },
+    {
+      "level_id": "L04_dust_on_mars",
+      "required_completed_level_ids": [
+        "L03_energy_manager"
+      ]
+    },
+    {
+      "level_id": "L05_the_great_storm",
+      "required_completed_level_ids": [
+        "L04_dust_on_mars"
+      ]
+    },
+    {
+      "level_id": "L06_greenhouse_online",
+      "required_completed_level_ids": [
+        "L05_the_great_storm"
+      ]
+    },
+    {
+      "level_id": "L07_breathing_matters",
+      "required_completed_level_ids": [
+        "L06_greenhouse_online"
+      ]
+    },
+    {
+      "level_id": "L08_radiation_alert",
+      "required_completed_level_ids": [
+        "L07_breathing_matters"
+      ]
+    },
+    {
+      "level_id": "L09_shelter_protocol",
+      "required_completed_level_ids": [
+        "L08_radiation_alert"
+      ]
+    },
+    {
+      "level_id": "L10_finding_water",
+      "required_completed_level_ids": [
+        "L09_shelter_protocol"
+      ]
+    },
+    {
+      "level_id": "L11_ice_operations",
+      "required_completed_level_ids": [
+        "L10_finding_water"
+      ]
+    },
+    {
+      "level_id": "L12_food_and_supplies",
+      "required_completed_level_ids": [
+        "L11_ice_operations"
+      ]
+    },
+    {
+      "level_id": "L13_crew_care",
+      "required_completed_level_ids": [
+        "L12_food_and_supplies"
+      ]
+    },
+    {
+      "level_id": "L14_mission_control",
+      "required_completed_level_ids": [
+        "L13_crew_care"
+      ]
+    },
+    {
+      "level_id": "L15_the_final_mission",
+      "required_completed_level_ids": [
+        "L14_mission_control"
+      ]
+    }
+  ],
+  "materials": {
+    "start": 80,
+    "capacity": 200,
+    "per_first_mission": 10,
+    "eligible_level_ids": [
+      "L01_first_light",
+      "L02_power_storage",
+      "L03_energy_manager",
+      "L04_dust_on_mars",
+      "L05_the_great_storm",
+      "L06_greenhouse_online",
+      "L07_breathing_matters",
+      "L08_radiation_alert",
+      "L09_shelter_protocol",
+      "L10_finding_water",
+      "L11_ice_operations",
+      "L12_food_and_supplies",
+      "L13_crew_care",
+      "L14_mission_control"
+    ],
+    "source": "deterministic mission resupply",
+    "overflow": "retain pending grants/refunds until storage has room"
+  },
+  "cancellation": {
+    "refund_fraction": 0.5,
+    "indivisible_resource_ids": [
+      "materials",
+      "spare_part"
+    ],
+    "queued_refund": 0,
+    "due_completion_wins": true
+  },
+  "salvage": {
+    "grants_per_level": 1,
+    "cap_per_level": 8,
+    "required_only": true,
+    "note": "Shortfall to cheapest eligible required unbuilt facility; no active jobs. Funds are restricted to required construction, never upgrades/research. One receipt per level; further losses after that receipt are not rescued.",
+    "earmark_for_required_construction": true
+  }
 }

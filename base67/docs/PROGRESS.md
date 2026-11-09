@@ -6,8 +6,8 @@ Updated: 2026-11-09
 
 - Prompt 2 status: **COMPLETE** — visual reference pass reviewed by the owner and committed as `43e15ac`.
 - Prompt 3 status: **COMPLETE** — committed as `c61af76` (analyzer and 24 tests were recorded in the Prompt 3 handoff).
-- Current activity: **Prompt 4A implemented and locally verified; owner review/commit/push pending**.
-- Prompt 4 status: **PARTIAL: 4A locally verified; 4B NOT STARTED, gated on owner commit/push of 4A**.
+- Current activity: **Prompt 4B-1 implemented and locally verified; awaiting owner review/commit/push**.
+- Prompt 4 status: **PARTIAL: 4A committed/pushed as f0a179f; 4B-1 locally verified; owner review/commit/push pending; 4B-2 NOT STARTED**.
 - Prompts 2–3 provided presentation and setup; 4A adds the pure engine without app wiring or mission outcomes.
 
 ## Prompt 4A implementation
@@ -15,8 +15,18 @@ Updated: 2026-11-09
 - Added the pure Dart engine, immutable configuration/snapshots/inputs, explicit simulation clock, power/resource/radiation/event models, restorable seeded RNG and repository adapter. No app wiring or progression service is included.
 - Only extra/sim_params.json and extra/resource_economy.json receive new GAME VALUE, provisional inputs. Additive bonuses and all model simplifications are documented in SIM_MODEL and Decisions.
 - New test/sim tests cover reserve estimates, formulas, finite shortages, inactive facilities, purity, immutable state, scripted/seeded events and deterministic snapshot continuation. Original assets, checksums and existing tests are preserved.
-- Validation in this session: `flutter analyze` exited 0 (`No issues found!`, 19.2s); `flutter test --reporter expanded --concurrency=1` exited 0 (`All tests passed!`, 63 tests); `python check_data.py` exited 0 (`facts: 40 | sources: 24 | ALL OK`). The full suite includes the unchanged original-pack checksum test and all existing UI/prologue tests.
-- Prompt 4 is not complete; 4A awaits owner review/commit/push, and 4B and Prompt 5 remain unstarted. No commit or push was made. New simulation behavior has not been wired into or tested on an Android device.
+- Recorded 4A validation (prior implementation session): `flutter analyze` exited 0 (`No issues found!`, 19.2s); `flutter test --reporter expanded --concurrency=1` exited 0 (`All tests passed!`, 63 tests); `python check_data.py` exited 0 (`facts: 40 | sources: 24 | ALL OK`). The full suite includes the unchanged original-pack checksum test and all existing UI/prologue tests.
+- 4A was subsequently approved and committed as `f0a179f`; local HEAD and origin/main both identify that commit (no remote fetch in this session). The earlier no-commit handoff is historical. Prompt 4 is incomplete; 4B-1 is tracked below, 4B-2 and Prompt 5 are unstarted. No Android-device verification of the engine is claimed.
+
+## Prompt 4B-1 implementation (owner-approved split)
+
+- Added an unwired pure Dart progression service with immutable job/config/state/receipt objects, explicit UTC inputs, construction, one supported upgrade tier, selected timed repairs, research prerequisites, crew exclusivity, queues and cancellation. Extended the existing timer completion guards; existing save/timer APIs and schema 2 are unchanged.
+- New GAME VALUE, provisional data is restricted to five existing extra JSONs. Resupply is 80 start / capacity 200 / +10 once per first completion of levels 1-14, with deterministic catch-up receipts and retained overflow. Salvage is one required-construction shortfall per level, capped at 8 material units, receipted and restricted against optional spending.
+- Added progression service/economy tests and `test/fixtures/pre_4b_f0a179f.json`. The fixture was generated using the unchanged current serializer at f0a179f; its settings contain the provenance note. It is synthetic, NOT a real player save, and has no timer jobs.
+- Baseline configuration costs 62 materials for all 11 facilities, leaving 18 from the initial 80 even without mission rewards (including an initial habitat that existing prologue saves already own). With all 14 eligible rewards and baseline spending, final materials are 158. This is configuration affordability, not proof of future mission solvability.
+- Recovery limits: cancelling salvage-funded work can leave a new shortfall after the level receipt is spent; one grant cannot cover multiple depleted requirements in one level; missing repair spare parts are outside required-construction salvage. Tests retain these counterexamples. An unconditional no-soft-lock claim is not made.
+- No save schema/store/controller/router/UI/prologue/sim/original pack/checksum changes. Receipts exist in the service aggregate only; disk persistence, migration and real app restart verification belong to 4B-2. Owner review and commit/push of 4B-1 gate 4B-2. No Prompt 5, sound, commit or push.
+- Final validation in this 4B-1 session: `flutter analyze` exit 0, `No issues found! (ran in 1.2s)`; `flutter test --reporter expanded --concurrency=1` exit 0, `00:08 +102: All tests passed!` (39 new, 63 existing); `python check_data.py` exit 0, `facts: 40 | sources: 24 | ALL OK`. Raw outputs are in the live session log. All unchanged original checksums/UI/prologue/sim tests ran. No Android build/device test was run.
 
 ## Foundation status
 

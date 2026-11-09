@@ -4,7 +4,7 @@ Update this file every session. Remove an item only when it is resolved, and rec
 
 | # | Item | Status | Owner | Safe default until resolved |
 |---|---|---|---|---|
-| 2 | Construction and research timer values | Provisional, not approved | Project owner | Keep short, documented GAME VALUES; never block all play |
+| 2 | Construction and research timer values | Owner-approved provisional implementation; final balance unverified | Project owner | Keep short, documented GAME VALUES; never block all play |
 | 3 | Mars Notebook fact cards (`fact_cards.json` has no entries yet) | Planned for the progression prompt | Agent | Show an empty-state message; never type NASA numbers by hand |
 | 4 | Human check of each NASA page against `nasa_data.json` | Open | Team | Treat NASA values as unverified until ticked |
 | 5 | Meridiani latitude read as 1.95 S from a page that prints -1.95 | Open | Team | Keep, flag in the UI notes |
@@ -13,7 +13,9 @@ Update this file every session. Remove an item only when it is resolved, and rec
 | 9 | Anything an agent could not verify in a session | Add here | Agent | State it plainly in the handoff |
 | 10 | Prompt 3 cites `docs/source/BASE_67.pdf`, which is not found; owner to correct the vault/source reference if another canonical file is intended | Open | Project owner | Keep using `docs/source/BASE_67_Prologue_Preview.pdf`, which contains the eight-scene prologue |
 | 11 | The source gives no age range for the crew setup field | Open | Project owner | Keep a positive whole number with a one- or two-digit technical limit; do not invent an age range |
-| 12 | 4B construction materials: mission resupply, production, or both? | Open for 4B | Project owner | Propose deterministic mission resupply initially; no material source, costs or refunds implemented in 4A; costs only for existing facility IDs |
+| 12 | Construction material source resolved for 4B-1 | Owner-approved GAME VALUE, provisional | Project owner | Deterministic resupply 80/200/+10 for first levels 1-14; receipts/catch-up, bounded salvage; implementation balance remains provisional |
 | 13 | 4A balance and simplified temperature/event/protection models | Provisional, unverified | Project owner | Mark every new gameplay input and response rule GAME VALUE, provisional; tests establish numerical behavior, not physical accuracy or campaign balance |
+| 14 | Bounded salvage cannot guarantee recovery after cancelling salvage-funded work, multiple exhausted requirements in one level, or missing repair spares | Open; tested counterexamples | Project owner | Keep one required-construction grant per level, cap 8; do not silently add grants or free repairs |
+| 15 | 4B-2 persistence and migration | Not started; gated on 4B-1 commit/push | Agent / owner | One whole primary blob write, preserve last good backup until verified; failed migration leaves original untouched; synthetic f0a179f fixture is not a real player save |
 
 - Owner may request a visual redesign pass after the game is feature complete; all styling must stay token-based so this stays cheap.
