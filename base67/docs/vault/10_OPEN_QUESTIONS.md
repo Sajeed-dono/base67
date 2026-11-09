@@ -13,5 +13,7 @@ Update this file every session. Remove an item only when it is resolved, and rec
 | 9 | Anything an agent could not verify in a session | Add here | Agent | State it plainly in the handoff |
 | 10 | Prompt 3 cites `docs/source/BASE_67.pdf`, which is not found; owner to correct the vault/source reference if another canonical file is intended | Open | Project owner | Keep using `docs/source/BASE_67_Prologue_Preview.pdf`, which contains the eight-scene prologue |
 | 11 | The source gives no age range for the crew setup field | Open | Project owner | Keep a positive whole number with a one- or two-digit technical limit; do not invent an age range |
+| 12 | 4B construction materials: mission resupply, production, or both? | Open for 4B | Project owner | Propose deterministic mission resupply initially; no material source, costs or refunds implemented in 4A; costs only for existing facility IDs |
+| 13 | 4A balance and simplified temperature/event/protection models | Provisional, unverified | Project owner | Mark every new gameplay input and response rule GAME VALUE, provisional; tests establish numerical behavior, not physical accuracy or campaign balance |
 
 - Owner may request a visual redesign pass after the game is feature complete; all styling must stay token-based so this stays cheap.

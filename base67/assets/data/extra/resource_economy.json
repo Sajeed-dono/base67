@@ -1,1 +1,22 @@
-{"_meta":{"file":"resource_economy.json","version":"0.1.0","data_class":"GAME_VALUE","status":"provisional","notes":["No new balance figures are asserted in this foundation step."]},"resources":[],"assumptions":[]}
+{
+  "_meta": {
+    "file": "resource_economy.json",
+    "version": "0.2.0",
+    "data_class": "GAME_VALUE",
+    "status": "provisional",
+    "notes": ["Owner-approved 4A simulation inputs only; no construction economy or progression rules."]
+  },
+  "resources": [
+    {"id":"oxygen_kg","unit":"kg","initial":30,"capacity":60,"data_class":"GAME_VALUE","status":"provisional"},
+    {"id":"water_kg","unit":"kg","initial":100,"capacity":200,"data_class":"GAME_VALUE","status":"provisional"},
+    {"id":"food_kg","unit":"kg","initial":100,"capacity":200,"data_class":"GAME_VALUE","status":"provisional"}
+  ],
+  "storage_expansions": [
+    {"facility_id":"life_support_module","resource_id":"oxygen_kg","capacity":30,"data_class":"GAME_VALUE","status":"provisional"},
+    {"facility_id":"ice_miner_water_storage","resource_id":"water_kg","capacity":100,"data_class":"GAME_VALUE","status":"provisional"},
+    {"facility_id":"food_storage","resource_id":"food_kg","capacity":100,"data_class":"GAME_VALUE","status":"provisional"}
+  ],
+  "assumptions": [
+    {"id":"water_kg_per_litre","value":1,"unit":"kg/L","data_class":"GAME_VALUE","status":"provisional","reason":"Owner-approved approximate conversion for drinking-water accounting; unverified."}
+  ]
+}

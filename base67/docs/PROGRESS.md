@@ -6,9 +6,17 @@ Updated: 2026-11-09
 
 - Prompt 2 status: **COMPLETE** — visual reference pass reviewed by the owner and committed as `43e15ac`.
 - Prompt 3 status: **COMPLETE** — committed as `c61af76` (analyzer and 24 tests were recorded in the Prompt 3 handoff).
-- Current activity: **Sound decisions recorded for Prompt 7; implementation deferred; no numbered prompt is in progress**.
-- Prompt 4 status: **NOT STARTED**.
-- This step implemented presentation, navigation, and accessibility support. It did not implement the simulation or mission outcomes.
+- Current activity: **Prompt 4A implemented and locally verified; owner review/commit/push pending**.
+- Prompt 4 status: **PARTIAL: 4A locally verified; 4B NOT STARTED, gated on owner commit/push of 4A**.
+- Prompts 2–3 provided presentation and setup; 4A adds the pure engine without app wiring or mission outcomes.
+
+## Prompt 4A implementation
+
+- Added the pure Dart engine, immutable configuration/snapshots/inputs, explicit simulation clock, power/resource/radiation/event models, restorable seeded RNG and repository adapter. No app wiring or progression service is included.
+- Only extra/sim_params.json and extra/resource_economy.json receive new GAME VALUE, provisional inputs. Additive bonuses and all model simplifications are documented in SIM_MODEL and Decisions.
+- New test/sim tests cover reserve estimates, formulas, finite shortages, inactive facilities, purity, immutable state, scripted/seeded events and deterministic snapshot continuation. Original assets, checksums and existing tests are preserved.
+- Validation in this session: `flutter analyze` exited 0 (`No issues found!`, 19.2s); `flutter test --reporter expanded --concurrency=1` exited 0 (`All tests passed!`, 63 tests); `python check_data.py` exited 0 (`facts: 40 | sources: 24 | ALL OK`). The full suite includes the unchanged original-pack checksum test and all existing UI/prologue tests.
+- Prompt 4 is not complete; 4A awaits owner review/commit/push, and 4B and Prompt 5 remain unstarted. No commit or push was made. New simulation behavior has not been wired into or tested on an Android device.
 
 ## Foundation status
 
@@ -68,23 +76,23 @@ Updated: 2026-11-09
 - The eight-scene dialogue uses `docs/source/BASE_67_Prologue_Preview.pdf`. The prompt's named `docs/source/BASE_67.pdf` was not found; `docs/source/BASE 67.pdf` is a different earlier script. The source correction is logged in decisions and open questions.
 - `test/prompt3_prologue_test.dart` covers token enforcement, save/load and schema migration, cargo over-budget rejection, the editable random site timeout, and completing the prologue with fake inputs through Home Base. It lists the `lib/ui/**` exemptions (theme, shared widgets, CustomPainter scenery, and CrewBean art).
 - Latest validation: `flutter analyze` exited 0 (`No issues found!`, 0.9s); `flutter test` exited 0 (`All tests passed!`, 24 tests). Crew, site, and cargo layouts pass at 360 dp and 1024 dp with 1.4× text; long site and cargo dialogue scrolls within the shared theme-token viewport.
-- Prompt 3 is complete and committed as `c61af76`; the recorded validation is clean analysis and 24 passing tests. Prompt 4 is **NOT STARTED**.
+- Prompt 3 is complete and committed as `c61af76`; the recorded validation is clean analysis and 24 passing tests. Current Prompt 4A status is tracked above.
 
 ## Interim Android portrait lock (not a numbered prompt)
 
 - Android activity orientation is set to portrait in `android/app/src/main/AndroidManifest.xml`; Flutter also requests `DeviceOrientation.portraitUp` before `runApp` in `lib/main.dart`.
 - `flutter analyze` exited 0 (`No issues found!`, 13.7s); `flutter test` exited 0 (`All tests passed!`, 24 tests).
-- This verifies Flutter analysis and tests only; no Android build or physical-device orientation check was run. Sound and Prompt 4 remain unstarted.
+- This earlier interim task verified Flutter analysis and tests only; it did not run an Android build or physical-device orientation check, or start sound or Prompt 4.
 
 ## Interim portrait-lock follow-up
 
 - Launcher label is `BASE 67`. Decisions now record both debug and profile INTERNET permissions. The portrait-lock handoff is completed with fresh command evidence in the live `docs/vault/templates/SESSION_LOG.md`.
 - Fresh follow-up validation: `flutter analyze` exited 0 (`No issues found!`, 22.6s); `flutter test` exited 0 (`All tests passed!`, 24 tests). Raw output is recorded in the live session log.
-- The owner's existing `META_PROMPT.md` addition is retained unchanged. No commit or push is authorized in this follow-up. No Android build or device run is included; sound and Prompt 4 remain unstarted.
+- The owner's existing `META_PROMPT.md` addition was retained unchanged in that follow-up. It included no Android build, device run, sound work or Prompt 4 implementation. The owner later approved its local commit.
 
 ## Sound scope agreed for Prompt 7 (not started)
 
 - Android release; web development checks only. Initial sound scope is short UI/action effects; music later, no voice. There is no interim sound implementation.
 - Audio sourcing is free-only: CC0, CC-BY or equivalent commercial-use licenses, excluding NC and ND. Owner approval is required before download and owner license confirmation before committing each file. Per-file credits include source URL, author, license and date in a new file under `assets/data/extra/`; original `credits.json` remains untouched.
 - Persisted master mute applies everywhere. Default sound is on at low volume, with a visual equivalent for every cue. Duck/pause on focus loss, remain silent if focus is denied, and handle interruptions without crashing.
-- Package selection and size budget await the Prompt 7 plan. Requirements are recorded in `docs/DECISIONS.md`; no sound code, package, or asset has been added. Prompt 4 remains **NOT STARTED**.
+- Package selection and size budget await the Prompt 7 plan. Requirements are recorded in `docs/DECISIONS.md`; no sound code, package, or asset has been added. Sound remains unstarted; Prompt 4A is tracked above.

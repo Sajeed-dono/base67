@@ -1,1 +1,36 @@
-{"_meta":{"file":"sim_params.json","version":"0.1.0","data_class":"GAME_VALUE","status":"provisional","notes":["Legacy constants remain in the original pack. Migration and any changed assumptions require a documented decision."]},"parameters":{},"formulas":{}}
+{
+  "_meta": {
+    "file": "sim_params.json",
+    "version": "0.2.0",
+    "data_class": "GAME_VALUE",
+    "status": "provisional",
+    "notes": ["4A simulation modifiers only. Values and simplified response formulas are provisional, not verified physics or final balance."]
+  },
+  "parameters": {
+    "upgrade_bonus": 0.25
+  },
+  "research_bonuses": {
+    "solar_energy_fundamentals": {"solar_output":0.10},
+    "advanced_battery_systems": {"battery_capacity":0.25},
+    "dust_protection_technology": {"dust_gain":-0.25},
+    "oxygen_production": {"oxygen_output":0.25},
+    "radiation_protection": {"radiation_dose":-0.10},
+    "advanced_water_extraction": {"water_output":0.25},
+    "sustainable_mars_agriculture": {"food_output":0.25}
+  },
+  "upgrade_stats": {
+    "solar_array":["solar_output"],
+    "battery_bank":["battery_capacity"],
+    "greenhouse":["oxygen_output","food_output"],
+    "life_support_module":["oxygen_capacity"],
+    "ice_miner_water_storage":["water_output","water_capacity"],
+    "food_storage":["food_capacity"]
+  },
+  "formulas": {
+    "stacking":"base * max(0, 1 + upgrade_bonus + research_bonus); each source applied once",
+    "temperature":"target + (previous - target) * exp(-hours / legacy_cold_time_constant); target blends outside and heater set point by delivered power",
+    "power":"allocate available generation plus stored energy in life-support, heater, greenhouse, miner, cleaning, repair order",
+    "event_timing":"random event checks at each sol start, including sol zero; scripted events fire at their configured simulation hour",
+    "safety":"pause on life-support power shortage, empty essential reserve, unsafe cold or radiation game limit; no crew death"
+  }
+}

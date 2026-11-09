@@ -86,3 +86,15 @@
 - A persisted master mute must apply everywhere. Sound defaults to on at low volume; every cue must have a visual equivalent.
 - On audio-focus loss, duck or pause. Stay silent if focus is denied; interruptions must never crash the app.
 - The audio package and size budget remain undecided and must be addressed in the Prompt 7 plan. No package, numeric volume, or size limit is selected here.
+
+## Prompt 4A — pure simulation only
+
+- Owner split Prompt 4 into 4A (pure engine, config loader, simulation tests) and 4B (progression services, persistence and app wiring). Owner commit/push of 4A gates 4B; Prompt 5 remains unstarted. No app/prologue, original asset, checksum, existing test, package or sound change is included.
+- New GAME VALUE, provisional inputs: oxygen 30/60 kg, water 100/200 kg, food 100/200 kg (starting/capacity); storage additions of 30 kg oxygen and 100 kg water/food; owner-approved water approximation 1 kg/L. They live only in the two extra simulation configuration files.
+- New GAME VALUE, provisional modifiers: applicable facility upgrades +25%; research solar +10%, battery/greenhouse oxygen/miner water/greenhouse food +25%, dust gain -25%, radiation dose -10%. Bonuses on a stat add: base × max(0, 1 + upgrade bonus + research bonus). The engine receives installed equipment and active research; it completes no purchases or research.
+- NASA crew/radiation source rates are per Earth day, converted through hours; equipment production is per sol. Derived, unverified no-production reserve estimates are 8.20, 9.73 and 10.18 sols at four crew; none is under five.
+- Panel output and cosine site factors are recalculated from source fact IDs instead of rounded legacy figures. Fixed global-mean ambient temperature is a GAME VALUE, provisional local approximation, not a measured temperature at each site.
+- New GAME VALUE, provisional response rules: midpoint solar integration, essential-first power allocation, proportional production under partial power, passive storage retention, and first-order warming/cooling with the legacy time constant. Disabled batteries retain inaccessible charge. All formulas and input classes are in SIM_MODEL.
+- New GAME VALUE, provisional event sampling uses explicit enabled IDs in sorted order at sol starts, including sol zero; scripts use simulation hours. Original event probabilities/effects are retained. Cleaning uses simulation time; the legacy immediate repair is distinct from 4B timed repair jobs.
+- Runtime clamps and trace notices keep shortages and invalid numeric state finite. Safe pauses retain crew. Invalid configuration fails before simulation. Only a trivial baseline policy is included; no level-specific policies.
+- Costs, material sources, timer ranges, research prerequisites, cancellation/refunds, completion ledgers, progression services and app persistence are deferred to 4B and are not written in 4A. Any later costs require existing facility IDs.

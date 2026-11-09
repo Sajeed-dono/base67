@@ -8,6 +8,7 @@
 | 2026-11-09 | Codex | Interim Android Gradle note | Documented owner-reported cross-drive workaround and same-drive Pub-cache fallback; no build run | Handoff below |
 | 2026-11-09 | Codex | Interim Android portrait lock | Added manifest and Flutter startup portrait requests; analyzer clean; 24 tests passed | Handoff below |
 | 2026-11-09 | Codex | Interim portrait-lock follow-up | Corrected launcher label and permission note; refreshed command evidence; awaiting review without commit | Handoff at bottom |
+| 2026-11-09 | Codex | Prompt 4A pure simulation | Analyzer clean; all 63 tests passed; owner review/commit/push pending; 4B not started | Handoff at bottom |
 
 (Paste each filled-in SESSION_HANDOFF_TEMPLATE below the table.)
 
@@ -366,3 +367,50 @@ Command: `git -c safe.directory=H:/projects diff --name-only -- assets/data` (ex
 
 ## Next safe step
 - Owner reviews the documentation diff; wait for approval. No interim sound implementation.
+
+---
+
+**Date and tool:** 2026-11-09; Codex
+**Prompt worked on:** Prompt 4A only — pure simulation, config adapter and simulation tests
+**Read before starting:** AGENTS.md; START_HERE; vault 01–11; PROGRESS; DECISIONS; GAME_BRIEF; SIM_MODEL; PROMPT_04_SIMULATION_ENGINE; original data/config; existing repository, RNG, save/timer and tests; SESSION_HANDOFF_TEMPLATE.
+
+## Done (with evidence)
+- Implemented immutable SimConfig/SimState/PlayerInputs, SimulationClock, Engine.step/run/Policy/Trace and one trivial BaselinePolicy. No level-specific policies.
+- Implemented source-backed power, batteries, loads/shedding, crew needs, greenhouse/miner output, storage, simplified temperature/radiation, scripted/seeded events and simulation actions.
+- SimConfigLoader resolves fact IDs and units outside lib/sim. Extra config contains only approved GAME VALUE, provisional simulation inputs and modifiers; same-stat bonuses add.
+- Added test/sim/config_test.dart, model_test.dart and determinism_test.dart. They cover prohibited imports/APIs, immutable snapshots, malformed config, shortages/inactive facilities/non-finite state, source units, 8.20/9.73/10.18-sol reserves, additive modifiers, event boundaries, conservation and deterministic restoration.
+- Existing tests, original assets/checksums, prologue, app wiring, progression services, UI and dependencies were not modified. Original-pack checksums passed in the full suite; the original-data checker passed.
+
+## Partly done
+- 4A is locally verified and awaits owner review/commit/push. Prompt 4 as a whole is incomplete until 4B is approved and completed.
+- Balance and thermal/event/protection simplifications remain GAME VALUE, provisional and physically unverified. NASA human source audit and student testing remain outstanding.
+
+## Not done
+- No app/persistence wiring, real-time services, material source, costs, research prerequisites, timer selections, cancellation/refunds or completion ledger written. No sound, Prompt 5, commit or push.
+- No Android build/device execution of the new engine; the engine is not connected to screens.
+
+## Files changed
+- lib/sim/: extended seeded_rng.dart; added sim_config.dart, sim_state.dart, player_inputs.dart, simulation_clock.dart, power_model.dart, resource_model.dart, radiation_model.dart, event_model.dart and engine.dart.
+- lib/data/sim_config_loader.dart; the three new test/sim files.
+- assets/data/extra/resource_economy.json and sim_params.json only.
+- docs/SIM_MODEL.md, DECISIONS.md, PROGRESS.md, vault/09_KNOWN_PITFALLS.md, vault/10_OPEN_QUESTIONS.md and this live log.
+
+## Real command results
+- flutter analyze: exit 0, `No issues found! (ran in 19.2s)`.
+- flutter test --reporter expanded --concurrency=1: exit 0, `00:07 +63: All tests passed!`.
+- python check_data.py (assets/data): exit 0, `facts: 40 | sources: 24 | ALL OK`.
+- Git data diff lists only the two extra simulation JSONs; protected original-data and existing-test/application diffs are empty. New files remain untracked pending owner review; ordinary git diff --stat omits them.
+- Initial focused tests failed during configuration setup because a nested unmodifiable map had dynamic typing; fixed production typing, without weakening or skipping tests. Initial analyzer style findings were fixed. Final analysis/full suite are clean.
+
+## Decisions made and provisional values added
+- Recorded in Decisions and SIM_MODEL: scope split, approved reserve/capacity/storage/water inputs, additive modifiers, source-unit conversion, exact source-derived solar values, finite guards/safe pauses, explicit clock/RNG and provisional model responses.
+
+## Conflicts found between documents
+- Prompt 4 includes progression, but the owner's explicit 4A/4B split defers those parts. SIM_MODEL already existed; extended it rather than creating a second document. Corrected Progress's obsolete current Prompt 4 gate without altering prompt files.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- 4B material source: propose deterministic mission resupply initially; owner to choose resupply, production or both. Any costs require existing facilities.
+- Simulation balance/response assumptions remain provisional and unverified.
+
+## Next safe step
+- Owner reviews 4A, then commits and pushes if accepted. 4B stays gated on that commit/push and approval.
