@@ -44,6 +44,6 @@ Project: BASE 67, kid-friendly (10-14) offline Android Mars settlement game in F
    ## Current state (a snapshot written on 2026-11-09; docs/PROGRESS.md overrides it)
    - Prompts 1, 2 and 3 are complete and committed: foundation and data layer; visual design with Home Base and Campaign Map; prologue, crew, landing site and cargo setup.
    - Interim task done: Android portrait lock, tested on the emulator. Android builds need kotlin.incremental=false in android/gradle.properties.
-   - Prompt 4 (simulation engine) and later are not started. Sound integration plan is not yet approved.
+   - Prompt 4 (simulation engine) and later are not started. Sound requirements are agreed in docs/DECISIONS.md and deferred to Prompt 7: short UI/action effects first, music later, no voice; no interim sound work. Package and size budget await the Prompt 7 plan.
    - Coding tool: Codex (GitHub Copilot was briefly tried and not needed).
    - Timer and research values are provisional. docs/reference has five style screenshots.

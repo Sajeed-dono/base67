@@ -75,3 +75,14 @@
 ## Interim portrait-lock follow-up (not a numbered prompt)
 
 - Set the Android launcher label to `BASE 67` to match the project identity. Retain the owner's existing `META_PROMPT.md` addition unchanged; its emulator-test statement is owner-provided evidence. Complete the live session log with fresh raw command output. This follow-up is prepared for review without committing or pushing; sound and Prompt 4 remain unstarted.
+
+## Sound decisions for Prompt 7 (owner-approved, 2026-11-09)
+
+- Android is the release target; web is for development checks only.
+- Sound implementation is folded into Prompt 7. There is no interim sound work, and no sound code is authorized by this documentation update.
+- Initial scope: short UI/action effects. Music is deferred until later; no voice.
+- Audio sourcing: free sources only. Codex may search for and propose free audio during Prompt 7, but only CC0, CC-BY or equivalent licenses that allow commercial use (no NC or ND). Every file gets a credit entry with source URL, author, license and date, and the owner confirms the license before the file is committed. Nothing is downloaded without owner approval.
+- Audio credits belong in a new file under `assets/data/extra/`; the original `assets/data/credits.json` stays untouched.
+- A persisted master mute must apply everywhere. Sound defaults to on at low volume; every cue must have a visual equivalent.
+- On audio-focus loss, duck or pause. Stay silent if focus is denied; interruptions must never crash the app.
+- The audio package and size budget remain undecided and must be addressed in the Prompt 7 plan. No package, numeric volume, or size limit is selected here.

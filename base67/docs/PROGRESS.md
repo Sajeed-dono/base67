@@ -6,7 +6,7 @@ Updated: 2026-11-09
 
 - Prompt 2 status: **COMPLETE** — visual reference pass reviewed by the owner and committed as `43e15ac`.
 - Prompt 3 status: **COMPLETE** — committed as `c61af76` (analyzer and 24 tests were recorded in the Prompt 3 handoff).
-- Current activity: **Interim portrait-lock follow-up prepared for review; Android launcher label and documentation corrected; no numbered prompt is in progress**.
+- Current activity: **Sound decisions recorded for Prompt 7; implementation deferred; no numbered prompt is in progress**.
 - Prompt 4 status: **NOT STARTED**.
 - This step implemented presentation, navigation, and accessibility support. It did not implement the simulation or mission outcomes.
 
@@ -81,3 +81,10 @@ Updated: 2026-11-09
 - Launcher label is `BASE 67`. Decisions now record both debug and profile INTERNET permissions. The portrait-lock handoff is completed with fresh command evidence in the live `docs/vault/templates/SESSION_LOG.md`.
 - Fresh follow-up validation: `flutter analyze` exited 0 (`No issues found!`, 22.6s); `flutter test` exited 0 (`All tests passed!`, 24 tests). Raw output is recorded in the live session log.
 - The owner's existing `META_PROMPT.md` addition is retained unchanged. No commit or push is authorized in this follow-up. No Android build or device run is included; sound and Prompt 4 remain unstarted.
+
+## Sound scope agreed for Prompt 7 (not started)
+
+- Android release; web development checks only. Initial sound scope is short UI/action effects; music later, no voice. There is no interim sound implementation.
+- Audio sourcing is free-only: CC0, CC-BY or equivalent commercial-use licenses, excluding NC and ND. Owner approval is required before download and owner license confirmation before committing each file. Per-file credits include source URL, author, license and date in a new file under `assets/data/extra/`; original `credits.json` remains untouched.
+- Persisted master mute applies everywhere. Default sound is on at low volume, with a visual equivalent for every cue. Duck/pause on focus loss, remain silent if focus is denied, and handle interruptions without crashing.
+- Package selection and size budget await the Prompt 7 plan. Requirements are recorded in `docs/DECISIONS.md`; no sound code, package, or asset has been added. Prompt 4 remains **NOT STARTED**.

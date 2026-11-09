@@ -329,3 +329,40 @@ Command: `git -c safe.directory=H:/projects diff --name-only -- assets/data` (ex
 
 ## Next safe step
 - Owner reviews the full diff and raw outputs; wait for approval before committing.
+
+---
+
+**Date and tool:** 2026-11-09; Codex
+**Prompt worked on:** Sound decision documentation for future Prompt 7; no numbered prompt started
+**Read before starting:** `AGENTS.md`; `docs/vault/00_START_HERE.md`; vault files `01`–`11`; `docs/PROGRESS.md`; `docs/DECISIONS.md`; `docs/GAME_BRIEF.md`; `META_PROMPT.md`; `SESSION_HANDOFF_TEMPLATE.md`; live `SESSION_LOG.md`
+
+## Done (with evidence)
+- Recorded the owner's Android/web scope, short effects first, music later, no voice, free-only audio sourcing, per-file extra-layer credits, persisted master mute defaulting on at low volume, visual cue equivalents, and interruption/focus rules in Decisions and Progress. The owner subsequently specified commercial-use CC0, CC-BY or equivalent licenses (no NC/ND), source URL/author/license/date credits, approval before downloads, and license confirmation before each audio file is committed.
+- Updated the META_PROMPT sound line: requirements agreed, implementation deferred to Prompt 7, no interim sound work; package and size budget await that plan.
+
+## Partly done
+- Package choice and size budget remain undecided for the Prompt 7 plan.
+
+## Not done
+- No sound code, package, audio asset, or credits data file added. Prompt 4 and Prompt 7 remain unstarted. No commit or push made.
+
+## Files changed
+- `docs/DECISIONS.md`, `docs/PROGRESS.md`, `docs/vault/META_PROMPT.md` — owner-approved sound decisions and scheduling.
+- `docs/vault/templates/SESSION_LOG.md` — this required handoff.
+
+## Real command results
+- `flutter analyze`: `No issues found! (ran in 2.4s)`; exit code 0.
+- `flutter test`: `All tests passed!`; 24 tests; exit code 0.
+- `check_data.py`: not run; no data files were edited.
+
+## Decisions made and provisional values added
+- Owner's sound decisions recorded in `docs/DECISIONS.md`: yes. No numeric volume, package, or size budget selected.
+
+## Conflicts found between documents
+- META_PROMPT's former pending sound-plan line now distinguishes agreed requirements from the future Prompt 7 implementation plan.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- None; the pending package and size decisions are recorded for the Prompt 7 plan in Decisions and Progress.
+
+## Next safe step
+- Owner reviews the documentation diff; wait for approval. No interim sound implementation.
