@@ -1,13 +1,14 @@
 {
   "_meta": {
     "file": "buildings.json",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "data_class": "GAME_VALUE",
     "status": "provisional",
     "notes": [
       "Facility list and upgrade themes follow the updated GDD. Construction costs and numeric upgrade effects remain unbalanced.",
       "Duration references use provisional ranges from the GDD and are not NASA facts.",
-      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim."
+      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim.",
+      "GAME VALUE, provisional: material costs cover installation/construction once. Packed equipment is reserved, then installed; no second purchase gate. Source equipment maxima cap mapped installed units; other facilities retain the previous single-installation limit. Additional units are optional unless a required count is explicitly approved."
     ]
   },
   "buildings": [
@@ -39,7 +40,10 @@
       "upgrade_timer_id": "solar_panel_installation",
       "max_upgrade_tier": 1,
       "required_progression": true,
-      "required_from_level_id": "L01_first_light"
+      "required_from_level_id": "L01_first_light",
+      "installation_stock_id": "solar_panel",
+      "unit_limit_equipment_id": "solar_panel",
+      "required_installed_units": 1
     },
     {
       "id": "battery_bank",
@@ -68,7 +72,10 @@
       "upgrade_timer_id": "battery_construction",
       "max_upgrade_tier": 1,
       "required_progression": true,
-      "required_from_level_id": "L02_power_storage"
+      "required_from_level_id": "L02_power_storage",
+      "installation_stock_id": "battery",
+      "unit_limit_equipment_id": "battery",
+      "required_installed_units": 1
     },
     {
       "id": "power_control_station",
@@ -96,7 +103,10 @@
       "upgrade_timer_id": "support_facility_construction",
       "max_upgrade_tier": 0,
       "required_progression": true,
-      "required_from_level_id": "L03_energy_manager"
+      "required_from_level_id": "L03_energy_manager",
+      "installation_stock_id": null,
+      "max_installed_units": 1,
+      "required_installed_units": 1
     },
     {
       "id": "maintenance_bay",
@@ -123,7 +133,10 @@
       "upgrade_timer_id": "support_facility_construction",
       "max_upgrade_tier": 0,
       "required_progression": true,
-      "required_from_level_id": "L04_dust_on_mars"
+      "required_from_level_id": "L04_dust_on_mars",
+      "installation_stock_id": null,
+      "max_installed_units": 1,
+      "required_installed_units": 1
     },
     {
       "id": "greenhouse",
@@ -155,7 +168,10 @@
       "upgrade_timer_id": "greenhouse_construction",
       "max_upgrade_tier": 1,
       "required_progression": true,
-      "required_from_level_id": "L06_greenhouse_online"
+      "required_from_level_id": "L06_greenhouse_online",
+      "installation_stock_id": "greenhouse",
+      "unit_limit_equipment_id": "greenhouse",
+      "required_installed_units": 1
     },
     {
       "id": "life_support_module",
@@ -182,7 +198,10 @@
       "upgrade_timer_id": "oxygen_system_upgrade",
       "max_upgrade_tier": 1,
       "required_progression": true,
-      "required_from_level_id": "L07_breathing_matters"
+      "required_from_level_id": "L07_breathing_matters",
+      "installation_stock_id": null,
+      "max_installed_units": 1,
+      "required_installed_units": 1
     },
     {
       "id": "radiation_shelter",
@@ -209,7 +228,10 @@
       "upgrade_timer_id": "advanced_radiation_shielding",
       "max_upgrade_tier": 0,
       "required_progression": true,
-      "required_from_level_id": "L09_shelter_protocol"
+      "required_from_level_id": "L09_shelter_protocol",
+      "installation_stock_id": "shielding",
+      "unit_limit_equipment_id": "shielding",
+      "required_installed_units": 1
     },
     {
       "id": "ice_miner_water_storage",
@@ -238,7 +260,10 @@
       "upgrade_timer_id": "ice_extraction_facility",
       "max_upgrade_tier": 1,
       "required_progression": true,
-      "required_from_level_id": "L11_ice_operations"
+      "required_from_level_id": "L11_ice_operations",
+      "installation_stock_id": "ice_miner",
+      "unit_limit_equipment_id": "ice_miner",
+      "required_installed_units": 1
     },
     {
       "id": "food_storage",
@@ -265,7 +290,10 @@
       "upgrade_timer_id": "support_facility_construction",
       "max_upgrade_tier": 1,
       "required_progression": true,
-      "required_from_level_id": "L12_food_and_supplies"
+      "required_from_level_id": "L12_food_and_supplies",
+      "installation_stock_id": null,
+      "max_installed_units": 1,
+      "required_installed_units": 1
     },
     {
       "id": "crew_habitat",
@@ -290,7 +318,10 @@
       "upgrade_timer_id": "habitat_expansion",
       "max_upgrade_tier": 0,
       "required_progression": true,
-      "required_from_level_id": "L13_crew_care"
+      "required_from_level_id": "L13_crew_care",
+      "installation_stock_id": null,
+      "max_installed_units": 1,
+      "required_installed_units": 1
     },
     {
       "id": "mission_control_hub",
@@ -315,7 +346,10 @@
       "upgrade_timer_id": "support_facility_construction",
       "max_upgrade_tier": 0,
       "required_progression": true,
-      "required_from_level_id": "L14_mission_control"
+      "required_from_level_id": "L14_mission_control",
+      "installation_stock_id": null,
+      "max_installed_units": 1,
+      "required_installed_units": 1
     }
   ]
 }

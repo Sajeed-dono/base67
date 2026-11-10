@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:base67/app/campaign_save.dart';
 import 'package:base67/progression/progression_service.dart';
+import 'package:base67/progression/progression_clock.dart';
 import 'package:base67/progression/timer_completion.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,12 +17,22 @@ ProgressionConfig configuration({
   Map<String, dynamic>? timers,
   Map<String, dynamic>? rules,
 }) => ProgressionConfig.fromDocuments(
+  equipment: jsonDecode(
+    File('assets/data/equipment.json').readAsStringSync(),
+  ) as Map<String, dynamic>,
+  events: jsonDecode(
+    File('assets/data/events.json').readAsStringSync(),
+  ) as Map<String, dynamic>,
   buildings: buildings ?? document('buildings'),
   research: research ?? document('research'),
   timers: timers ?? document('timer_rules'),
   crew: document('crew_assignments'),
   rules: rules ?? document('progression_rules'),
 );
+
+// Test producer: UTC and its capture-order token are formed together.
+ClockObservation observation(ProgressionState state, DateTime utc) =>
+    ClockObservation(token: state.lastObservationToken + 1, utc: utc);
 
 void main() {
   late ProgressionConfig config;
@@ -50,7 +61,7 @@ void main() {
     jobId: id,
     kind: 'construction',
     targetId: target,
-    nowUtc: now,
+    observation: observation(state, now),
     crewId: crewId,
   );
 
@@ -92,16 +103,16 @@ void main() {
     expect(() => configuration(research: data), throwsFormatException);
   });
 
-  test('config rejects invalid timers, refunds and salvage caps', () {
+  test('config rejects invalid timers, refunds and assistance restoration', () {
     final timers = document('timer_rules');
     timers['timers'][0]['duration_seconds'] = 0;
     expect(() => configuration(timers: timers), throwsFormatException);
-    for (final field in ['refund', 'cap']) {
+    for (final field in ['refund', 'restore']) {
       final rules = document('progression_rules');
       if (field == 'refund') {
         rules['cancellation']['refund_fraction'] = 1.1;
       } else {
-        rules['salvage']['cap_per_level'] = 0;
+        rules['recovery']['assistance_cancel_restore_fraction'] = 0.5;
       }
       expect(() => configuration(rules: rules), throwsFormatException);
     }
@@ -122,13 +133,13 @@ void main() {
     expect(queued.crewAssignments, isEmpty);
     queued = service.reconcile(
       queued,
-      nowUtc: now.add(const Duration(days: 2)),
+      observation: observation(queued, now.add(const Duration(days: 2))),
     );
     expect(queued.jobs['q']!.status, 'queued');
     final started = service.activate(
       queued,
       jobId: 'q',
-      nowUtc: now.add(const Duration(days: 2)),
+      observation: observation(queued, now.add(const Duration(days: 2))),
     );
     expect(started.code, 'active');
     expect(started.state.materials, state.materials - 5);
@@ -145,10 +156,14 @@ void main() {
       first.materials,
     );
     expect(
-      service.activate(first, jobId: 'build', nowUtc: now).code,
+      service
+          .activate(first, jobId: 'build', observation: observation(first, now))
+          .code,
       'not_startable',
     );
-    final cancelled = service.cancel(first, jobId: 'build', nowUtc: now).state;
+    final cancelled = service
+        .cancel(first, jobId: 'build', observation: observation(first, now))
+        .state;
     expect(
       build(cancelled, 'build', 'solar_array').code,
       'duplicate_or_invalid_id',
@@ -165,10 +180,16 @@ void main() {
     expect(active.crewAssignments['engineer'], 'build');
     final deadline = active.jobs['build']!.deadlineUtc!;
     final restarted = RealTimeProgressionService(config);
-    final completed = restarted.reconcile(active, nowUtc: deadline);
+    final completed = restarted.reconcile(
+      active,
+      observation: observation(active, deadline),
+    );
     final twice = restarted.reconcile(
       completed,
-      nowUtc: deadline.add(const Duration(days: 3)),
+      observation: observation(
+        completed,
+        deadline.add(const Duration(days: 3)),
+      ),
     );
     expect(twice.facilities['solar_array'], 1);
     expect(twice.completedActivityIds, {'build'});
@@ -176,7 +197,7 @@ void main() {
     expect(twice.materials, active.materials);
     expect(twice.crewAssignments, isEmpty);
     expect(twice.jobs['build']!.finishedAtUtc, deadline);
-    expect(build(twice, 'second', 'solar_array').code, 'already_built');
+    expect(build(twice, 'second', 'solar_array').code, 'active');
   });
 
   test('crew exclusivity, wrong roles and target conflicts are rechecked on activation', () {
@@ -199,7 +220,9 @@ void main() {
       build(state, 'unknown-crew', 'battery_bank', crewId: 'missing').code,
       'wrong_crew_role',
     );
-    state = service.cancel(state, jobId: 'solar', nowUtc: now).state;
+    state = service
+        .cancel(state, jobId: 'solar', observation: observation(state, now))
+        .state;
     expect(
       build(state, 'new-battery', 'battery_bank', crewId: 'engineer').code,
       'active',
@@ -226,7 +249,13 @@ void main() {
     expect(blocked.state.crewAssignments, isEmpty);
     final recovered = service.recover(blocked.state).state;
     expect(
-      service.activate(recovered, jobId: 'solar', nowUtc: now).code,
+      service
+          .activate(
+            recovered,
+            jobId: 'solar',
+            observation: observation(recovered, now),
+          )
+          .code,
       'active',
     );
   });
@@ -236,7 +265,7 @@ void main() {
     final active = build(before, 'solar', 'solar_array').state;
     final after = service.reconcile(
       active,
-      nowUtc: now.add(const Duration(days: 300)),
+      observation: observation(active, now.add(const Duration(days: 300))),
     );
     for (final resource in ['oxygen', 'water', 'food']) {
       expect(after.resources[resource], before.resources[resource]);
@@ -260,16 +289,16 @@ void main() {
     var state = build(initial(), 'solar', 'solar_array').state;
     final deadline = state.jobs['solar']!.deadlineUtc!;
     final half = now.add(const Duration(seconds: 150));
-    state = service.reconcile(state, nowUtc: half);
-    final remaining = service.remaining(state, 'solar', half);
+    state = service.reconcile(state, observation: observation(state, half));
+    final remaining = service.remaining(state, 'solar');
     state = service.reconcile(
       state,
-      nowUtc: now.subtract(const Duration(days: 1)),
+      observation: observation(state, now.subtract(const Duration(days: 1))),
     );
-    expect(service.remaining(state, 'solar', now), remaining);
+    expect(service.remaining(state, 'solar'), remaining);
     expect(state.jobs['solar']!.deadlineUtc, deadline);
-    state = service.reconcile(state, nowUtc: deadline);
-    state = service.reconcile(state, nowUtc: now);
+    state = service.reconcile(state, observation: observation(state, deadline));
+    state = service.reconcile(state, observation: observation(state, now));
     expect(state.facilities['solar_array'], 1);
     expect(state.jobs['solar']!.status, 'completed');
   });
@@ -280,7 +309,13 @@ void main() {
       final active = build(initial(), 'solar', 'solar_array').state;
       expect(
         service
-            .reconcile(active, nowUtc: now.add(const Duration(days: 1)))
+            .reconcile(
+              active,
+              observation: observation(
+                active,
+                now.add(const Duration(days: 1)),
+              ),
+            )
             .facilities['solar_array'],
         1,
       );
@@ -298,7 +333,10 @@ void main() {
         .cancel(
           state,
           jobId: 'solar',
-          nowUtc: now.add(const Duration(seconds: 299)),
+          observation: observation(
+            state,
+            now.add(const Duration(seconds: 299)),
+          ),
         )
         .state;
     expect(cancelled.materials, 77); // 80 - 5 + floor(5 * .5).
@@ -307,18 +345,31 @@ void main() {
     expect(cancelled.jobs['solar']!.status, 'cancelled');
     expect(
       service
-          .reconcile(cancelled, nowUtc: now.add(const Duration(days: 1)))
+          .reconcile(
+            cancelled,
+            observation: observation(
+              cancelled,
+              now.add(const Duration(days: 1)),
+            ),
+          )
           .facilities,
       isEmpty,
     );
     expect(
-      service.cancel(cancelled, jobId: 'solar', nowUtc: now).state.materials,
+      service
+          .cancel(
+            cancelled,
+            jobId: 'solar',
+            observation: observation(cancelled, now),
+          )
+          .state
+          .materials,
       77,
     );
     final fresh = build(cancelled, 'retry', 'solar_array').state;
     expect(
       fresh.jobs['retry']!.deadlineUtc,
-      cancelled.lastObservedUtc!.add(const Duration(seconds: 300)),
+      now.add(const Duration(seconds: 300)),
     );
   });
 
@@ -332,25 +383,45 @@ void main() {
         )
         .state;
     expect(
-      service.cancel(queued, jobId: 'queued', nowUtc: now).state.materials,
+      service
+          .cancel(
+            queued,
+            jobId: 'queued',
+            observation: observation(queued, now),
+          )
+          .state
+          .materials,
       queued.materials,
     );
     final blocked = build(initial(), 'control', 'power_control_station').state;
     expect(
-      service.cancel(blocked, jobId: 'control', nowUtc: now).state.materials,
+      service
+          .cancel(
+            blocked,
+            jobId: 'control',
+            observation: observation(blocked, now),
+          )
+          .state
+          .materials,
       blocked.materials,
     );
     final active = build(initial(), 'solar', 'solar_array').state;
     final atDue = service.cancel(
       active,
       jobId: 'solar',
-      nowUtc: active.jobs['solar']!.deadlineUtc!,
+      observation: observation(active, active.jobs['solar']!.deadlineUtc!),
     );
     expect(atDue.code, 'not_cancellable');
     expect(atDue.state.jobs['solar']!.status, 'completed');
     expect(atDue.state.materials, 75);
     expect(
-      service.cancel(atDue.state, jobId: 'missing', nowUtc: now).code,
+      service
+          .cancel(
+            atDue.state,
+            jobId: 'missing',
+            observation: observation(atDue.state, now),
+          )
+          .code,
       'not_cancellable',
     );
   });
@@ -362,16 +433,22 @@ void main() {
       jobId: id,
       kind: 'research',
       targetId: target,
-      nowUtc: state.lastObservedUtc ?? now,
+      observation: observation(state, state.lastObservedUtc ?? now),
       crewId: 'scientist',
     );
     expect(research('locked', 'advanced_battery_systems').code, 'prerequisite');
     state = research('solar-research', 'solar_energy_fundamentals').state;
     state = service.reconcile(
       state,
-      nowUtc: state.jobs['solar-research']!.deadlineUtc!,
+      observation: observation(
+        state,
+        state.jobs['solar-research']!.deadlineUtc!,
+      ),
     );
-    state = service.reconcile(state, nowUtc: state.lastObservedUtc!);
+    state = service.reconcile(
+      state,
+      observation: observation(state, state.lastObservedUtc!),
+    );
     expect(state.completedResearch, {'solar_energy_fundamentals'});
     expect(
       research('duplicate', 'solar_energy_fundamentals').code,
@@ -394,13 +471,13 @@ void main() {
             jobId: 'upgrade',
             kind: 'upgrade',
             targetId: 'solar_array',
-            nowUtc: now,
+            observation: observation(state, now),
           )
           .state;
       expect(state.materials, 70);
       state = service.reconcile(
         state,
-        nowUtc: state.jobs['upgrade']!.deadlineUtc!,
+        observation: observation(state, state.jobs['upgrade']!.deadlineUtc!),
       );
       expect(state.facilities['solar_array'], 3);
       expect(state.upgradeTiers['solar_array'], 1);
@@ -411,7 +488,7 @@ void main() {
               jobId: 'again',
               kind: 'upgrade',
               targetId: 'solar_array',
-              nowUtc: now,
+              observation: observation(state, now),
             )
             .code,
         'already_upgraded',
@@ -423,7 +500,7 @@ void main() {
               jobId: 'unsupported',
               kind: 'upgrade',
               targetId: 'mission_control_hub',
-              nowUtc: now,
+              observation: observation(state, now),
             )
             .code,
         'unknown_recipe',
@@ -444,22 +521,22 @@ void main() {
             jobId: 'repair',
             kind: 'major_repair',
             targetId: 'solar_array',
-            nowUtc: now,
+            observation: observation(state, now),
           )
           .state;
       expect(state.resources['spare_part'], 2);
       final cancelled = service
-          .cancel(state, jobId: 'repair', nowUtc: now)
+          .cancel(state, jobId: 'repair', observation: observation(state, now))
           .state;
       expect(cancelled.resources['spare_part'], 2);
       expect(cancelled.materials, 79);
       var completed = service.reconcile(
         state,
-        nowUtc: state.jobs['repair']!.deadlineUtc!,
+        observation: observation(state, state.jobs['repair']!.deadlineUtc!),
       );
       completed = service.reconcile(
         completed,
-        nowUtc: now.add(const Duration(days: 1)),
+        observation: observation(completed, now.add(const Duration(days: 1))),
       );
       expect(completed.damagedUnits['solar_array'], 1);
       expect(completed.facilities['solar_array'], 3);
@@ -477,10 +554,12 @@ void main() {
       expect(() => config.recipes.clear(), throwsUnsupportedError);
       final a = service.reconcile(
         state,
-        nowUtc: now.add(const Duration(hours: 1)),
+        observation: observation(state, now.add(const Duration(hours: 1))),
       );
-      final b = RealTimeProgressionService(config)
-          .reconcile(state, nowUtc: now.add(const Duration(hours: 1)));
+      final b = RealTimeProgressionService(config).reconcile(
+        state,
+        observation: observation(state, now.add(const Duration(hours: 1))),
+      );
       expect(a.resources, b.resources);
       expect(a.facilities, b.facilities);
       expect(a.completedActivityIds, b.completedActivityIds);
@@ -535,7 +614,11 @@ void main() {
           )
           .state;
       state = state.copyWith(crewRoles: {'engineer': 'Medic'});
-      final result = service.activate(state, jobId: 'queued', nowUtc: now);
+      final result = service.activate(
+        state,
+        jobId: 'queued',
+        observation: observation(state, now),
+      );
       expect(result.code, 'wrong_crew_role');
       expect(result.state.materials, state.materials);
       expect(result.state.crewAssignments, isEmpty);
@@ -559,10 +642,16 @@ void main() {
           jobId: 'fractional',
           kind: 'major_repair',
           targetId: 'solar_array',
-          nowUtc: now,
+          observation: observation(state, now),
         )
         .state;
-    state = custom.cancel(state, jobId: 'fractional', nowUtc: now).state;
+    state = custom
+        .cancel(
+          state,
+          jobId: 'fractional',
+          observation: observation(state, now),
+        )
+        .state;
     expect(state.resources['lubricant'], 1.25);
     expect(state.resources['spare_part'], 0);
     final invalid = build(
@@ -575,16 +664,30 @@ void main() {
   });
 
   test('completion at a shared deadline is ordered by stable job IDs', () {
+    final timers = document('timer_rules');
+    timers['timers'][0]['duration_seconds'] = 600;
+    service = RealTimeProgressionService(configuration(timers: timers));
     var state = build(initial(), 'z-solar', 'solar_array').state;
-    state = build(state, 'a-maintenance', 'maintenance_bay').state;
+    state = service
+        .start(
+          state,
+          jobId: 'a-research',
+          kind: 'research',
+          targetId: 'solar_energy_fundamentals',
+          observation: observation(state, now),
+        )
+        .state;
     expect(
-      state.jobs['a-maintenance']!.deadlineUtc,
+      state.jobs['a-research']!.deadlineUtc,
       state.jobs['z-solar']!.deadlineUtc,
     );
-    state = service.reconcile(state, nowUtc: now.add(const Duration(hours: 1)));
-    expect(state.completedActivityIds.toList(), ['a-maintenance', 'z-solar']);
+    state = service.reconcile(
+      state,
+      observation: observation(state, now.add(const Duration(hours: 1))),
+    );
+    expect(state.completedActivityIds.toList(), ['a-research', 'z-solar']);
     expect(state.facilities['solar_array'], 1);
-    expect(state.facilities['maintenance_bay'], 1);
+    expect(state.completedResearch, {'solar_energy_fundamentals'});
   });
 
   test('synthetic fixture was encoded by unchanged pre-4B serializer and has no app-created jobs', () {

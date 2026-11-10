@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +14,8 @@ import '../ui/game_widgets.dart';
 import '../ui/theme.dart';
 import 'campaign_save.dart';
 import 'campaign_save_store.dart';
+import 'campaign_migration.dart';
+import 'campaign_controller.dart';
 
 class GameBootstrap extends StatefulWidget {
   const GameBootstrap({super.key});
@@ -24,15 +28,14 @@ class _GameBootstrapState extends State<GameBootstrap> {
   late final Future<_LoadedGame> _loading = _load();
 
   Future<_LoadedGame> _load() async {
-    final store = CampaignSaveStore.local();
-    final results = await Future.wait<Object>([
-      GameDataRepository.load(),
-      store.load(),
-    ]);
+    final repository = await GameDataRepository.load();
+    final migration = CampaignMigration(repository);
+    final store = CampaignSaveStore.local(migrate: migration.migrate, validate: migration.validate);
+    final save = await store.load();
     return _LoadedGame(
-      results[0] as GameDataRepository,
+      repository,
       store,
-      results[1] as CampaignSave,
+      save,
     );
   }
 
@@ -48,7 +51,7 @@ class _GameBootstrapState extends State<GameBootstrap> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'BASE 67 could not open its bundled data.\n${snapshot.error}',
+                  'BASE 67 could not open its saved campaign or bundled data.\n${snapshot.error}',
                 ),
               ),
             ),
@@ -96,30 +99,92 @@ class GameRouter extends StatefulWidget {
   State<GameRouter> createState() => _GameRouterState();
 }
 
-class _GameRouterState extends State<GameRouter> {
+class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
   final _navigatorKey = GlobalKey<NavigatorState>();
-  late CampaignSave _save = widget.save;
+  late final CampaignController _controller;
+  Object? _reportedError;
+  CampaignSave get _save => _controller.save;
 
-  Future<void> _updateSettings(String key, Object? value) async {
-    final settings = Map<String, Object?>.from(_save.settings)..[key] = value;
-    final updated = _save.copyWith(settings: settings);
-    await widget.store.save(updated);
-    if (mounted) setState(() => _save = updated);
+  @override
+  void initState() {
+    super.initState();
+    _controller = CampaignController(repository: widget.repository, store: widget.store, initial: widget.save);
+    _controller.addListener(_changed);
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_guard(_controller.initialize()));
+    if (widget.store.recoveredFromBackup) {
+      _notice('Recovered the previous valid campaign save.');
+    }
   }
 
-  Future<void> _completePrologue(CampaignSave updated) async {
-    await widget.store.save(updated);
-    if (!mounted) return;
-    setState(() => _save = updated);
+  void _changed() {
+    if (!mounted) { return; }
+    setState(() {});
+    if (_controller.lastError != null && _controller.lastError != _reportedError) {
+      _reportedError = _controller.lastError;
+      _notice('Campaign changes were not saved. Reopen BASE 67 to try recovery.');
+    }
+  }
+
+  void _notice(String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) { return; }
+      final context = _navigatorKey.currentContext;
+      if (context != null) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(message)));
+      }
+    });
+  }
+
+  Future<void> _guard(Future<void> action) async {
+    try {
+      await action;
+    } catch (error) {
+      if (!mounted) { return; }
+      if (_reportedError != error) {
+        _reportedError = error;
+        _notice('Campaign changes were not saved. Reopen BASE 67 to try recovery.');
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_guard(_controller.resume()));
+    } else {
+      _controller.pause();
+    }
+  }
+
+  Future<void> _updateSettings(String key, Object? value) =>
+      _guard(_controller.updateSetting(key, value));
+
+  Future<void> _completePrologue(CampaignSave updated, int generation) async {
+    final accepted = await _controller.completePrologue(updated, expectedGeneration: generation);
+    if (!mounted || !accepted) { return; }
     final nav = _navigatorKey.currentState!;
     nav.popUntil((route) => route.isFirst);
     nav.pushReplacementNamed('/home');
   }
 
-  Future<void> _resetCampaign() async {
-    const fresh = CampaignSave();
-    await widget.store.save(fresh);
-    if (mounted) setState(() => _save = fresh);
+  Future<void> _resetCampaign() => _guard(_controller.resetCampaign());
+
+  Widget _prologuePage() {
+    final generation = _controller.setupGeneration;
+    return Prologue(
+      repository: widget.repository,
+      initialSave: _save.legacySnapshot(),
+      onComplete: (updated) => unawaited(_guard(_completePrologue(updated, generation))),
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.removeListener(_changed);
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -144,7 +209,8 @@ class _GameRouterState extends State<GameRouter> {
 
   Route<void> _route(RouteSettings settings) {
     final path = settings.name ?? '/splash';
-    final page = switch (path) {
+    final fixedPrologue = path == '/prologue' ? _prologuePage() : null;
+    Widget page() => switch (path) {
       '/splash' => _SplashScreen(
         openHome: () {
           _navigatorKey.currentState!.pushReplacementNamed(
@@ -169,11 +235,7 @@ class _GameRouterState extends State<GameRouter> {
           _navigatorKey.currentState!.pushNamed('/briefing', arguments: id);
         },
       ),
-      '/prologue' => Prologue(
-        repository: widget.repository,
-        initialSave: _save,
-        onComplete: _completePrologue,
-      ),
+      '/prologue' => fixedPrologue!,
       '/briefing' => _BriefingScreen(
         repository: widget.repository,
         levelId: settings.arguments is String
@@ -271,7 +333,10 @@ class _GameRouterState extends State<GameRouter> {
       reverseTransitionDuration: reduceMotion
           ? Duration.zero
           : GameMotion.short,
-      pageBuilder: (_, _, _) => page,
+      pageBuilder: (_, _, _) => ListenableBuilder(
+        listenable: _controller,
+        builder: (context, child) => page(),
+      ),
       transitionsBuilder: (_, animation, _, child) => reduceMotion
           ? child
           : FadeTransition(opacity: animation, child: child),

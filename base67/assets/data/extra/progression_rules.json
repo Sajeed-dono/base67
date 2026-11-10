@@ -1,12 +1,13 @@
 {
   "_meta": {
     "file": "progression_rules.json",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "data_class": "GAME_VALUE",
     "status": "provisional",
     "notes": [
       "The campaign unlock chain is one-way and does not reset the persistent base. Reward thresholds remain unbalanced.",
-      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim."
+      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim.",
+      "Owner-approved service-policy follow-up: shared lanes and restricted recovery replace the once-per-level salvage cap. No app or persistence integration."
     ]
   },
   "rules": {
@@ -137,11 +138,16 @@
     "queued_refund": 0,
     "due_completion_wins": true
   },
-  "salvage": {
-    "grants_per_level": 1,
-    "cap_per_level": 8,
+  "job_lanes": {
+    "construction": "engineering",
+    "upgrade": "engineering",
+    "major_repair": "engineering",
+    "research": "research"
+  },
+  "recovery": {
     "required_only": true,
-    "note": "Shortfall to cheapest eligible required unbuilt facility; no active jobs. Funds are restricted to required construction, never upgrades/research. One receipt per level; further losses after that receipt are not rescued.",
-    "earmark_for_required_construction": true
+    "assistance_cancel_restore_fraction": 1,
+    "damage_occurrences": [],
+    "note": "GAME VALUE, provisional. Construction identities derive from required installed counts. Essential repairs require a validated occurrence catalogue and confirmed observed damage. The catalogue is empty until missions define occurrences; arbitrary caller IDs cannot authorize assistance. Credits are restricted, target-specific, reusable after cancellation, and bounded by current verified recipe shortfall."
   }
 }

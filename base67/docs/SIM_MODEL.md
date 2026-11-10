@@ -1,11 +1,38 @@
-# BASE 67 simulation model — Prompt 4A
+# BASE 67 simulation and progression model
+
+## Schema-3 app persistence boundary (2026-11-10; implementation pending owner validation)
+
+The final owner authorization enables Prompt 4B-2. The service rules below remain unchanged. CampaignSave stores the complete progression aggregate once; presentation inventory/resources/tiers/jobs are derived views. CampaignMigration validates legacy input and ProgressionCodec validates restored/outgoing allocations, payments, receipts, crew/lane ownership, installed facilities and time checkpoints. Only absent approved initial reserve fields are initialized during legacy migration/setup; existing zero balances survive. Packed spares transfer through the existing explicit unpacking operation.
+
+CampaignController supplies ordered UTC/token observations captured before queue delivery, commits one entire primary blob through the existing store, and publishes only after read-back verification. Preserve the prior verified blob as backup before replacement. Startup/resume and a nearest-job wake-up call the existing reconciliation function; no simulation step, survival consumption or automatic queued activation occurs. ProgressionClock.restore restores history/checkpoints without observing time or changing the approved rollback formula.
+
+Legacy migration errors preserve the original bytes and block loading; no blank-save fallback. A corrupt/missing primary can recover a validated backup with a recovery notice. Ambiguous legacy jobs are archived terminal with crew released, IDs retained, no inferred effect/refund and a diagnostic log. Future unsupported schemas and unrecognized aggregate fields/recipes stop safely. The existing shared_preferences backend is retained; this is not an ACID or power-loss test claim. No validation commands were run in this implementation pass. The owner must validate before Prompt 4 can be marked verified complete.
+
+## Approved audit corrections (2026-11-10; supersede affected service details below)
+
+All gameplay policies remain GAME VALUE, provisional; no new balance values or simulation formulas are added. These corrections apply to the unwired progression layer only, not CampaignSave schema 2.
+
+- Damage observation: admit a known catalogue occurrence only with the correct level and a count transition equal to its configured units, within installed capacity and consistent with existing allocations. Record the occurrence before confirmation. No aggregate positive count alone can identify a historical occurrence. Unknown existing damage receives a non-authoritative allocation when ordinarily repaired; it cannot acquire recovery authority later.
+- Repair job snapshots repairDamageId independently of payment identity. Resolve one unit from that allocation on completion, including ordinary-funded completion. Confirmation after activation cannot change the bound identity. No second assistance payment for an active bound allocation. Final resolution removes unused restricted credit and retains historical receipts/tombstone. Other damage occurrences retain their own counts/credits. Cancellation leaves outstanding damage in the same allocation and returns actual assistance at 100%, ordinary payments at configured 50% with indivisible rounding down.
+- recordFieldRepair is a pure report of an already-executed/paid external outcome: validate named open allocation, count decrement and absence of a reservation, then resolve that allocation. It is not a gameplay action or a second resource charge. Future integration must atomically coordinate the external payment/outcome. No field-repair or event simulation code changes here. Damage replaced outside this boundary is inconsistent, logged, and cannot silently complete a reserved repair.
+- Construction: installedCount excludes pending units. First construction transitions lifecycle-only state to underConstruction, then operating/damaged on completion; first cancellation restores notBuilt. Preserve deliberate off/outOfResources states. Expansion never replaces the operating state of existing units and preserves damage/tier. Installed lifecycle-only/unknown states are invalid, not silently normalized. Pending units provide no output or capacity. Cargo/cost/refund rules are unchanged.
+- Spares: resources['spare_part'] is the only available repair stock. Explicit unpacking removes packed spares and transfers them atomically into an empty/zero available balance. Repetition transfers nothing. Mixed positive representations are rejected as ambiguous; no inferred grants or automatic summation. Spares are not installation kits and never gain full ordinary cancellation refunds by being classified as cargo.
+- Clock Option A: capture an immutable (UTC, token) pair before delivery. Token order is capture order across the aggregate, independent of UTC order. Reject duplicate/older tokens before any timed-request state mutation, including enqueue and pending delivery. For accepted observations only, the previously approved formula remains:
+
+      elapsed = max(0, suppliedUTC - observedUTC)
+      nextRemaining = max(0, previousRemaining - elapsed)
+      nextObservedUTC = suppliedUTC  # also on an accepted rollback
+
+  Original start/deadline history, terminal completions and receipts remain unchanged. New jobs use accepted current UTC, never a global historical UTC floor. Tokens must not be assigned to stale timestamps at delivery time. Genuine accepted forward jumps can still complete early. The service reads no clock; no coordinator or persistence is introduced. Future integration must preserve token ordering and damage ownership; raw snapshot replacement is not authoritative observation.
+
+Local validation is recorded in PROGRESS and the live session log. Independent read-only review is required; no acceptance, disk durability or Prompt 4 completion claim.
 
 The foundation introduced a pure Dart simulation boundary. Prompt 4A now implements that library independently from Flutter widgets; it is not wired into the playable app.
 
 - The default deterministic random seed is read from `assets/data/game_constants.json` (`rng.default_seed`); its specified algorithm is Mulberry32. `SeededRng` implements the specified sequence generator.
 - NASA values remain in `nasa_data.json`, with source links resolved through `sources.json`. Simulation code must obtain values using fact IDs.
 - Existing assumptions and formulas remain in the original game pack. New balance choices belong in the versioned GAME VALUE files under `assets/data/extra/`.
-- The Martian simulation clock and real-world progression timers are separate. Timer deadlines are stored as UTC timestamps and completion is idempotent. Backward device-clock changes do not cause early completion.
+- The Martian simulation clock and real-world progression timers are separate. Timer deadlines are stored as UTC timestamps and completion is idempotent. Clock corrections cannot reverse completion or increase remaining work; the current per-job policy is specified below.
 
 Detailed 4A assumptions and formulas follow. Mission balance remains unverified.
 
@@ -140,7 +167,9 @@ These are continuous depletion estimates, not survival guarantees. None is below
 At the 4A boundary material sourcing, construction economy, timer selection and refunds were deferred. The approved 4B-1 rules below now resolve deterministic resupply; costs remain limited to existing facility IDs.
 
 
-## 4B-1 real-time progression (unwired)
+## Historical 4B-1 real-time progression (unwired)
+
+The service-policy section below supersedes this historical salvage and clock-floor behavior. Original numerical costs/resupply remain unchanged.
 
 All new economy, prerequisite, timing, role and recovery rules here are **GAME VALUE, provisional**, not NASA facts or verified engineering/campaign balance. Pure lib/sim rules are unchanged. The service accepts immutable configuration/state and caller UTC; it reads no device clock, disk, Flutter, UI or audio. Repository document adaptation and persistent schema migration are 4B-2 work.
 
@@ -169,3 +198,41 @@ With no active job, find the cheapest eligible required unbuilt facility with bu
 Affordability evidence: 80 - 62 = 18 without any mission rewards; 80 + 14*10 - 62 = 158 after baseline construction and all eligible rewards. Every configured baseline facility can be afforded before its level reward. This checks the current config, not future mission success, optional upgrades or arbitrary losses.
 
 Bounded recovery limitations retained as tests: 26 solar cancellations yield 2 materials; salvage +3 restores affordability once. Cancelling a fully salvaged solar build leaves 2 and exhausts that level receipt. Several missing facilities with zero funds can require more than one recovery in one level, which is not allowed. Missing repair spares cannot be salvaged. Further owner policy is needed for an unconditional no-soft-lock guarantee; no unauthorized recovery is implemented.
+
+
+## Current service-policy follow-up (unwired, 2026-11-10)
+
+Every new gameplay rule here is **GAME VALUE, provisional**. No NASA/scientific accuracy or final campaign balance is asserted. Original simulation formulas and lib/sim are unchanged.
+
+### Authority and restricted recovery
+
+- Mandatory construction identity = `construction:<known facility>:<configured required count>`. Required counts are validated against installed limits. Eligibility requires an unmet count, unlock level, building/research prerequisites and a known recipe. Optional additional units do not qualify under the current required count of one.
+- Essential damage identity = `<known level>:<source event>:<positive sequence>`, derived from the repository configuration catalogue, not supplied as a new claim by UI code. Validate its target and maximum units against the original event definition. Confirm an occurrence only against observed, unclaimed damage not exceeding installed count. Retain the confirmation receipt after repair. Verify receipt kind/target/level/amount whenever selecting repair assistance. The current production occurrence catalogue is empty: no mission events are invented by this follow-up. Tests supply clearly synthetic catalogues. Future mission/controller code must provide trusted observations; no cryptographic save authentication is claimed.
+- Restricted credit per target/resource is separate from ordinary balances. `shortfall = max(0, recipeCost - ordinaryAvailable - existingCredit)`, after pending ordinary deliveries. Add only this shortfall to the same entitlement; available credit cannot exceed its recipe cost. New required objectives can recover in the same level. Completed objectives and resolved occurrences cannot recover. Unrelated research is not a recovery gate. Existing active funded work cannot claim a second payment.
+- On activation use matching restricted credit first, then ordinary funds. Snapshot the two payment sources independently. On cancellation, `ordinaryRefund = ordinaryPaid * refundFraction` (configured 0.5), floor materials/spares; `restrictedRestoration = assistancePaid` (100%). Do not refund assistance as ordinary inventory. Queued/blocked refunds are zero; due completion precedes cancellation. No elapsed work carries into a retry. Full-storage ordinary material refunds remain pending.
+
+### Lanes, cargo and installed facilities
+
+One engineering lane serves construction/upgrades/timed major repairs; one research lane serves research. Assigned or unattended jobs occupy their lane. Crew and target reservations are checked again on activation. Queued work reserves nothing, and offline time does not activate it. A pure external reservation input permits later cross-clock crew/facility coordination without running simulation code here.
+
+An assigned Engineer's eligible timed repair uses `ceil(baseDurationMicroseconds * configuredMultiplier)` with multiplier 0.5; material/spare cost is unchanged. Snapshot the effective duration, never recompute it for active work.
+
+Construction queue: no stock/cost change. Activation: reserve one matching packed item if available and deduct the existing material recipe once. Completion: installedCount += 1, reserved item consumed once. Cancellation: return reserved uninstalled items fully; material refunds follow their payment source. No packed item is a second purchase gate; the same existing material recipe constructs a unit when stock is absent. This is the approved simplified GAME VALUE accounting, not real manufacturing economics.
+
+Equipment-backed limits come from the original equipment max_units through supplied configuration. Facilities without a mapped equipment limit retain the prior one-installation limit. Spare parts are consumable repair stock, not a maintenance-bay installation kit. Store installed counts, upgrade tiers, damaged counts and operating states separately. Simulation projection uses `tier = 1 + progressionUpgradeTier`, never adds packed stock, never initializes reserves, and leaves existing units operating while another is built. The original habitat is not replaced; later expansion remains undefined until its own approved plan.
+
+### Per-job time checkpoints
+
+Inputs are caller UTC and immutable job state. At activation store original startUTC, originalDeadlineUTC = startUTC + effectiveDuration, remaining = effectiveDuration, observedUTC = startUTC.
+
+    elapsed = max(0, suppliedUTC - observedUTC)
+    nextRemaining = max(0, previousRemaining - elapsed)
+    nextObservedUTC = suppliedUTC  # also on rollback
+
+Complete only once when remaining reaches zero, committing the effect/status/completion ID/receipt in one in-memory transition. Original deadline history remains unchanged, including when corrected-clock completion happens before its original wall deadline. Record actual observation/completion time and rollback diagnostics separately. Completed/cancelled jobs cannot reverse. Process simultaneous due jobs by original deadline then stable ID. New jobs never inherit an aggregate high-water timestamp. Countdown reads only a reconciled snapshot.
+
+A future jump may complete timers early (accepted limitation); repeated forward/back changes cannot duplicate effects/refunds. No trustworthy offline elapsed time can be inferred during a negative clock jump: grant zero for that interval, move the checkpoint, then resume progress with later positive intervals. Persist all checkpoints/receipts together in 4B-2; this work proves pure-state continuation only. Real-time progression never advances sols or consumes survival reserves.
+
+### Limits
+
+Restricted assistance is not permission for arbitrary caller objectives, unidentified damage, optional upgrades or unapproved extra units. The production damage catalogue is intentionally empty pending mission definitions. No unconditional claim covers corrupt saves or every future scenario. Existing 80/200/+10 construction resupply, all construction/repair costs, original production rates, stocks/capacities and base timer ranges are unchanged. The Engineer multiplier is owner-approved GAME VALUE, provisional.

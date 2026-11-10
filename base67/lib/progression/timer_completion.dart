@@ -3,6 +3,13 @@ import '../app/campaign_save.dart';
 class TimerCompletion {
   const TimerCompletion._();
 
+  static bool canApply({
+    required String id,
+    required String status,
+    required Set<String> completedIds,
+    bool rewardApplied = false,
+  }) => status == 'active' && !rewardApplied && !completedIds.contains(id);
+
   /// UTC deadlines are retained across restarts. Clock rollback clamps elapsed
   /// progress to zero; a completed activity can be rewarded only once.
   static bool isDue({
@@ -20,9 +27,12 @@ class TimerCompletion {
     required DateTime nowUtc,
     bool rewardApplied = false,
   }) =>
-      status == 'active' &&
-      !rewardApplied &&
-      !completedIds.contains(id) &&
+      canApply(
+        id: id,
+        status: status,
+        completedIds: completedIds,
+        rewardApplied: rewardApplied,
+      ) &&
       deadlineUtc != null &&
       isDue(deadlineUtc: deadlineUtc, nowUtc: nowUtc);
 

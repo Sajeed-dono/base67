@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:base67/progression/progression_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'progression_service_test.dart' show observation;
+
 void main() {
   late ProgressionConfig config;
   late RealTimeProgressionService service;
@@ -13,6 +15,12 @@ void main() {
           as Map<String, dynamic>;
   setUp(() {
     config = ProgressionConfig.fromDocuments(
+      equipment: jsonDecode(
+        File('assets/data/equipment.json').readAsStringSync(),
+      ) as Map<String, dynamic>,
+      events: jsonDecode(
+        File('assets/data/events.json').readAsStringSync(),
+      ) as Map<String, dynamic>,
       buildings: data('buildings'),
       research: data('research'),
       timers: data('timer_rules'),
@@ -33,10 +41,13 @@ void main() {
     jobId: id,
     kind: kind,
     targetId: target,
-    nowUtc: state.lastObservedUtc ?? now,
+    observation: observation(state, state.lastObservedUtc ?? now),
   );
   ProgressionState finish(ProgressionState state, String id) =>
-      service.reconcile(state, nowUtc: state.jobs[id]!.deadlineUtc!);
+      service.reconcile(
+        state,
+        observation: observation(state, state.jobs[id]!.deadlineUtc!),
+      );
 
   test('resupply start 80, capacity 200, +10 once for levels 1-14; level 15 and replays grant nothing', () {
     var state = initial();
@@ -119,7 +130,10 @@ void main() {
     expect(spent, 62);
     expect(state.facilities.keys.toSet(), config.requiredFacilities);
     expect(state.materials, 158);
-    expect(state.receipts.keys.any((id) => id.startsWith('salvage:')), isFalse);
+    expect(
+      state.receipts.keys.any((id) => id.startsWith('assistance:')),
+      isFalse,
+    );
   });
 
   test(
@@ -151,123 +165,47 @@ void main() {
     state = start(state, 'full').state;
     expect(state.materials, 200);
     expect(state.pending['materials'], 15);
-    state = service.cancel(state, jobId: 'full', nowUtc: now).state;
+    state = service
+        .cancel(state, jobId: 'full', observation: observation(state, now))
+        .state;
     expect(state.materials, 200);
     expect(state.pending['materials'], 17);
     expect(service.resupply(state).pending, state.pending);
     expect(
-      state.receipts.keys.where((id) => id.startsWith('salvage:')),
+      state.receipts.keys.where((id) => id.startsWith('assistance:')),
       isEmpty,
     );
   });
 
-  test('repeated cancellation counterexample is rescued once at level 1 without farming', () {
-    var state = initial();
-    var cancellations = 0;
-    while (state.materials >= 5) {
-      final id = 'cancel:${cancellations++}';
-      final active = start(state, id);
-      expect(active.code, 'active');
-      state = service.cancel(active.state, jobId: id, nowUtc: now).state;
-    }
-    expect(cancellations, 26);
-    expect(state.materials, 2);
-    final recovery = service.recover(state);
-    expect(recovery.code, 'salvage_granted');
-    state = recovery.state;
-    expect(state.materials, 5);
-    expect(state.receipts['salvage:${config.levels.first}']!.amount, 3);
-    expect(service.recover(state).state.materials, 5);
-    state = finish(start(state, 'rescued').state, 'rescued');
-    expect(state.facilities['solar_array'], 1);
-    expect(service.recover(state).code, 'no_required_facility');
-  });
-
-  test('salvage is earmarked: optional upgrades cannot spend the grant', () {
-    var state = initial(level: config.levels[1])
-        .copyWith(resources: {'materials': 0}, facilities: {'solar_array': 1});
-    state = service.recover(state).state;
-    expect(state.materials, 4);
-    expect(state.salvage['battery_bank'], 4);
-    final upgraded = start(state, 'optional', kind: 'upgrade');
-    expect(upgraded.code, 'insufficient_resources');
-    expect(upgraded.state.materials, 4);
-    state = finish(
-      start(state, 'required', target: 'battery_bank').state,
-      'required',
-    );
-    expect(state.facilities['battery_bank'], 1);
-    expect(state.reservedMaterials, 0);
-  });
-
-  test('salvage requires no active job; queued or blocked jobs hold no crew or materials', () {
-    var state = start(
-      initial(),
-      'active',
-    ).state.copyWith(resources: {'materials': 0});
-    expect(service.recover(state).code, 'active_job');
-    state = service.cancel(state, jobId: 'active', nowUtc: now).state;
-    final queued = service
-        .enqueue(
-          state,
-          jobId: 'queued',
-          kind: 'construction',
-          targetId: 'solar_array',
-        )
-        .state;
-    expect(service.recover(queued).code, 'salvage_granted');
-  });
-
-  test('once-per-level salvage cannot be farmed by cancelling salvage-funded work; reports remaining dead end', () {
-    var state = initial().copyWith(resources: {'materials': 0});
-    state = service.recover(state).state;
-    state = service
-        .cancel(start(state, 'salvaged').state, jobId: 'salvaged', nowUtc: now)
-        .state;
-    expect(state.materials, 2);
-    expect(state.salvage['solar_array'], 2);
-    for (var retry = 0; retry < 20; retry++) {
-      final recovery = service.recover(state);
-      expect(recovery.code, 'salvage_exhausted');
-      expect(recovery.state.materials, 2);
-      expect(
-        recovery.state.receipts.keys
-            .where((id) => id.startsWith('salvage:'))
-            .length,
-        1,
-      );
-      state = recovery.state;
-    }
-    expect(start(state, 'cannot-retry').code, 'insufficient_resources');
-  });
-
-  test('per-level salvage cap cannot rescue multiple requirements after resources were exhausted', () {
-    var state = initial(level: config.levels[2])
-        .copyWith(resources: {'materials': 0});
-    state = service.recover(state).state;
-    expect(
-      state.receipts['salvage:${config.levels[2]}']!.amount,
-      4,
-    ); // Cheapest is battery.
-    state = finish(
-      start(state, 'battery', target: 'battery_bank').state,
-      'battery',
-    );
-    expect(service.recover(state).code, 'salvage_exhausted');
-    expect(start(state, 'solar').code, 'insufficient_resources');
-  });
-
-  test('salvage never grants for optional research/upgrades once required facilities exist', () {
-    final state = initial(level: config.levels.last).copyWith(
-      resources: {'materials': 0},
-      facilities: {for (final id in config.requiredFacilities) id: 1},
-    );
-    expect(service.recover(state).code, 'no_required_facility');
-    expect(service.recover(state).state.materials, 0);
-  });
+  test(
+    'repeated ordinary cancellations recover a bounded restricted shortfall',
+    () {
+      var state = initial();
+      var cancellations = 0;
+      while (state.materials >= 5) {
+        final id = 'cancel:${cancellations++}';
+        state = service
+            .cancel(
+              start(state, id).state,
+              jobId: id,
+              observation: observation(start(state, id).state, now),
+            )
+            .state;
+      }
+      expect(cancellations, 26);
+      expect(state.materials, 2);
+      state = service.recover(state).state;
+      expect(state.materials, 2);
+      expect(state.restrictedMaterials, 3);
+      expect(service.recover(state).code, 'not_needed');
+      state = finish(start(state, 'rescued').state, 'rescued');
+      expect(state.facilities['solar_array'], 1);
+      expect(service.recover(state).code, 'no_required_facility');
+    },
+  );
 
   test(
-    'earmarks reject even affordable optional upgrade and research costs',
+    'assistance cannot fund optional upgrades or cheaper custom research',
     () {
       final buildings = data('buildings');
       buildings['buildings'][0]['upgrade_cost']['materials'] = 1;
@@ -280,6 +218,12 @@ void main() {
           timers: data('timer_rules'),
           crew: data('crew_assignments'),
           rules: data('progression_rules'),
+          equipment: jsonDecode(
+            File('assets/data/equipment.json').readAsStringSync(),
+          ) as Map<String, dynamic>,
+          events: jsonDecode(
+            File('assets/data/events.json').readAsStringSync(),
+          ) as Map<String, dynamic>,
         ),
       );
       final state = custom
@@ -290,7 +234,8 @@ void main() {
             ),
           )
           .state;
-      expect(state.materials, 4);
+      expect(state.materials, 0);
+      expect(state.restrictedMaterials, 4);
       for (final kind in ['upgrade', 'research']) {
         final result = custom.start(
           state,
@@ -299,85 +244,202 @@ void main() {
           targetId: kind == 'upgrade'
               ? 'solar_array'
               : 'solar_energy_fundamentals',
-          nowUtc: now,
+          observation: observation(state, now),
         );
         expect(result.code, 'insufficient_resources');
-        expect(result.state.materials, 4);
+        expect(result.state.resources, state.resources);
+        expect(result.state.assistance, state.assistance);
       }
     },
   );
 
-  test(
-    'salvage reaches the configured 8-unit cap for a greenhouse shortfall',
-    () {
-      var state = initial(level: config.levels[5]).copyWith(
-        resources: {'materials': 0},
-        facilities: {
-          'solar_array': 1,
-          'battery_bank': 1,
-          'power_control_station': 1,
-          'maintenance_bay': 1,
-        },
-      );
-      final recovered = service.recover(state);
-      expect(recovered.code, 'salvage_granted');
-      expect(
-        recovered.state.receipts['salvage:${config.levels[5]}']!.amount,
-        8,
-      );
-      state = finish(
-        start(recovered.state, 'greenhouse', target: 'greenhouse').state,
-        'greenhouse',
-      );
-      expect(state.facilities['greenhouse'], 1);
-      expect(state.materials, 0);
-    },
-  );
-
-  test(
-    'required-construction salvage does not rescue missing repair parts',
-    () {
-      final state = initial().copyWith(
-        resources: {'materials': 0, 'spare_part': 0},
-        facilities: {'solar_array': 1},
-        damagedUnits: {'solar_array': 1},
-      );
-      expect(service.recover(state).code, 'no_required_facility');
-      expect(
-        start(
+  test('unrelated research does not suppress recovery and queued work holds nothing', () {
+    var state = initial().copyWith(resources: {'materials': 0});
+    state = service
+        .start(
           state,
-          'repair',
-          target: 'solar_array',
-          kind: 'major_repair',
-        ).code,
-        'insufficient_resources',
-      );
-    },
-  );
+          jobId: 'research',
+          kind: 'research',
+          targetId: 'solar_energy_fundamentals',
+          observation: observation(state, now),
+        )
+        .state;
+    state = service
+        .enqueue(
+          state,
+          jobId: 'queued',
+          kind: 'construction',
+          targetId: 'solar_array',
+        )
+        .state;
+    expect(state.jobs['queued']!.paid, isEmpty);
+    expect(state.crewAssignments, isEmpty);
+    state = service.recover(state).state;
+    expect(state.restrictedMaterials, 5);
+    expect(start(state, 'alongside').code, 'active');
+  });
 
-  test('each later level has a distinct receipt but returning to an old level does not reset it', () {
+  test('fully assisted cancellation is repeatable without a dead end or ordinary farming', () {
     var state = service
         .recover(initial().copyWith(resources: {'materials': 0}))
         .state;
-    final merelyChangedLevel = service.recover(
-      state.copyWith(levelId: config.levels[1]),
-    );
-    expect(merelyChangedLevel.code, 'not_needed');
-    expect(
-      merelyChangedLevel.state.receipts.keys
-          .where((id) => id.startsWith('salvage:'))
-          .length,
-      1,
-    );
-    state = finish(start(state, 'required-solar').state, 'required-solar');
-    state = state.copyWith(levelId: config.levels[1]);
-    state = service.recover(state).state;
-    expect(
-      state.receipts.keys.where((id) => id.startsWith('salvage:')).length,
-      2,
-    );
-    final total = state.materials;
-    state = state.copyWith(levelId: config.levels.first);
-    expect(service.recover(state).state.materials, total);
+    for (var retry = 0; retry < 30; retry++) {
+      final id = 'assisted:$retry';
+      final active = start(state, id);
+      expect(active.code, 'active');
+      state = service
+          .cancel(
+            active.state,
+            jobId: id,
+            observation: observation(active.state, now),
+          )
+          .state;
+      expect(state.materials, 0);
+      expect(state.restrictedMaterials, 5);
+      final again = service.cancel(
+        state,
+        jobId: id,
+        observation: observation(state, now),
+      );
+      expect(again.state.assistance, state.assistance);
+      expect(service.recover(state).code, 'not_needed');
+      expect(
+        state.receipts.keys.where((id) => id.startsWith('assistance:')).length,
+        1,
+      );
+    }
+    state = finish(start(state, 'finish').state, 'finish');
+    expect(state.facilities['solar_array'], 1);
+    expect(state.restrictedMaterials, 0);
+    expect(service.recover(state).code, 'no_required_facility');
+    expect(start(state, 'optional-second').code, 'insufficient_resources');
   });
+
+  test(
+    'mixed cancellations top up only the same eligible recipe shortfall',
+    () {
+      var state = service
+          .recover(initial().copyWith(resources: {'materials': 2}))
+          .state;
+      for (var i = 0; i < 10; i++) {
+        state = service
+            .cancel(
+              start(state, 'mixed:$i').state,
+              jobId: 'mixed:$i',
+              observation: observation(start(state, 'mixed:$i').state, now),
+            )
+            .state;
+        state = service.recover(state).state;
+        expect(state.materials + state.restrictedMaterials, 5);
+        expect(state.restrictedMaterials <= 5, isTrue);
+      }
+      expect(state.materials, 0);
+      expect(state.restrictedMaterials, 5);
+      expect(
+        state.receipts['assistance:construction:solar_array:1']!.amount,
+        5,
+      );
+    },
+  );
+
+  test(
+    'several required facilities recover in one level, including prerequisites',
+    () {
+      var state = initial(level: config.levels[2])
+          .copyWith(resources: {'materials': 0});
+      for (final target in [
+        'battery_bank',
+        'solar_array',
+        'power_control_station',
+      ]) {
+        final recovery = service.recover(state);
+        expect(recovery.code, 'assistance_granted');
+        state = recovery.state;
+        final active = start(state, 'required:$target', target: target);
+        expect(active.code, 'active');
+        state = finish(active.state, 'required:$target');
+        expect(state.facilities[target], 1);
+        expect(state.materials, 0);
+      }
+      expect(service.recover(state).code, 'no_required_facility');
+      expect(
+        state.receipts.keys.where((id) => id.startsWith('assistance:')).length,
+        3,
+      );
+    },
+  );
+
+  test('completed required work cannot grant for optional units, upgrades or research', () {
+    final state = initial(level: config.levels.last).copyWith(
+      resources: {'materials': 0},
+      facilities: {for (final id in config.requiredFacilities) id: 1},
+    );
+    expect(service.recover(state).code, 'no_required_facility');
+    expect(service.recover(state).state.assistance, isEmpty);
+  });
+
+  test('greenhouse assistance covers its actual eight-unit recipe, not a level cap', () {
+    var state = initial(level: config.levels[5]).copyWith(
+      resources: {'materials': 0},
+      facilities: {
+        'solar_array': 1,
+        'battery_bank': 1,
+        'power_control_station': 1,
+        'maintenance_bay': 1,
+      },
+    );
+    state = service.recover(state).state;
+    expect(state.restrictedMaterials, 8);
+    state = finish(
+      start(state, 'greenhouse', target: 'greenhouse').state,
+      'greenhouse',
+    );
+    expect(state.facilities['greenhouse'], 1);
+    expect(state.materials, 0);
+    expect(state.restrictedMaterials, 0);
+  });
+
+  test('unidentified observed damage cannot mint repair assistance', () {
+    final state = initial().copyWith(
+      resources: {'materials': 0, 'spare_part': 0},
+      facilities: {'solar_array': 1},
+      damagedUnits: {'solar_array': 1},
+    );
+    expect(service.recover(state).code, 'no_required_facility');
+    expect(
+      start(state, 'repair', kind: 'major_repair').code,
+      'insufficient_resources',
+    );
+    expect(service.confirmDamage(state, 'invented').code, 'unknown_damage');
+    expect(
+      service.recover(state, identity: 'repair:invented').state.assistance,
+      isEmpty,
+    );
+  });
+
+  test(
+    'changing levels neither duplicates nor converts an objective entitlement',
+    () {
+      var state = service
+          .recover(initial().copyWith(resources: {'materials': 0}))
+          .state;
+      final id = service.constructionObjective('solar_array');
+      for (final level in [
+        config.levels[1],
+        config.levels.first,
+        config.levels[2],
+      ]) {
+        state = service
+            .recover(state.copyWith(levelId: level), identity: id)
+            .state;
+        expect(state.assistance[id]!['materials'], 5);
+        expect(state.materials, 0);
+      }
+      state = finish(start(state, 'required').state, 'required');
+      expect(
+        service.recover(state, identity: id).code,
+        'invalid_recovery_identity',
+      );
+    },
+  );
 }

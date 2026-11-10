@@ -23,12 +23,15 @@ BASE 67 is a 2D, offline-first, portrait-first Android game for children aged 10
 - A passing test does not prove a screen looks good. Ask me for screenshots for visual work.
 - Do not give me a long plan when I ask a short question. Be concise, use plain English, and put anything I must paste into Codex in a code block.
 
-## Current state (a snapshot written on 2026-11-08; docs/PROGRESS.md overrides it)
-- Prompt 1 (foundation and data layer): complete, verified, pushed.
-- Prompt 2 (visual design, astronauts, Home Base, Campaign Map): implemented and tests pass; I am doing a visual review. docs/reference/ (the Dribbble style screenshots) was empty, so the look follows the written brief. A polish pass against screenshots may follow.
-- Prompts 3 to 8: not started.
-- Timer and research values are provisional. Fact cards for the Mars Notebook are not written yet.
-- A teammate, Mumit, collaborates through the GitHub repository.
+## Current state (snapshot 2026-11-10; docs/PROGRESS.md overrides it)
+- Prompts 1-3 are complete. Visual references were reviewed; the prologue is implemented.
+- 4A and 4B-1 are committed/pushed; origin/main was verified at 6ddb2c3 before the service-policy follow-up.
+- Current work: owner-approved service-policy audit corrections, Clock Option A; locally verified (clean analyzer, 136 tests); independent read-only review REQUIRED, not accepted; not staged/committed/pushed. Prompt 4 is incomplete. 4B-2 and Prompt 5 are NOT STARTED.
+- Correction contracts: damage identity is independent of payment; confirm recorded occurrences only and retain closure receipts. First construction clears lifecycle states while preserving shutdown/existing units. Capture UTC/token together before delivery and reject stale timed requests before mutation; accepted rollback formula is unchanged. Explicitly unpack spares into the canonical consumable balance; reject ambiguous duplicate representations. All remain unwired, without restart durability.
+- Official owner decisions are recorded in docs/DECISIONS.md. Preserve crew voting for Prompts 5-6 and the original story/educational vision. No service-policy work changes app/prologue/UI, lib/sim, schema 2 or original data.
+- Transactional storage is approved for a separate evaluation/proposal only, after this follow-up. No package/backend selected. Centralized save mutation and story-only replay await separately approved 4B-2 work.
+- Sound remains deferred to Prompt 7: short UI/action effects first, music later, no voice. Package and size budget await that plan; sourcing requires owner approval as recorded in Decisions.
+- Timers/research and new game policies remain provisional. Fact cards and student/NASA source verification remain outstanding. A teammate, Mumit, collaborates through GitHub.
 
 ## What I want from you right now
 First reply in 6 lines or fewer: confirm you understood the project, state the current prompt as you understand it, and list the one or two things you need from me (for example the latest docs/PROGRESS.md or Codex's latest report). Then wait.
@@ -41,9 +44,5 @@ After each prompt is verified, edit only the "Current state" part of the box abo
 ```
 Project: BASE 67, kid-friendly (10-14) offline Android Mars settlement game in Flutter for NASA Space Apps 2026. One persistent base, 15 levels, 5 chapters, real-world timers (no pay-to-skip), NASA data labelled NASA DATA / GAME VALUE / DERIVED. Code is written by Codex from 8 prompts pasted one at a time; I paste its reports to you for review. Read docs/vault/00_START_HERE.md, docs/PROGRESS.md, docs/DECISIONS.md and docs/GAME_BRIEF.md in the repo (github.com/Sajeed-dono/base67). Rules: original data pack read-only; no NASA number in code; never claim tests passed unless run; do not invent anything; one prompt at a time. I am a Windows beginner: give exact steps. Ask me for the latest PROGRESS.md before advising.
 ```
-   ## Current state (a snapshot written on 2026-11-09; docs/PROGRESS.md overrides it)
-   - Prompts 1, 2 and 3 are complete and committed: foundation and data layer; visual design with Home Base and Campaign Map; prologue, crew, landing site and cargo setup.
-   - Interim task done: Android portrait lock, tested on the emulator. Android builds need kotlin.incremental=false in android/gradle.properties.
-   - Prompt 4 (simulation engine) and later are not started. Sound requirements are agreed in docs/DECISIONS.md and deferred to Prompt 7: short UI/action effects first, music later, no voice; no interim sound work. Package and size budget await the Prompt 7 plan.
-   - Coding tool: Codex (GitHub Copilot was briefly tried and not needed).
-   - Timer and research values are provisional. docs/reference has five style screenshots.
+
+Android portrait lock/launcher cleanup are committed. The owner reported emulator testing; this follow-up makes no new Android-device claim. Keep kotlin.incremental=false for the recorded cross-drive Gradle workaround.

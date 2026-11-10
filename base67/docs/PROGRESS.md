@@ -1,24 +1,40 @@
 # BASE 67 Development Progress
 
-Updated: 2026-11-09
+Updated: 2026-11-10
 
 ## Current prompt and gate
 
 - Prompt 2 status: **COMPLETE** — visual reference pass reviewed by the owner and committed as `43e15ac`.
 - Prompt 3 status: **COMPLETE** — committed as `c61af76` (analyzer and 24 tests were recorded in the Prompt 3 handoff).
-- Current activity: **Prompt 4B-1 implemented and locally verified; awaiting owner review/commit/push**.
-- Prompt 4 status: **PARTIAL: 4A committed/pushed as f0a179f; 4B-1 locally verified; owner review/commit/push pending; 4B-2 NOT STARTED**.
+- Current activity: **Owner-authorized Prompt 4B-2 implementation is present locally: schema 3, aggregate codec, migration/backup, serialized controller and startup/resume wiring. Owner terminal validation and independent review are PENDING; no validation commands were run in this implementation pass; no commit/push.**
+- Prompt 4 status: **IMPLEMENTATION READY FOR VALIDATION, NOT VERIFIED COMPLETE: 4A/4B-1 previously committed; reviewed service-policy work preserved; 4B-2 implemented locally but unvalidated. Prompt 5 NOT STARTED.**
 - Prompts 2–3 provided presentation and setup; 4A adds the pure engine without app wiring or mission outcomes.
 
-## Prompt 4A implementation
+## Prompt 4B-2 final implementation authorization (2026-11-10)
+
+- The owner's attached final authorization supersedes the previous 4B-2 implementation gate and reserves tests, analyzer, builds, Git diff checks and validation scripts for the owner. Earlier test results in this document are historical and do not validate this implementation.
+- `CampaignSave` reads legacy schemas 1/2 and schema 3. Schema 3 stores one canonical progression object; overlapping inventory, resources, facility-level, research, completion and job presentation fields are computed views and are not stored twice. Historical schema-2 constructors/codecs remain available for the unchanged prologue and fixture tests.
+- `CampaignMigration` adapts repository documents, preserves player metadata and existing balances (including zero), imports legacy facility presentation tiers as one installed unit plus its tier, initializes only absent approved reserve fields at setup/migration, and invokes existing receipted resupply/catch-up. Packed spare parts transfer through the existing canonical unpack operation; ambiguous mixed ownership stops migration unchanged.
+- Readable legacy saves that fail migration are not replaced with a backup or a blank campaign. Unsupported versions stop unchanged. Legacy jobs lacking trustworthy effect/payment history are retained as terminal archived records, free their crew, reserve their IDs, and log their no-cost/no-effect retirement. The synthetic f0a179f fixture remains unchanged and is not a real player save.
+- `ProgressionCodec` round-trips resources/pending deliveries, cargo reservations, installed counts/tiers/status/damage, immutable job recipes/payments, occurrence allocations, restricted entitlements/receipts, lanes/crew and clock checkpoints/tokens. It validates incoming and outgoing snapshots against current approved configuration. Restore entry points do not read time or grant progress; original service-policy transitions and Clock Option A are preserved.
+- `CampaignSaveStore` retains the existing primary key/backend, backs up exact prior valid bytes before replacement, verifies the backup and complete primary read-back, and retains the previous backup after success. Primary-write/read-back failure attempts restoration, preserves the verified backup and requires reload. Corrupt/missing primary may load a valid backup with a visible recovery notice; two unusable blobs never become a blank save. This is not a claim of ACID transactions, cross-process locking or tested power-loss durability.
+- `CampaignController` serializes state changes, captures UTC/token pairs before asynchronous command delivery, rejects stale observations and callbacks from a reset campaign, and publishes only after verified storage. Startup/resume reconcile existing active jobs; one wake-up at the nearest remaining job duration handles foreground completion. Queues do not start automatically; no simulation time or survival consumption advances offline.
+- Router settings/reset/setup writes now use the coordinator. Existing campaign replay retains the original prologue presentation but discards setup edits and starting grants; no prologue source/story/layout was changed. The existing explicit reset confirmation remains the reset entry point. Presentation reads the canonical save views without redesigning screens.
+- Added `test/progression_persistence_test.dart` with migration/fixture, failure/backup, malformed/future save, restart/rollback, occurrence/payment/shutdown serialization and controller coordination regressions. The only necessary existing-test adaptation is the prologue integration assertion: unpacked spare parts are now expected in resources, absent from packed inventory. Existing service-policy tests, including the latest ownership assertions, are preserved.
+- **Not run in this pass:** focused/full Flutter tests, analyzer, builds, check_data.py, original checksum verification, git diff --check, automated validation scripts. Owner must run the commands in the final handoff and review real results. Prompt 4 is not marked verified complete. No Prompt 5, stage, commit or push.
+- Remaining limits: strict current recipe/catalogue validation means future data/balance revisions require an explicit compatibility migration; production essential-damage catalogue remains empty pending mission definitions; rejected legacy ambiguity needs owner resolution; device restart/power-loss behavior and manual prologue replay/reset checks remain unverified.
+
+## Historical Prompt 4A implementation
 
 - Added the pure Dart engine, immutable configuration/snapshots/inputs, explicit simulation clock, power/resource/radiation/event models, restorable seeded RNG and repository adapter. No app wiring or progression service is included.
 - Only extra/sim_params.json and extra/resource_economy.json receive new GAME VALUE, provisional inputs. Additive bonuses and all model simplifications are documented in SIM_MODEL and Decisions.
 - New test/sim tests cover reserve estimates, formulas, finite shortages, inactive facilities, purity, immutable state, scripted/seeded events and deterministic snapshot continuation. Original assets, checksums and existing tests are preserved.
 - Recorded 4A validation (prior implementation session): `flutter analyze` exited 0 (`No issues found!`, 19.2s); `flutter test --reporter expanded --concurrency=1` exited 0 (`All tests passed!`, 63 tests); `python check_data.py` exited 0 (`facts: 40 | sources: 24 | ALL OK`). The full suite includes the unchanged original-pack checksum test and all existing UI/prologue tests.
-- 4A was subsequently approved and committed as `f0a179f`; local HEAD and origin/main both identify that commit (no remote fetch in this session). The earlier no-commit handoff is historical. Prompt 4 is incomplete; 4B-1 is tracked below, 4B-2 and Prompt 5 are unstarted. No Android-device verification of the engine is claimed.
+- 4A was subsequently approved and committed as `f0a179f`; at the historical 4A completion checkpoint, local HEAD and origin/main identified that commit. The earlier no-commit handoff is historical. Prompt 4 is incomplete; 4B-1 is tracked below, 4B-2 and Prompt 5 are unstarted. No Android-device verification of the engine is claimed.
 
-## Prompt 4B-1 implementation (owner-approved split)
+## Prompt 4B-1 implementation (historical record)
+
+Owner subsequently approved/committed/pushed this work as 6ddb2c3. The salvage limitations below describe that original version; the current service-policy follow-up supersedes them.
 
 - Added an unwired pure Dart progression service with immutable job/config/state/receipt objects, explicit UTC inputs, construction, one supported upgrade tier, selected timed repairs, research prerequisites, crew exclusivity, queues and cancellation. Extended the existing timer completion guards; existing save/timer APIs and schema 2 are unchanged.
 - New GAME VALUE, provisional data is restricted to five existing extra JSONs. Resupply is 80 start / capacity 200 / +10 once per first completion of levels 1-14, with deterministic catch-up receipts and retained overflow. Salvage is one required-construction shortfall per level, capped at 8 material units, receipted and restricted against optional spending.
@@ -27,6 +43,31 @@ Updated: 2026-11-09
 - Recovery limits: cancelling salvage-funded work can leave a new shortfall after the level receipt is spent; one grant cannot cover multiple depleted requirements in one level; missing repair spare parts are outside required-construction salvage. Tests retain these counterexamples. An unconditional no-soft-lock claim is not made.
 - No save schema/store/controller/router/UI/prologue/sim/original pack/checksum changes. Receipts exist in the service aggregate only; disk persistence, migration and real app restart verification belong to 4B-2. Owner review and commit/push of 4B-1 gate 4B-2. No Prompt 5, sound, commit or push.
 - Final validation in this 4B-1 session: `flutter analyze` exit 0, `No issues found! (ran in 1.2s)`; `flutter test --reporter expanded --concurrency=1` exit 0, `00:08 +102: All tests passed!` (39 new, 63 existing); `python check_data.py` exit 0, `facts: 40 | sources: 24 | ALL OK`. Raw outputs are in the live session log. All unchanged original checksums/UI/prologue/sim tests ran. No Android build/device test was run.
+
+## Service-policy follow-up (owner-approved specification)
+
+- Push gate verified before edits: remote origin/main = 6ddb2c371476283427dd89c5d1e02aaf80b69bce. Local 4B-1 commit was not rewritten.
+- Added unwired restricted recovery with config-derived mandatory objective IDs and validated/confirmed damage identities, full assistance restoration versus ordinary 50% refunds, two shared lanes, packed stock reservations/transfers, multiple installed units with source-backed limits, independent facility projection, per-job rollback correction and the assigned Engineer half-time timed-repair modifier.
+- The production damage-occurrence catalogue is empty until missions define authoritative events. Test entries are synthetic. Unknown/unconfirmed damage cannot receive assistance. Pure continuation is not disk/app restart validation.
+- No schema-2/save/store/controller/router/prologue/UI/lib/sim/original data/checksum/package/legacy fixture changes. Existing replay overwrite risk and durable save coordination are pending 4B-2, not fixed by the unwired service.
+- Original costs, 80/200/+10 material resupply, survival stocks/production, source-unit conversion and base timers are unchanged. New policy rules remain GAME VALUE, provisional.
+- Final validation: `flutter analyze` exit 0, `No issues found! (ran in 0.9s)`; `flutter test --reporter expanded --concurrency=1` exit 0, `00:09 +122: All tests passed!`; `python check_data.py` exit 0, `facts: 40 | sources: 24 | ALL OK`. The complete original-pack/UI/prologue/simulation suites ran. An intermediate new two-occurrence test failed constructing a typed fixture map; its type was corrected without changing assertions and the complete suite reran. Raw failed/final outputs are in the live session log. Original-pack SHA-256: 16/16 match; protected paths diff empty. No device build/test was run. Do not mark Prompt 4 complete. No commit/push; owner review is required. Storage evaluation/schema-3 plan follows this independent review; implementation requires separate approval.
+
+## Owner-approved audit corrections (2026-11-10)
+
+- The independent audit rejected the earlier 122-test implementation. Owner then approved the correction plan and Clock Option A. Historical validation is not acceptance evidence; independent review remains required.
+- Damage allocations are independent of payment identity. Confirmation requires a validated occurrence observation, not merely current aggregate damage. Ordinary-funded repairs resolve their bound occurrence; final resolution closes restricted credits and retains receipts. Cancellation keeps the same allocation and payment-source rules. External field-repair reporting is pure and unwired; it does not execute/pay for a field action.
+- First construction clears lifecycle-only states on completion; deliberate off states survive. Expansion preserves installed operation, damage and tier. Pending units remain in jobs and contribute no capacity. Reserved cargo returns once on cancellation. Invalid installed lifecycle states are rejected.
+- Clock Option A bundles UTC and capture-order token. Old/duplicate timed requests return the original snapshot before mutation. Accepted rollback retains the original formula and moves the checkpoint. No clock reader, coordinator or persistence is added.
+- Canonical repair spares live in resources['spare_part']. Explicit unpacking consumes packed stock atomically; repeats transfer nothing and mixed positive representations are rejected as ambiguous. Ordinary spare refunds remain floored 50%; assistance returns restricted at 100%; spares never become facilities.
+- Final validation this correction session: flutter analyze exit 0, No issues found! (ran in 0.9s); flutter test --reporter expanded --concurrency=1 exit 0, 00:09 +136: All tests passed! (14 added regressions; prior tests retained); python check_data.py exit 0, facts: 40 | sources: 24 | ALL OK; original SHA-256 16/16 matching. Raw final outputs and final diff checks are appended to the live session log. Initial analysis had five brace-style infos, fixed before final analysis; an earlier complete run passed 131 tests before four further edge-case regressions were added (135 passed); final diff inspection then added the invalid-start observation-order regression and the complete suite passed 136.
+- No schema/store/app/prologue/UI/sim/data/dependency/balance changes in this correction pass. Existing uncommitted JSON, timer-helper and GAME_BRIEF changes belong to the earlier follow-up and were preserved byte-for-byte. No stage/commit/push or device build/test. Next gate: independent review; no acceptance or Prompt 4 completion claim.
+
+## Construction cancellation audit correction (2026-11-10)
+
+- Lifecycle rollback now applies only to an active construction job. Cancelling queued or blocked work cannot reset the `underConstruction` state owned by another active first build.
+- Added two regressions: cancelling a queued same-facility build and cancelling one blocked by `target_busy`; both assert the active build retains payment, Engineer assignment, clock progress, cargo reservation, and facility lifecycle state.
+- Verification in this task: targeted ownership suite passed 14 tests; full Flutter suite passed 138 tests; `flutter analyze` reported no issues; `git diff --check` passed. This is a local correction only and awaits independent confirmation; Prompt 4 remains partial, 4B-2 and Prompt 5 remain not started.
 
 ## Foundation status
 

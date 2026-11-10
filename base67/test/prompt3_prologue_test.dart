@@ -282,7 +282,8 @@ void main() {
     expect(saved.crewNames['Commander'], 'Commander Pilot');
     expect(saved.crewAges['Medic'], 12);
     expect(saved.startingCargo['solar_panel'], 4);
-    expect(saved.inventory['spare_part'], 1);
+    expect(saved.resources['spare_part'], 1);
+    expect(saved.inventory.containsKey('spare_part'), isFalse);
     expect(saved.inventory['battery'], 3);
     expect(saved.buildingLevels['crew_habitat'], 1);
     expect(saved.unlockedLevelIds, {'L01_first_light'});

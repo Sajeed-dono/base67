@@ -214,3 +214,19 @@ Use a clean separation:
 - `assets/data/` — original read-only data pack.
 - `assets/data/extra/` — new GAME VALUE configuration.
 - `docs/` — design, decisions, simulation model, QA and project documentation.
+
+
+## 17. Owner-approved policy direction (2026-11-10)
+
+These requirements supplement the brief; they do not claim that future screens or campaign systems are implemented.
+
+- Retain crew opinions and individual votes before important choices; the commander can override them. Show educational reactions to consequences, initially without numerical morale penalties (Prompts 5-6). Preserve the original story, personalities, four-person crew and investigation objectives.
+- Use one engineering lane for construction/upgrades/timed repairs plus one research lane. Crew cannot hold conflicting tasks; queues reserve neither resources nor crew. Keep essential recovery accessible.
+- Replace once-per-level salvage with validated, restricted assistance for mandatory objectives/essential repairs. Restore assistance fully on cancellation; ordinary payments retain 50% refunds. Never convert assistance into optional purchasing funds.
+- Starting equipment is packed stock. Transfer/reserve it exactly once into installed facilities; material installation costs are charged once with no second equipment purchase. Counts, tiers, damage and operating state are separate. Reuse original unit limits where defined.
+- An assigned Engineer halves eligible timed repair duration without an additional spare discount. Immediate field repair and timed major repair are distinct.
+- Existing-campaign prologue replay must become story-only; starting resources are granted once and reset requires explicit confirmation. Centralized save mutation must reject stale callbacks. These app safeguards are still pending 4B-2.
+- Per-job clock checkpoints must prevent increasing remaining work, reversing completions or contaminating new job timestamps after corrections. Offline timers never advance survival time.
+- Preserve the initial habitat; later expansion is a distinct milestone. The finale combines production with planned survival supplies, separate from construction-material resupply. Exact balance needs a proposal before Prompt 6; no silent refills.
+- Keep chapter badges and topic badges separate. Add informative daily sol summaries and retain optional/post-campaign improvement goals. Define lab/rover dependencies before they are needed. Preserve Earth-day-to-sol source conversion. First guided construction must be short or free; its duration is not selected here.
+- Evaluate transactional storage separately after the service-policy follow-up; no package is selected and schema 3/app wiring require their own approval.
