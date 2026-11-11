@@ -1,5 +1,7 @@
 # META PROMPT: paste this into any AI to bring it fully up to speed
 
+> Onboarding aid, not an implementation authority. Read `docs/BASE_67_Codex_Prompt_Sequence.txt` for the historical numbered prompts and consolidated M2-M10 instructions; `docs/PROGRESS.md` overrides the dated snapshot below. Latest checkpoint: M1 validated; M2-M9 implemented for review; M10 partial pending Android/final acceptance. Analyzer/full tests/release APK passed as attributed in PROGRESS; starting damage is a separate design decision.
+
 Copy everything inside the box below as your first message. Then paste whatever you want checked (for example a Codex report). You do not need to explain the project again.
 
 ```

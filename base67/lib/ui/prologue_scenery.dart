@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
+import 'facility_architecture.dart';
 
 enum PrologueScene { news, command, goodbye, launch, marsApproach, touchdown }
 
@@ -28,10 +29,15 @@ class _PrologueSceneryState extends State<PrologueScenery>
   );
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _setMotion();
   }
+
+  bool get _reduced =>
+      widget.reducedMotion ||
+      MediaQuery.disableAnimationsOf(context) ||
+      MediaQuery.accessibleNavigationOf(context);
 
   @override
   void didUpdateWidget(covariant PrologueScenery oldWidget) {
@@ -43,7 +49,7 @@ class _PrologueSceneryState extends State<PrologueScenery>
   }
 
   void _setMotion() {
-    if (widget.reducedMotion) {
+    if (_reduced) {
       _controller.stop();
       _controller.value = .5;
     } else {
@@ -64,7 +70,7 @@ class _PrologueSceneryState extends State<PrologueScenery>
       builder: (context, _) => CustomPaint(
         painter: _PrologueSceneryPainter(
           scene: widget.scene,
-          motion: widget.reducedMotion ? .5 : _controller.value,
+          motion: _reduced ? .5 : _controller.value,
         ),
         child: const SizedBox.expand(),
       ),
@@ -210,6 +216,16 @@ class _PrologueSceneryPainter extends CustomPainter {
   }
 
   void _mars(Canvas canvas, Size size) {
+    final ridge = Path()
+      ..moveTo(0, size.height * .72)
+      ..lineTo(size.width * .16, size.height * .61)
+      ..lineTo(size.width * .34, size.height * .70)
+      ..lineTo(size.width * .72, size.height * .57)
+      ..lineTo(size.width, size.height * .69)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(ridge, Paint()..color = GameColors.marsDistant);
     final horizon = Path()
       ..moveTo(0, size.height * .70)
       ..quadraticBezierTo(
@@ -222,27 +238,16 @@ class _PrologueSceneryPainter extends CustomPainter {
       ..lineTo(0, size.height)
       ..close();
     canvas.drawPath(horizon, Paint()..color = GameColors.rust);
-    final craft = Rect.fromCenter(
-      center: Offset(size.width * .52, size.height * (.68 - motion * .015)),
-      width: size.width * .20,
-      height: size.height * .09,
+    canvas.save();
+    canvas.translate(size.width * .52, size.height * (.68 - motion * .015));
+    canvas.scale(size.shortestSide * .0035);
+    FacilityArchitecture.paint(
+      canvas,
+      'landing_craft',
+      shell: GameColors.structuralSurface,
+      trim: GameColors.architecturalAccent,
     );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        craft,
-        const Radius.circular(GameRadii.button / 2),
-      ),
-      Paint()..color = GameColors.sand,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        craft,
-        const Radius.circular(GameRadii.button / 2),
-      ),
-      Paint()
-        ..color = GameColors.ink
-        ..style = PaintingStyle.stroke,
-    );
+    canvas.restore();
   }
 
   void _horizon(Canvas canvas, Size size) {

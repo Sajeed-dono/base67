@@ -472,16 +472,18 @@ class _CineScreenState extends State<CineScreen> {
                                     ),
                                   ),
                                 const SizedBox(height: GameSpacing.sm),
-                                Text(
-                                  line.who == null
-                                      ? line.text
-                                      : '“${line.text}”',
-                                  textAlign: TextAlign.center,
-                                  style: text.titleLarge?.copyWith(
-                                    color: GameColors.paper,
-                                    fontStyle: line.who == null
-                                        ? FontStyle.italic
-                                        : FontStyle.normal,
+                                CinematicCaption(
+                                  child: Text(
+                                    line.who == null
+                                        ? line.text
+                                        : '“${line.text}”',
+                                    textAlign: TextAlign.center,
+                                    style: text.titleLarge?.copyWith(
+                                      color: GameColors.paper,
+                                      fontStyle: line.who == null
+                                          ? FontStyle.italic
+                                          : FontStyle.normal,
+                                    ),
                                   ),
                                 ),
                               ],

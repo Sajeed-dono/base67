@@ -4,9 +4,16 @@ import '../app/campaign_save.dart';
 import '../data/models/data_class.dart';
 import '../data/repositories/game_data_repository.dart';
 import '../ui/crew_bean.dart';
+import '../ui/crew_movement.dart';
+import '../ui/settlement_map.dart';
+import '../ui/settlement_snapshot.dart';
 import '../ui/game_widgets.dart';
 import '../ui/mars_base_painter.dart';
 import '../ui/theme.dart';
+import '../ui/settlement_status_panel.dart';
+import '../sim/sim_state.dart';
+import '../progression/progression_service.dart';
+import '../sim/simulation_clock.dart';
 
 class HomeBaseScreen extends StatelessWidget {
   const HomeBaseScreen({
@@ -14,11 +21,22 @@ class HomeBaseScreen extends StatelessWidget {
     required this.save,
     required this.repository,
     required this.navigate,
+    this.movement,
+    this.world,
+    this.progression,
+    this.generationKw,
+    this.solHours,
+    this.daylightHours,
   });
 
   final CampaignSave save;
+  final CrewMovement? movement;
   final GameDataRepository repository;
   final ValueChanged<String> navigate;
+  final SimState? world;
+  final ProgressionState? progression;
+  final double? generationKw;
+  final double? solHours, daylightHours;
 
   @override
   Widget build(BuildContext context) {
@@ -40,106 +58,7 @@ class HomeBaseScreen extends StatelessWidget {
         .where((item) => item['id'] == chapterId)
         .firstOrNull;
     final chapterName = chapter?['name'] as String? ?? 'Chapter 1';
-    bool isAvailable(String levelId) => save.unlockedLevelIds.contains(levelId);
-    final facilities = <MarsFacility>[
-      MarsFacility(
-        'habitat',
-        'Habitat',
-        const Offset(.48, .57),
-        level: save.buildingLevels['crew_habitat'] ?? 0,
-        available: isAvailable('L13_crew_care'),
-      ),
-      MarsFacility(
-        'landing_craft',
-        'Lander',
-        const Offset(.16, .84),
-        level: save.buildingLevels['landing_craft'] ?? 0,
-      ),
-      MarsFacility(
-        'solar_array',
-        'Solar',
-        const Offset(.23, .75),
-        level: save.buildingLevels['solar_array'] ?? 0,
-        available: isAvailable('L01_first_light'),
-      ),
-      MarsFacility(
-        'battery_bank',
-        'Power',
-        const Offset(.74, .69),
-        level: save.buildingLevels['battery_bank'] ?? 0,
-        available: isAvailable('L02_power_storage'),
-      ),
-      MarsFacility(
-        'greenhouse',
-        'Greenhouse',
-        const Offset(.77, .49),
-        level: save.buildingLevels['greenhouse'] ?? 0,
-        available: isAvailable('L06_greenhouse_online'),
-      ),
-      MarsFacility(
-        'research_lab',
-        'Lab',
-        const Offset(.23, .50),
-        level: save.buildingLevels['research_lab'] ?? 0,
-        available: isAvailable('L01_first_light'),
-      ),
-      MarsFacility(
-        'life_support_module',
-        'Life support',
-        const Offset(.50, .77),
-        level: save.buildingLevels['life_support_module'] ?? 0,
-        available: isAvailable('L07_breathing_matters'),
-      ),
-      MarsFacility(
-        'radiation_shelter',
-        'Shelter',
-        const Offset(.31, .38),
-        level: save.buildingLevels['radiation_shelter'] ?? 0,
-        available: isAvailable('L09_shelter_protocol'),
-      ),
-      MarsFacility(
-        'ice_miner_water_storage',
-        'Ice and water',
-        const Offset(.69, .37),
-        level: save.buildingLevels['ice_miner_water_storage'] ?? 0,
-        available: isAvailable('L11_ice_operations'),
-      ),
-      MarsFacility(
-        'food_storage',
-        'Food',
-        const Offset(.16, .62),
-        level: save.buildingLevels['food_storage'] ?? 0,
-        available: isAvailable('L12_food_and_supplies'),
-      ),
-      MarsFacility(
-        'maintenance_bay',
-        'Workshop',
-        const Offset(.50, .34),
-        level: save.buildingLevels['maintenance_bay'] ?? 0,
-        available: isAvailable('L04_dust_on_mars'),
-      ),
-      MarsFacility(
-        'communications',
-        'Comms',
-        const Offset(.87, .59),
-        level: save.buildingLevels['mission_control_hub'] ?? 0,
-        available: isAvailable('L14_mission_control'),
-      ),
-      MarsFacility(
-        'rover',
-        'Rover',
-        const Offset(.65, .86),
-        level: save.buildingLevels['rover'] ?? 0,
-        available: isAvailable('L10_finding_water'),
-      ),
-      MarsFacility(
-        'medical_area',
-        'Crew care',
-        const Offset(.34, .86),
-        level: save.buildingLevels['crew_habitat'] ?? 0,
-        available: isAvailable('L13_crew_care'),
-      ),
-    ];
+    final facilities = settlementFacilities(save);
     final width = MediaQuery.sizeOf(context).width;
 
     return Scaffold(
@@ -173,6 +92,13 @@ class HomeBaseScreen extends StatelessWidget {
             ),
             children: [
               _Header(nextTitle: nextTitle, chapterName: chapterName),
+              if (world != null) ...[
+                const SizedBox(height: GameSpacing.md),
+                SettlementStatusPanel(
+                  world: world!,
+                  generationKw: generationKw,
+                ),
+              ],
               const SizedBox(height: 14),
               if (width >= 720)
                 Row(
@@ -196,9 +122,23 @@ class HomeBaseScreen extends StatelessWidget {
               ],
               const SizedBox(height: 16),
               _navigationGrid(context),
-              if (save.timerJobs
-                  .where((job) => job.status == 'active')
-                  .isNotEmpty) ...[
+              if (progression != null &&
+                  progression!.jobs.values.any(
+                    (job) =>
+                        !const {'completed', 'cancelled'}.contains(job.status),
+                  )) ...[
+                const SizedBox(height: GameSpacing.md),
+                SavedJobsPanel(
+                  jobs: progression!.jobs.values.where(
+                    (job) =>
+                        !const {'completed', 'cancelled'}.contains(job.status),
+                  ),
+                  onManage: () => navigate('/build'),
+                ),
+              ] else if (progression == null &&
+                  save.timerJobs
+                      .where((job) => job.status == 'active')
+                      .isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text(
                   'Work in progress',
@@ -228,16 +168,23 @@ class HomeBaseScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 280,
-                width: double.infinity,
-                child: Semantics(
-                  label: 'Top-down Mars base map. Built buildings appear in teal; empty building sites are marked with locks.',
-                  image: true,
-                  child: CustomPaint(
-                    painter: MarsBasePainter(facilities: facilities),
-                  ),
-                ),
+              SettlementMap(
+                facilities: facilities,
+                crew: MapCrew.fromSave(save),
+                movement: movement,
+                reducedMotion: save.settings['reduceMotion'] == true,
+                night:
+                    world != null &&
+                    solHours != null &&
+                    daylightHours != null &&
+                    SimulationClock.hourOfSol(world!.elapsedHours, solHours!) >=
+                        daylightHours!,
+                storm:
+                    world?.activeEvents['dust_storm'] != null &&
+                    world!.activeEvents['dust_storm']!.endHour >
+                        world!.elapsedHours,
+                dust: world?.dust ?? 0,
+                onManage: navigate,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -398,14 +345,16 @@ class HomeBaseScreen extends StatelessWidget {
               label: 'Continue mission',
               icon: Icons.rocket_launch_rounded,
               expand: true,
-              onPressed: () => navigate('/campaign'),
+              onPressed: () => navigate(
+                save.missionJson == null ? '/campaign' : '/resume-mission',
+              ),
             ),
           ],
         ),
       );
 
   Widget _navigationGrid(BuildContext context) {
-    const actions = <(String, IconData, String)>[
+    final actions = <(String, IconData, String)>[
       ('Campaign Map', Icons.route_rounded, '/campaign'),
       ('Build', Icons.home_work_rounded, '/build'),
       ('Research', Icons.science_rounded, '/research'),
@@ -416,6 +365,12 @@ class HomeBaseScreen extends StatelessWidget {
       ('Settings', Icons.tune_rounded, '/settings'),
       ('About', Icons.info_outline_rounded, '/about'),
       ('Credits', Icons.favorite_outline_rounded, '/credits'),
+      if (save.completedLevelIds.containsAll(
+        (repository.campaign['levels'] as List).map(
+          (row) => (row as Map)['id'] as String,
+        ),
+      ))
+        ('Certificate', Icons.school_rounded, '/certificate'),
     ];
     return LayoutBuilder(
       builder: (context, constraints) => GridView.builder(

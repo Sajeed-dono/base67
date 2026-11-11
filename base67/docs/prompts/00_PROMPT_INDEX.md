@@ -1,5 +1,7 @@
 # BASE 67: the eight Codex prompts
 
+> Authority: `docs/BASE_67_Codex_Prompt_Sequence.txt` is the single implementation sequence, including Supplemental 6A and the consolidated M2-M10, analyzer-cleanup and final-acceptance records. The files listed below remain historical extracts in their original order; they do not override the master. M milestones are not numbered prompts. Read `docs/PROGRESS.md` for current status.
+
 One prompt at a time, in order. A prompt is finished only when `docs/PROGRESS.md` says so with real `flutter analyze` and `flutter test` results, and you have committed and pushed.
 
 | # | Prompt | File |

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import '../data/repositories/game_data_repository.dart';
 import '../progression/progression_service.dart';
+import '../data/sim_config_loader.dart';
+import '../missions/mission_runtime.dart';
 import 'campaign_save.dart';
 
 /// Repository adaptation and one-way schema migration; no IO or clock reads.
@@ -19,6 +21,15 @@ class CampaignMigration {
 
   final GameDataRepository repository;
   final ProgressionConfig config;
+  late final missions = MissionRuntime(SimConfigLoader.load(repository),
+    {...repository.document('tutorial.json')!,
+      'missions': [...repository.document('tutorial.json')!['missions'] as List,
+        ...repository.document('campaign_operations.json')!['missions'] as List],
+      'mission_rules': {...repository.document('tutorial.json')!['mission_rules'] as Map,
+        ...repository.document('campaign_operations.json')!['mission_rules'] as Map}}, config.levels,
+    operations: repository.document('campaign_operations.json')!,
+    crewRules: repository.document('crew_assignments.json')!['mission_operations'] as Map<String, dynamic>,
+    progressionConfig: config);
   late final codec = ProgressionCodec(config, equipmentIds: [
     for (final row in repository.document('equipment.json')!['equipment'] as List)
       (row as Map)['id'] as String,
@@ -118,6 +129,20 @@ class CampaignMigration {
       throw const FormatException('Application saves require schema 3');
     }
     final state = codec.decode(jsonDecode(save.progressionJson!));
+    if (save.missionJson != null) {
+      final mission = jsonDecode(save.missionJson!) as Map<String, dynamic>;
+      missions.validate(mission);
+      if (mission['settlement'] != null) {
+        missions.crew.validate(state, Map<String, dynamic>.from(mission['settlement'] as Map));
+      }
+      if (!save.prologueComplete || save.selectedSiteId == null ||
+          !save.unlockedLevelIds.contains(mission['level'])) {
+        throw const FormatException('Mission requires completed setup and an unlocked level');
+      }
+      if (mission['result'] == 'success' && !state.completedLevels.contains(mission['level'])) {
+        throw const FormatException('Mission outcome is missing its campaign completion');
+      }
+    }
     if (!config.levels.toSet().containsAll(save.unlockedLevelIds)) {
       throw const FormatException('Unknown unlocked level');
     }

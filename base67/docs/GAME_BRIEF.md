@@ -4,6 +4,10 @@
 
 BASE 67 is a 2D, offline-first, portrait-first Android Mars settlement and junior astronaut mission-training game for children aged 10–14.
 
+Current owner-authorized assignment (2026-11-12): finish the M2-M10 visual/gameplay integration roadmap through Level 2, sequentially under one authorization. M1 is validated. M2-M9 are implemented for review; M10 remains PARTIAL pending Android/final acceptance. The analyzer passed with zero issues in the prior cleanup session; the owner now reports the full Flutter suite passed and a successful 52.2 MB release APK build. No new Level 3 or Prompt 7 work. The owner requested starting damage be designed separately, so the existing construction-first Level 1 opening is preserved.
+
+Owner-approved Phase 1 presentation direction (2026-11-11): render the persistent colony with original 2.5D code art over a stable world coordinate system, a bounded follow/pan/zoom camera, readable contextual inspection and the existing hybrid astronaut movement. This is a presentation evolution of the Flutter game, not a replacement simulation, economy or save architecture. The implementation is pending owner validation. All 15 levels and existing task/resource authorities remain in place.
+
 The player becomes the commander of a four-person crew sent to Mars. The player establishes and manages one persistent Mars base. The same base, crew, facilities, research progress, resources, and mission history carry forward throughout the campaign.
 
 The game has 15 progressively challenging levels grouped into five chapters. Each level introduces a manageable new concept or system. Later levels combine previously learned systems so that the player gradually learns to manage a functioning Mars settlement.
@@ -40,7 +44,7 @@ There is ONE persistent Mars base for the entire 15-level campaign.
 
 ### Chapter 1 — Power and Energy
 1. First Light: sunlight, solar panels, and the first energy supply.
-2. Power Storage: batteries, capacity, charging, and stored energy.
+2. Power Storage: batteries, capacity, charging, stored energy and the existing habitat heater's local switch. Switching it off saves power but cools the habitat. Essential life support stays on; central management and its Power Control Station prerequisite remain in Level 3.
 3. Energy Manager: power consumption, essential loads, and trade-offs.
 
 ### Chapter 2 — Martian Weather
@@ -230,3 +234,15 @@ These requirements supplement the brief; they do not claim that future screens o
 - Preserve the initial habitat; later expansion is a distinct milestone. The finale combines production with planned survival supplies, separate from construction-material resupply. Exact balance needs a proposal before Prompt 6; no silent refills.
 - Keep chapter badges and topic badges separate. Add informative daily sol summaries and retain optional/post-campaign improvement goals. Define lab/rover dependencies before they are needed. Preserve Earth-day-to-sol source conversion. First guided construction must be short or free; its duration is not selected here.
 - Evaluate transactional storage separately after the service-policy follow-up; no package is selected and schema 3/app wiring require their own approval.
+
+
+## 18. Current visual/gameplay integration boundary (2026-11-12)
+
+Original cream/rust/blue-grey modular code art sits on a sunlit Martian presentation world, with dark mission-control telemetry and menu/support screens. The stable world, camera, astronaut identities/assignments and actual progression/engine outcomes remain authoritative. Terrain and building drawings are cached separately from actors; decorative dust uses presentation time only and respects reduced motion. No decorative surface is a resource node, installation or collision change.
+
+Home/mission telemetry reads actual reserves and saved generation. Saved job progress reads the reconciled remaining-work clock. Crew/facility inspection leads to real management routes; camera framing and walking never perform work. Existing Level 2 local heater trade-offs and unsaved preview remain. Successful debrief and campaign details distinguish configured future rewards from recorded one-time resupply. No new scoring/badge rules or lab/rover functions are inferred from the visual references.
+
+Automated reference strategies now complete Levels 1 and 2 at each of the four sites, including a mid-mission restart. This is not acceptance of all loadouts/histories, timer pacing, physical-device durability, child usability or final visual quality. The original prologue story code and all data assets remain unchanged; the starting-damage scenario is a separate owner-requested design task. The analyzer/full-suite/release-build gates have now passed as attributed in PROGRESS; Android device, accessibility/performance and final owner art acceptance remain pending.
+
+
+Current prompt authority: docs/BASE_67_Codex_Prompt_Sequence.txt includes historical prompts and the consolidated M2-M10/final-acceptance records. No standalone M2 historical source was found; its exact assignment excerpt is preserved. The latest consolidation task authorizes Git delivery only and changes no game rules. Starting damage remains a separate design decision.

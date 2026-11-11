@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 class UnsupportedSaveVersion extends FormatException {
-  UnsupportedSaveVersion(int version) : super('Unsupported campaign version: $version');
+  UnsupportedSaveVersion(int version)
+    : super('Unsupported campaign version: $version');
 }
 
 class TimerJobSave {
@@ -55,20 +56,20 @@ class TimerJobSave {
 class CampaignSave {
   const CampaignSave({
     this.version = 2,
-    Set<String> completedLevelIds = const {},
+    this._completedLevelIds = const {},
     this.unlockedLevelIds = const {'L01_first_light'},
-    Set<String> completedActivityIds = const {},
+    this._completedActivityIds = const {},
     this.crewNames = const {},
     this.crewAges = const {},
     this.crewAppearance = const {},
     this.selectedSiteId,
     this.startingCargo = const {},
-    Map<String, int> inventory = const {},
-    Map<String, int> buildingLevels = const {},
-    Map<String, double> resources = const {},
+    this._inventory = const {},
+    this._buildingLevels = const {},
+    this._resources = const {},
     this.resourceCapacities = const {},
-    Set<String> completedResearchIds = const {},
-    List<TimerJobSave> timerJobs = const [],
+    this._completedResearchIds = const {},
+    this._timerJobs = const [],
     this.levelResults = const {},
     this.badgeIds = const {},
     this.notebookFactIds = const {},
@@ -79,12 +80,9 @@ class CampaignSave {
     this.settings = const {},
     this.prologueComplete = false,
     this.progressionJson,
+    this.missionJson,
     this.legacyTimerJobs = const [],
-  }) : _completedLevelIds = completedLevelIds,
-       _completedActivityIds = completedActivityIds,
-       _inventory = inventory, _buildingLevels = buildingLevels,
-       _resources = resources, _completedResearchIds = completedResearchIds,
-       _timerJobs = timerJobs;
+  });
 
   final int version;
   final Set<String> _completedLevelIds;
@@ -114,29 +112,45 @@ class CampaignSave {
   /// Immutable canonical aggregate encoding. Schema 2 constructors remain
   /// available for historical codecs/fixtures and the unchanged prologue.
   final String? progressionJson;
+  /// Optional schema-3 teaching/environment checkpoint. Ownership stays in
+  /// progressionJson; older saves have no mission until one is opened.
+  final String? missionJson;
   final List<TimerJobSave> legacyTimerJobs;
   Map<String, dynamic>? get _progression => progressionJson == null
-      ? null : jsonDecode(progressionJson!) as Map<String, dynamic>;
-  Set<String> get completedLevelIds => _progression == null ? _completedLevelIds
+      ? null
+      : jsonDecode(progressionJson!) as Map<String, dynamic>;
+  Set<String> get completedLevelIds => _progression == null
+      ? _completedLevelIds
       : Set.unmodifiable(_set(_progression!['completedLevels']));
-  Set<String> get completedActivityIds => _progression == null ? _completedActivityIds
+  Set<String> get completedActivityIds => _progression == null
+      ? _completedActivityIds
       : Set.unmodifiable(_set(_progression!['completedActivityIds']));
-  Set<String> get completedResearchIds => _progression == null ? _completedResearchIds
+  Set<String> get completedResearchIds => _progression == null
+      ? _completedResearchIds
       : Set.unmodifiable(_set(_progression!['completedResearch']));
-  Map<String, int> get inventory => _progression == null ? _inventory
+  Map<String, int> get inventory => _progression == null
+      ? _inventory
       : Map.unmodifiable(_intMap(_progression!['packedStock']));
-  Map<String, double> get resources => _progression == null ? _resources
+  Map<String, double> get resources => _progression == null
+      ? _resources
       : Map.unmodifiable(_doubleMap(_progression!['resources']));
   Map<String, int> get buildingLevels {
     final p = _progression;
-    if (p == null) { return _buildingLevels; }
+    if (p == null) {
+      return _buildingLevels;
+    }
     final tiers = _intMap(p['upgradeTiers']);
-    return Map.unmodifiable({for (final e in _intMap(p['facilities']).entries)
-      if (e.value > 0) e.key: 1 + (tiers[e.key] ?? 0)});
+    return Map.unmodifiable({
+      for (final e in _intMap(p['facilities']).entries)
+        if (e.value > 0) e.key: 1 + (tiers[e.key] ?? 0),
+    });
   }
+
   List<TimerJobSave> get timerJobs {
     final p = _progression;
-    if (p == null) { return _timerJobs; }
+    if (p == null) {
+      return _timerJobs;
+    }
     return List.unmodifiable([
       ...legacyTimerJobs,
       for (final raw in (p['jobs'] as Map).values)
@@ -145,10 +159,16 @@ class CampaignSave {
             id: raw['id'] as String,
             category: (raw['recipe'] as Map)['kind'] as String,
             targetId: (raw['recipe'] as Map)['targetId'] as String,
-            startedAtUtc: DateTime.parse(raw['clock']['startedAtUtc'] as String),
+            startedAtUtc: DateTime.parse(
+              raw['clock']['startedAtUtc'] as String,
+            ),
             // Display projection only; original deadlines remain in the aggregate.
-            expectedCompletionAtUtc: DateTime.parse(raw['clock']['observedAtUtc'] as String)
-                .add(Duration(microseconds: raw['clock']['remainingMicros'] as int)),
+            expectedCompletionAtUtc:
+                DateTime.parse(raw['clock']['observedAtUtc'] as String).add(
+                  Duration(
+                    microseconds: raw['clock']['remainingMicros'] as int,
+                  ),
+                ),
             status: raw['status'] as String,
             rewardApplied: raw['status'] == 'completed',
             assignedCrewRole: raw['crewId'] as String?,
@@ -182,59 +202,80 @@ class CampaignSave {
     'settings': settings,
     'prologueComplete': prologueComplete,
     if (version == 3) 'progression': _progression,
+    if (version == 3 && missionJson != null) 'mission': jsonDecode(missionJson!),
     if (version == 3 && legacyTimerJobs.isNotEmpty)
       'legacyTimerJobs': legacyTimerJobs.map((job) => job.toJson()).toList(),
   };
 
   factory CampaignSave.fromJson(Map<String, dynamic> json) {
     final version = json['version'] ?? 1;
-    if (version is! int) { throw const FormatException('Invalid campaign version'); }
-    if (version < 1 || version > 3) { throw UnsupportedSaveVersion(version); }
+    if (version is! int) {
+      throw const FormatException('Invalid campaign version');
+    }
+    if (version < 1 || version > 3) {
+      throw UnsupportedSaveVersion(version);
+    }
     if (json.keys.any((key) => !_knownKeys.contains(key))) {
-      throw const FormatException('Unsupported campaign fields; save preserved');
+      throw const FormatException(
+        'Unsupported campaign fields; save preserved',
+      );
     }
-    if (version == 3 && (json['progression'] is! Map<String, dynamic> ||
-        const ['inventory','buildingLevels','resources','completedResearchIds',
-          'completedActivityIds','completedLevelIds','timerJobs'].any(json.containsKey))) {
-      throw const FormatException('Schema 3 requires one authoritative aggregate');
+    if (version == 3 &&
+        (json['progression'] is! Map<String, dynamic> ||
+            const [
+              'inventory',
+              'buildingLevels',
+              'resources',
+              'completedResearchIds',
+              'completedActivityIds',
+              'completedLevelIds',
+              'timerJobs',
+            ].any(json.containsKey))) {
+      throw const FormatException(
+        'Schema 3 requires one authoritative aggregate',
+      );
     }
-    if (version < 3 && (json.containsKey('progression') || json.containsKey('legacyTimerJobs'))) {
+    if (version < 3 &&
+        (json.containsKey('progression') ||
+            json.containsKey('legacyTimerJobs') || json.containsKey('mission'))) {
       throw const FormatException('Unexpected progression in legacy save');
     }
     return CampaignSave(
-    version: (json['version'] as int? ?? 1) < 2 ? 2 : json['version'] as int,
-    completedLevelIds: _set(json['completedLevelIds']),
-    unlockedLevelIds: _set(
-      json['unlockedLevelIds'],
-      fallback: const ['L01_first_light'],
-    ),
-    completedActivityIds: _set(json['completedActivityIds']),
-    crewNames: _stringMap(json['crewNames']),
-    crewAges: _intMap(json['crewAges']),
-    crewAppearance: _nestedIntMap(json['crewAppearance']),
-    selectedSiteId: json['selectedSiteId'] as String?,
-    startingCargo: _intMap(json['startingCargo']),
-    inventory: _intMap(json['inventory']),
-    buildingLevels: _intMap(json['buildingLevels']),
-    resources: _doubleMap(json['resources']),
-    resourceCapacities: _doubleMap(json['resourceCapacities']),
-    completedResearchIds: _set(json['completedResearchIds']),
-    timerJobs: (json['timerJobs'] as List? ?? const [])
-        .map((row) => TimerJobSave.fromJson(row as Map<String, dynamic>))
-        .toList(),
-    levelResults: _objectMap(json['levelResults']),
-    badgeIds: _set(json['badgeIds']),
-    notebookFactIds: _set(json['notebookFactIds']),
-    missionPatchId: json['missionPatchId'] as String?,
-    playerDisplayName: json['playerDisplayName'] as String?,
-    deterministicSeed: json['deterministicSeed'] as int?,
-    eventHistory: _listOfStrings(json['eventHistory']),
-    settings: _objectMap(json['settings']),
-    prologueComplete: json['prologueComplete'] as bool? ?? false,
-    progressionJson: version == 3 ? jsonEncode(json['progression']) : null,
-    legacyTimerJobs: (json['legacyTimerJobs'] as List? ?? const [])
-        .map((row) => TimerJobSave.fromJson(row as Map<String, dynamic>)).toList(),
-  );
+      version: (json['version'] as int? ?? 1) < 2 ? 2 : json['version'] as int,
+      completedLevelIds: _set(json['completedLevelIds']),
+      unlockedLevelIds: _set(
+        json['unlockedLevelIds'],
+        fallback: const ['L01_first_light'],
+      ),
+      completedActivityIds: _set(json['completedActivityIds']),
+      crewNames: _stringMap(json['crewNames']),
+      crewAges: _intMap(json['crewAges']),
+      crewAppearance: _nestedIntMap(json['crewAppearance']),
+      selectedSiteId: json['selectedSiteId'] as String?,
+      startingCargo: _intMap(json['startingCargo']),
+      inventory: _intMap(json['inventory']),
+      buildingLevels: _intMap(json['buildingLevels']),
+      resources: _doubleMap(json['resources']),
+      resourceCapacities: _doubleMap(json['resourceCapacities']),
+      completedResearchIds: _set(json['completedResearchIds']),
+      timerJobs: (json['timerJobs'] as List? ?? const [])
+          .map((row) => TimerJobSave.fromJson(row as Map<String, dynamic>))
+          .toList(),
+      levelResults: _objectMap(json['levelResults']),
+      badgeIds: _set(json['badgeIds']),
+      notebookFactIds: _set(json['notebookFactIds']),
+      missionPatchId: json['missionPatchId'] as String?,
+      playerDisplayName: json['playerDisplayName'] as String?,
+      deterministicSeed: json['deterministicSeed'] as int?,
+      eventHistory: _listOfStrings(json['eventHistory']),
+      settings: _objectMap(json['settings']),
+      prologueComplete: json['prologueComplete'] as bool? ?? false,
+      progressionJson: version == 3 ? jsonEncode(json['progression']) : null,
+      missionJson: json['mission'] == null ? null : jsonEncode(json['mission']),
+      legacyTimerJobs: (json['legacyTimerJobs'] as List? ?? const [])
+          .map((row) => TimerJobSave.fromJson(row as Map<String, dynamic>))
+          .toList(),
+    );
   }
 
   String encode() => jsonEncode(toJson());
@@ -245,6 +286,7 @@ class CampaignSave {
   CampaignSave copyWith({
     int? version,
     String? progressionJson,
+    String? missionJson,
     List<TimerJobSave>? legacyTimerJobs,
     Set<String>? completedLevelIds,
     Set<String>? unlockedLevelIds,
@@ -271,39 +313,46 @@ class CampaignSave {
     bool? prologueComplete,
   }) {
     if (this.progressionJson != null &&
-        (completedLevelIds != null || completedActivityIds != null ||
-         completedResearchIds != null || inventory != null || buildingLevels != null ||
-         resources != null || timerJobs != null)) {
-      throw StateError('Mutate schema-3 progression through CampaignController');
+        (completedLevelIds != null ||
+            completedActivityIds != null ||
+            completedResearchIds != null ||
+            inventory != null ||
+            buildingLevels != null ||
+            resources != null ||
+            timerJobs != null)) {
+      throw StateError(
+        'Mutate schema-3 progression through CampaignController',
+      );
     }
     return CampaignSave(
-    version: version ?? this.version,
-    progressionJson: progressionJson ?? this.progressionJson,
-    legacyTimerJobs: legacyTimerJobs ?? this.legacyTimerJobs,
-    completedLevelIds: completedLevelIds ?? this.completedLevelIds,
-    unlockedLevelIds: unlockedLevelIds ?? this.unlockedLevelIds,
-    completedActivityIds: completedActivityIds ?? this.completedActivityIds,
-    crewNames: crewNames ?? this.crewNames,
-    crewAges: crewAges ?? this.crewAges,
-    crewAppearance: crewAppearance ?? this.crewAppearance,
-    selectedSiteId: selectedSiteId ?? this.selectedSiteId,
-    startingCargo: startingCargo ?? this.startingCargo,
-    inventory: inventory ?? this.inventory,
-    buildingLevels: buildingLevels ?? this.buildingLevels,
-    resources: resources ?? this.resources,
-    resourceCapacities: resourceCapacities ?? this.resourceCapacities,
-    completedResearchIds: completedResearchIds ?? this.completedResearchIds,
-    timerJobs: timerJobs ?? this.timerJobs,
-    levelResults: levelResults ?? this.levelResults,
-    badgeIds: badgeIds ?? this.badgeIds,
-    notebookFactIds: notebookFactIds ?? this.notebookFactIds,
-    missionPatchId: missionPatchId ?? this.missionPatchId,
-    playerDisplayName: playerDisplayName ?? this.playerDisplayName,
-    deterministicSeed: deterministicSeed ?? this.deterministicSeed,
-    eventHistory: eventHistory ?? this.eventHistory,
-    settings: settings ?? this.settings,
-    prologueComplete: prologueComplete ?? this.prologueComplete,
-  );
+      version: version ?? this.version,
+      progressionJson: progressionJson ?? this.progressionJson,
+      missionJson: missionJson ?? this.missionJson,
+      legacyTimerJobs: legacyTimerJobs ?? this.legacyTimerJobs,
+      completedLevelIds: completedLevelIds ?? this.completedLevelIds,
+      unlockedLevelIds: unlockedLevelIds ?? this.unlockedLevelIds,
+      completedActivityIds: completedActivityIds ?? this.completedActivityIds,
+      crewNames: crewNames ?? this.crewNames,
+      crewAges: crewAges ?? this.crewAges,
+      crewAppearance: crewAppearance ?? this.crewAppearance,
+      selectedSiteId: selectedSiteId ?? this.selectedSiteId,
+      startingCargo: startingCargo ?? this.startingCargo,
+      inventory: inventory ?? this.inventory,
+      buildingLevels: buildingLevels ?? this.buildingLevels,
+      resources: resources ?? this.resources,
+      resourceCapacities: resourceCapacities ?? this.resourceCapacities,
+      completedResearchIds: completedResearchIds ?? this.completedResearchIds,
+      timerJobs: timerJobs ?? this.timerJobs,
+      levelResults: levelResults ?? this.levelResults,
+      badgeIds: badgeIds ?? this.badgeIds,
+      notebookFactIds: notebookFactIds ?? this.notebookFactIds,
+      missionPatchId: missionPatchId ?? this.missionPatchId,
+      playerDisplayName: playerDisplayName ?? this.playerDisplayName,
+      deterministicSeed: deterministicSeed ?? this.deterministicSeed,
+      eventHistory: eventHistory ?? this.eventHistory,
+      settings: settings ?? this.settings,
+      prologueComplete: prologueComplete ?? this.prologueComplete,
+    );
   }
 
   static List<String> _sorted(Set<String> values) => values.toList()..sort();
@@ -330,11 +379,17 @@ class CampaignSave {
 
   /// In-memory adapter for the unchanged prologue. Never persist this projection.
   CampaignSave legacySnapshot() {
-    final json = toJson()..remove('progression')..remove('legacyTimerJobs');
+    final json = toJson()
+      ..remove('progression')
+      ..remove('mission')
+      ..remove('legacyTimerJobs');
     json.addAll({
-      'version': 2, 'completedLevelIds': _sorted(completedLevelIds),
+      'version': 2,
+      'completedLevelIds': _sorted(completedLevelIds),
       'completedActivityIds': _sorted(completedActivityIds),
-      'inventory': inventory, 'buildingLevels': buildingLevels, 'resources': resources,
+      'inventory': inventory,
+      'buildingLevels': buildingLevels,
+      'resources': resources,
       'completedResearchIds': _sorted(completedResearchIds),
       'timerJobs': timerJobs.map((job) => job.toJson()).toList(),
     });
@@ -342,11 +397,32 @@ class CampaignSave {
   }
 
   static const _knownKeys = {
-    'version','completedLevelIds','unlockedLevelIds','completedActivityIds',
-    'crewNames','crewAges','crewAppearance','selectedSiteId','startingCargo',
-    'inventory','buildingLevels','resources','resourceCapacities','completedResearchIds',
-    'timerJobs','levelResults','badgeIds','notebookFactIds','missionPatchId',
-    'playerDisplayName','deterministicSeed','eventHistory','settings','prologueComplete',
-    'progression','legacyTimerJobs',
+    'version',
+    'completedLevelIds',
+    'unlockedLevelIds',
+    'completedActivityIds',
+    'crewNames',
+    'crewAges',
+    'crewAppearance',
+    'selectedSiteId',
+    'startingCargo',
+    'inventory',
+    'buildingLevels',
+    'resources',
+    'resourceCapacities',
+    'completedResearchIds',
+    'timerJobs',
+    'levelResults',
+    'badgeIds',
+    'notebookFactIds',
+    'missionPatchId',
+    'playerDisplayName',
+    'deterministicSeed',
+    'eventHistory',
+    'settings',
+    'prologueComplete',
+    'progression',
+    'mission',
+    'legacyTimerJobs',
   };
 }

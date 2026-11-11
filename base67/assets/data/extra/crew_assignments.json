@@ -5,8 +5,9 @@
     "data_class": "GAME_VALUE",
     "status": "provisional",
     "notes": [
-      "Role activities follow the updated GDD. Unspecified task durations and numerical skill bonuses remain unassigned.",
-      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim."
+      "Role activities follow the GDD. Combined campaign simulation tasks are defined once under mission_operations; legacy task rows link to their action IDs.",
+      "Prompt 4B-1: all new costs, durations, prerequisites and economy rules are GAME VALUE, provisional; no NASA claim.",
+      "Combined Prompts 5+6: mission_operations defines provisional simulation assignments, rest, health, morale and workload. No offline wellbeing changes; no death; Engineer timed-repair modifier unchanged."
     ]
   },
   "tasks": [
@@ -14,11 +15,12 @@
       "id": "commander_set_priorities",
       "role_id": "Commander",
       "name": "Set priorities",
-      "time_basis": "instant",
+      "time_basis": "simulation",
       "timer_id": null,
       "research_id": null,
       "prerequisites": [],
-      "skill_effect": "Power priorities and coordination; no numeric bonus assigned."
+      "skill_effect": "GAME VALUE, provisional: use mission_operations for introduction, simulation duration and specialist/backup effect. Not a real-time job.",
+      "mission_action_id": "priorities"
     },
     {
       "id": "engineer_repair_equipment",
@@ -38,7 +40,8 @@
       "timer_id": null,
       "research_id": null,
       "prerequisites": [],
-      "skill_effect": "Uses the existing simulation cleaning action, not a real-time job."
+      "skill_effect": "GAME VALUE, provisional: use mission_operations for introduction, simulation duration and specialist/backup effect. Not a real-time job.",
+      "mission_action_id": "clean"
     },
     {
       "id": "scientist_research",
@@ -54,43 +57,47 @@
       "id": "scientist_survey_ice",
       "role_id": "Scientist",
       "name": "Survey for ice",
-      "time_basis": "instant",
+      "time_basis": "simulation",
       "timer_id": null,
       "research_id": null,
       "prerequisites": [],
-      "skill_effect": "Clock declaration only; no survey or forecast effect authorized in 4B-1.",
-      "status": "blocked_pending_mission_definition"
+      "skill_effect": "GAME VALUE, provisional: use mission_operations for introduction, simulation duration and specialist/backup effect. Not a real-time job.",
+      "status": "implemented_in_mission_operations",
+      "mission_action_id": "survey"
     },
     {
       "id": "scientist_observe_weather",
       "role_id": "Scientist",
       "name": "Observe the weather",
-      "time_basis": "instant",
+      "time_basis": "simulation",
       "timer_id": null,
       "research_id": null,
       "prerequisites": [],
-      "skill_effect": "Clock declaration only; no survey or forecast effect authorized in 4B-1.",
-      "status": "blocked_pending_mission_definition"
+      "skill_effect": "GAME VALUE, provisional: use mission_operations for introduction, simulation duration and specialist/backup effect. Not a real-time job.",
+      "status": "implemented_in_mission_operations",
+      "mission_action_id": "forecast"
     },
     {
       "id": "medic_check_crew",
       "role_id": "Medic",
       "name": "Check crew wellbeing",
-      "time_basis": "instant",
+      "time_basis": "simulation",
       "timer_id": null,
       "research_id": null,
       "prerequisites": [],
-      "skill_effect": "Wellbeing support; no numeric bonus assigned."
+      "skill_effect": "GAME VALUE, provisional: use mission_operations for introduction, simulation duration and specialist/backup effect. Not a real-time job.",
+      "mission_action_id": "care"
     },
     {
       "id": "medic_run_shelter_drill",
       "role_id": "Medic",
       "name": "Run a shelter drill",
-      "time_basis": "instant",
+      "time_basis": "simulation",
       "timer_id": null,
       "research_id": null,
       "prerequisites": [],
-      "skill_effect": "Safety practice; no numeric bonus assigned."
+      "skill_effect": "GAME VALUE, provisional: use mission_operations for introduction, simulation duration and specialist/backup effect. Not a real-time job.",
+      "mission_action_id": "drill"
     }
   ],
   "restrictions": [
@@ -106,5 +113,90 @@
     "major_repair": "Engineer",
     "research": "Scientist"
   },
-  "timed_repair_duration_multiplier": 0.5
+  "timed_repair_duration_multiplier": 0.5,
+  "mission_operations": {
+    "initial_health": 100,
+    "initial_morale": 80,
+    "initial_fatigue": 0,
+    "maximum": 100,
+    "safe_health": 25,
+    "safe_morale": 20,
+    "safe_fatigue": 90,
+    "work_fatigue_per_hour": 4,
+    "rest_fatigue_per_hour": 6,
+    "rest_health_per_hour": 2,
+    "cold_health_per_hour": 5,
+    "shortage_health_per_hour": 8,
+    "care_health": 12,
+    "care_morale": 6,
+    "care_fatigue": 10,
+    "rally_morale": 12,
+    "backup_effect_fraction": 0.5,
+    "actions": [
+      {
+        "id": "priorities",
+        "name": "Review readiness",
+        "from_level": 3,
+        "specialist": "Commander",
+        "hours": 1,
+        "backup_hours": 2
+      },
+      {
+        "id": "clean",
+        "name": "Clean panels",
+        "from_level": 4,
+        "specialist": "Engineer",
+        "hours": 1,
+        "backup_hours": 2
+      },
+      {
+        "id": "forecast",
+        "name": "Study weather",
+        "from_level": 5,
+        "specialist": "Scientist",
+        "hours": 1,
+        "backup_hours": 2
+      },
+      {
+        "id": "drill",
+        "name": "Practise shelter",
+        "from_level": 9,
+        "specialist": "Medic",
+        "hours": 1,
+        "backup_hours": 2
+      },
+      {
+        "id": "survey",
+        "name": "Survey for ice",
+        "from_level": 10,
+        "specialist": "Scientist",
+        "hours": 1,
+        "backup_hours": 2
+      },
+      {
+        "id": "rest",
+        "name": "Rest",
+        "from_level": 13,
+        "specialist": null,
+        "hours": 2,
+        "backup_hours": 2
+      },
+      {
+        "id": "care",
+        "name": "Check crew",
+        "from_level": 13,
+        "specialist": "Medic",
+        "hours": 1,
+        "backup_hours": 1
+      },
+      {
+        "id": "rally",
+        "name": "Rally crew",
+        "from_level": 13,
+        "specialist": "Commander",
+        "hours": 1,
+        "backup_hours": 1
+      }
+    ]
+  }
 }

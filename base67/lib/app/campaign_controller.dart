@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import '../data/repositories/game_data_repository.dart';
 import '../progression/progression_clock.dart';
 import '../progression/progression_service.dart';
+import '../missions/mission_runtime.dart';
+import '../sim/sim_state.dart';
 import 'campaign_migration.dart';
 import 'campaign_save.dart';
 import 'campaign_save_store.dart';
@@ -40,6 +42,152 @@ class CampaignController extends ChangeNotifier {
   int get setupGeneration => _setupGeneration;
   ProgressionState get progression => migration.codec.decode(jsonDecode(_save.progressionJson!));
   RealTimeProgressionService get service => RealTimeProgressionService(migration.config);
+  MissionRuntime get missions => migration.missions;
+  Map<String, dynamic>? get mission => _save.missionJson == null
+      ? null : jsonDecode(_save.missionJson!) as Map<String, dynamic>;
+  SimState get missionWorld => missions.world(progression, mission,
+    site: _save.selectedSiteId ?? missions.config.sites.keys.first,
+    seed: _save.deterministicSeed ?? missions.config.defaultSeed);
+
+  /// All mission writes use the same serialized, verified one-blob save path.
+  /// Mission UI commands include the expected identity to reject old screens.
+  Future<String> missionAction(String levelId, String action, {String? value}) {
+    final generation = _setupGeneration;
+    final observation = _capture();
+    return _serial(() async {
+      if (generation != _setupGeneration) { return 'campaign_changed'; }
+      if (!_save.prologueComplete || !missions.supports(levelId) ||
+          !_save.unlockedLevelIds.contains(levelId)) { return 'level_locked'; }
+      if (_save.selectedSiteId == null) { return 'Saved landing site not found; owner review is needed.'; }
+      if (observation.token <= progression.lastObservationToken) { return 'stale_observation'; }
+      var current = mission;
+      var state = service.reconcile(progression, observation: observation);
+      SimState world(Map<String, dynamic>? snapshot) => missions.world(state, snapshot,
+        site: _save.selectedSiteId!, seed: _save.deterministicSeed ?? missions.config.defaultSeed);
+      if (action == 'open') {
+        if (current?['level'] == levelId) { return 'resumed'; }
+        if (current != null && current['phase'] != 'debrief') { return 'mission_in_progress'; }
+        current = missions.open(levelId, world(current), current);
+      } else {
+        if (current == null || current['level'] != levelId) { return 'mission_changed'; }
+        final phase = current['phase'];
+        switch (action) {
+          case 'review':
+            if (phase != 'briefing') { return 'wrong_phase'; }
+            current = {...current, 'phase': 'review'};
+          case 'plan':
+            if (phase != 'review') { return 'wrong_phase'; }
+            current = {...current, 'phase': 'planning'};
+          case 'learn':
+            if (value != missions.definition(levelId)['answer']) { return 'Try comparing the meters with the lesson.'; }
+            current = {...current, 'learned': {
+              ...(current['learned'] as List).cast<String>(),
+              missions.definition(levelId)['interaction'] as String,
+            }.toList(), 'message': 'Good observation. Try it with your own base.'};
+          case 'hint':
+            current = {...current, 'hint': ((current['hint'] as int) + 1).clamp(0, 3)};
+          case 'crew':
+            final parts = value?.split(':') ?? const <String>[];
+            if (parts.length != 2) { return 'Choose an astronaut and activity.'; }
+            final result = missions.crew.assign(state, missions.settlement(state, current),
+              role: parts[0], action: parts[1], level: missions.order(levelId));
+            if (identical(result.progression, state)) { return result.message; }
+            state = result.progression;
+            current = {...current, 'settlement': result.settlement, 'message': result.message};
+          case 'cancel_crew':
+            final result = missions.crew.cancel(state, missions.settlement(state, current), value ?? '');
+            state = result.progression;
+            current = {...current, 'settlement': result.settlement, 'message': result.message};
+          case 'support':
+            final result = missions.support(state, current, site: _save.selectedSiteId!,
+              seed: _save.deterministicSeed ?? missions.config.defaultSeed);
+            state = result.progression; current = result.session;
+          case 'shelter':
+            if (!missions.introduced(levelId, 'shelter') ||
+                (world(current).facilities['radiation_shelter']?.workingUnits ?? 0) == 0) {
+              return 'Build a working shelter before using this procedure.';
+            }
+            current = {...current, 'shelter': current['shelter'] != true,
+              'message': 'Shelter procedure changed. Outdoor cleaning pauses while sheltered; essential systems still need power.'};
+          case 'toggle':
+            if (!const {'planning','play'}.contains(phase) ||
+                !missions.canControlLoad(state, levelId, value ?? '')) { return 'system_locked'; }
+            final loads = (current['disabled'] as List).cast<String>().toSet();
+            if (!loads.remove(value)) { loads.add(value!); }
+            current = {...current, 'disabled': loads.toList(), 'message':
+              value == 'heater' ? 'Heater changed: less power also means a colder habitat.' : 'Load changed: production needs its power restored.'};
+          case 'begin':
+            if (phase != 'planning') { return 'wrong_phase'; }
+            for (final required in migration.config.requiredUnits.entries) {
+              final recipe = migration.config.recipes['construction:${required.key}']!;
+              if (missions.order(recipe.levelId) <= missions.order(levelId) &&
+                  (state.facilities[required.key] ?? 0) < required.value) {
+                return 'Build ${required.key.replaceAll('_', ' ')} before starting. Planning and other activities stay available.';
+              }
+            }
+            if ((state.facilities['solar_array'] ?? 0) == 0) { return 'Install a solar array first. Other planning stays available.'; }
+            if (missions.order(levelId) >= 2 && (state.facilities['battery_bank'] ?? 0) == 0) { return 'Install battery storage first.'; }
+            if (missions.order(levelId) == 6 && (state.facilities['greenhouse'] ?? 0) == 0) { return 'Greenhouse construction is still needed. Preparation stays available.'; }
+            if (!(current['learned'] as List).contains(missions.definition(levelId)['interaction'])) {
+              return 'Discuss the mission question before starting.';
+            }
+            current = missions.begin(current, world(current));
+          case 'step' || 'prepare' || 'clean':
+            if (_paused) { return 'app_paused'; }
+            if (action == 'clean' && !missions.introduced(levelId, 'cleaning')) { return 'system_locked'; }
+            if (action == 'clean') {
+              final free = state.crewRoles.keys.where((r) => !state.crewAssignments.containsKey(r));
+              if (free.isEmpty) { return 'Crew are busy. Wait, cancel an assignment, or choose another plan.'; }
+              final role = free.contains('Engineer') ? 'Engineer' : free.first;
+              final assignment = missions.crew.assign(state, missions.settlement(state, current),
+                role: role, action: 'clean', level: missions.order(levelId));
+              if (identical(assignment.progression, state)) { return assignment.message; }
+              state = assignment.progression;
+              current = {...current, 'settlement': assignment.settlement};
+            }
+            final result = missions.step(state, current,
+              site: _save.selectedSiteId ?? missions.config.sites.keys.first,
+              seed: _save.deterministicSeed ?? missions.config.defaultSeed,
+              preparation: action == 'prepare');
+            state = result.progression;
+            current = result.session;
+          case 'retry':
+            if (phase != 'debrief') { return 'wrong_phase'; }
+            current = {...missions.open(levelId, world(current), current), 'phase': 'planning'};
+          default: return 'unknown_action';
+        }
+      }
+      var unlocked = _save.unlockedLevelIds;
+      var results = _save.levelResults;
+      if (current['result'] == 'success' && !state.completedLevels.contains(levelId)) {
+        final nextIndex = missions.levels.indexOf(levelId) + 1;
+        state = service.resupply(state.copyWith(
+          completedLevels: {...state.completedLevels, levelId},
+          levelId: nextIndex < missions.levels.length ? missions.levels[nextIndex] : levelId));
+        unlocked = {...unlocked, if (nextIndex < missions.levels.length) missions.levels[nextIndex]};
+        results = {...results, levelId: {
+          'outcome': 'success', 'seed': current['seed'], 'history': current['history'],
+          'baseline': current['baseline'], 'elapsed_hours': (current['environment'] as Map)['hours'],
+          'assisted': ((current['settlement'] as Map?)?['support_count'] as int? ?? 0) > (current['baseline_support'] as int? ?? 0),
+          'crew': (current['settlement'] as Map?)?['crew'],
+        }};
+      }
+      await _commit(_withProgression(_save, state).copyWith(
+        missionJson: jsonEncode(current), unlockedLevelIds: unlocked, levelResults: results));
+      return 'saved';
+    });
+  }
+
+  /// Progressive presentation access; the underlying service still validates
+  /// recipes, costs, crew, prerequisites and concurrency at activation.
+  Future<String> startMissionJob({required String jobId, required String kind,
+    required String targetId, String? crewId}) {
+    final currentOrder = missions.order(progression.levelId);
+    if (kind == 'research' && currentOrder < (missions.rules['research_from_level'] as int)) {
+      return Future.value('Research is introduced with greenhouse planning.');
+    }
+    return start(jobId: jobId, kind: kind, targetId: targetId, crewId: crewId);
+  }
 
   ClockObservation _capture() => ClockObservation(token: ++_issuedToken, utc: _utcNow().toUtc());
 

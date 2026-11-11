@@ -4,6 +4,8 @@ import '../app/campaign_save.dart';
 import '../data/repositories/game_data_repository.dart';
 import '../ui/game_widgets.dart';
 import '../ui/theme.dart';
+import '../data/models/data_class.dart';
+import '../progression/progression_service.dart';
 
 const _chapterRowHeight = 108.0;
 const _campaignNodeHeight = 104.0;
@@ -14,11 +16,98 @@ class CampaignMapScreen extends StatelessWidget {
     required this.save,
     required this.repository,
     required this.openLevel,
+    this.progression,
   });
 
   final CampaignSave save;
   final GameDataRepository repository;
   final ValueChanged<String> openLevel;
+  final ProgressionState? progression;
+
+  Future<void> _details(BuildContext context, String id) async {
+    final level = (repository.campaign['levels'] as List)
+        .cast<Map<String, dynamic>>()
+        .firstWhere((row) => row['id'] == id);
+    final materials =
+        repository.document('progression_rules.json')?['materials'] as Map?;
+    final eligible = (materials?['eligible_level_ids'] as List? ?? const [])
+        .contains(id);
+    final receipt = progression?.receipts['resupply:$id'];
+    final complete = save.completedLevelIds.contains(id);
+    final result = save.levelResults[id];
+    final open = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * .75,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(GameSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  level['name'] as String,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                GameCopy(
+                  complete
+                      ? 'Completed / progress saved'
+                      : 'Available / next challenge',
+                ),
+                const SizedBox(height: GameSpacing.md),
+                FactCard(
+                  title: 'What you will learn',
+                  body: level['learning_objective'] as String,
+                  dataClass: DataClass.game,
+                ),
+                FactCard(
+                  title: 'Mission goal',
+                  body: level['mission_objective'] as String,
+                  dataClass: DataClass.game,
+                ),
+                if (receipt != null)
+                  GameCopy(
+                    'Recorded resupply: ${receipt.amount.toStringAsFixed(0)} materials. This receipt is retained; replay does not award it again.',
+                  )
+                else if (eligible)
+                  GameCopy(
+                    'First success: ${materials!['per_first_mission']} construction materials, once. Survival supplies are not refilled. These reward values are provisional.',
+                  )
+                else
+                  const GameCopy(
+                    'Completion and any existing rewards stay with the campaign.',
+                  ),
+                const DataChip(DataClass.game),
+                if (result is Map && result['assisted'] == true)
+                  const GameCopy(
+                    'The saved result records emergency support. Practice is always welcome.',
+                  ),
+                const SizedBox(height: GameSpacing.md),
+                const GameCopy(
+                  'Your current crew, facilities and supplies carry into this mission. Replay uses this same base.',
+                ),
+                GameButton(
+                  label: 'Open mission briefing',
+                  onPressed: () => Navigator.pop(context, true),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Back to campaign'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (open == true) openLevel(id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +146,12 @@ class CampaignMapScreen extends StatelessWidget {
               28,
             ),
             children: [
+              const ColonySectionHeading(
+                title: 'Mission route',
+                caption: 'Five chapters, one settlement. Return to earlier missions with your existing base.',
+                icon: Icons.explore_outlined,
+              ),
+              const SizedBox(height: GameSpacing.md),
               Text(
                 'One base. Fifteen missions.',
                 style: Theme.of(context).textTheme.headlineMedium
@@ -68,6 +163,28 @@ class CampaignMapScreen extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
+              if (nextId != null) ...[
+                MissionControlPanel(
+                  child: Builder(
+                    builder: (context) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GameCopy(
+                          'Next mission: ${levels.firstWhere((level) => level['id'] == nextId)['name']}',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: GameSpacing.sm),
+                        GameButton(
+                          label: 'Mission details',
+                          secondary: true,
+                          onPressed: () => _details(context, nextId),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: GameSpacing.md),
+              ],
               for (var i = 0; i < chapters.length; i++) ...[
                 _ChapterMap(
                   title: chapters[i]['name'] as String? ?? 'Chapter',
@@ -79,6 +196,7 @@ class CampaignMapScreen extends StatelessWidget {
                   save: save,
                   nextLevelId: nextId,
                   openLevel: openLevel,
+                  showDetails: (id) => _details(context, id),
                 ),
                 const SizedBox(height: 14),
               ],
@@ -112,6 +230,7 @@ class _ChapterMap extends StatelessWidget {
     required this.save,
     required this.nextLevelId,
     required this.openLevel,
+    required this.showDetails,
   });
 
   final String title;
@@ -121,6 +240,7 @@ class _ChapterMap extends StatelessWidget {
   final CampaignSave save;
   final String? nextLevelId;
   final ValueChanged<String> openLevel;
+  final ValueChanged<String> showDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -242,6 +362,7 @@ class _ChapterMap extends StatelessWidget {
           key: ValueKey('campaign-node-$id'),
           borderRadius: BorderRadius.circular(16),
           onTap: isOpen ? () => openLevel(id) : null,
+          onLongPress: isOpen ? () => showDetails(id) : null,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

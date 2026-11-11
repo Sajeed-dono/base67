@@ -8,10 +8,16 @@ import '../data/validation/data_check_screen.dart';
 import '../data/models/data_class.dart';
 import '../game/campaign_map_screen.dart';
 import '../game/home_base_screen.dart';
+import '../game/mission_screen.dart';
+import '../game/progression_screen.dart';
+import '../game/settlement_crew_screen.dart';
+import '../game/certificate_screen.dart';
 import '../prologue/prologue.dart';
 import '../ui/crew_bean.dart';
+import '../ui/crew_movement.dart';
 import '../ui/game_widgets.dart';
 import '../ui/theme.dart';
+import '../ui/colony_backdrop.dart';
 import 'campaign_save.dart';
 import 'campaign_save_store.dart';
 import 'campaign_migration.dart';
@@ -30,13 +36,12 @@ class _GameBootstrapState extends State<GameBootstrap> {
   Future<_LoadedGame> _load() async {
     final repository = await GameDataRepository.load();
     final migration = CampaignMigration(repository);
-    final store = CampaignSaveStore.local(migrate: migration.migrate, validate: migration.validate);
-    final save = await store.load();
-    return _LoadedGame(
-      repository,
-      store,
-      save,
+    final store = CampaignSaveStore.local(
+      migrate: migration.migrate,
+      validate: migration.validate,
     );
+    final save = await store.load();
+    return _LoadedGame(repository, store, save);
   }
 
   @override
@@ -101,6 +106,7 @@ class GameRouter extends StatefulWidget {
 
 class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
   final _navigatorKey = GlobalKey<NavigatorState>();
+  final _crewMovement = CrewMovement();
   late final CampaignController _controller;
   Object? _reportedError;
   CampaignSave get _save => _controller.save;
@@ -108,7 +114,11 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    _controller = CampaignController(repository: widget.repository, store: widget.store, initial: widget.save);
+    _controller = CampaignController(
+      repository: widget.repository,
+      store: widget.store,
+      initial: widget.save,
+    );
     _controller.addListener(_changed);
     WidgetsBinding.instance.addObserver(this);
     unawaited(_guard(_controller.initialize()));
@@ -118,20 +128,28 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
   }
 
   void _changed() {
-    if (!mounted) { return; }
+    if (!mounted) {
+      return;
+    }
     setState(() {});
-    if (_controller.lastError != null && _controller.lastError != _reportedError) {
+    if (_controller.lastError != null &&
+        _controller.lastError != _reportedError) {
       _reportedError = _controller.lastError;
-      _notice('Campaign changes were not saved. Reopen BASE 67 to try recovery.');
+      _notice(
+        'Campaign changes were not saved. Reopen BASE 67 to try recovery.',
+      );
     }
   }
 
   void _notice(String message) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       final context = _navigatorKey.currentContext;
       if (context != null) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(message)));
+        ScaffoldMessenger.maybeOf(context)
+            ?.showSnackBar(SnackBar(content: Text(message)));
       }
     });
   }
@@ -140,10 +158,14 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
     try {
       await action;
     } catch (error) {
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       if (_reportedError != error) {
         _reportedError = error;
-        _notice('Campaign changes were not saved. Reopen BASE 67 to try recovery.');
+        _notice(
+          'Campaign changes were not saved. Reopen BASE 67 to try recovery.',
+        );
       }
     }
   }
@@ -161,8 +183,13 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
       _guard(_controller.updateSetting(key, value));
 
   Future<void> _completePrologue(CampaignSave updated, int generation) async {
-    final accepted = await _controller.completePrologue(updated, expectedGeneration: generation);
-    if (!mounted || !accepted) { return; }
+    final accepted = await _controller.completePrologue(
+      updated,
+      expectedGeneration: generation,
+    );
+    if (!mounted || !accepted) {
+      return;
+    }
     final nav = _navigatorKey.currentState!;
     nav.popUntil((route) => route.isFirst);
     nav.pushReplacementNamed('/home');
@@ -175,7 +202,8 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
     return Prologue(
       repository: widget.repository,
       initialSave: _save.legacySnapshot(),
-      onComplete: (updated) => unawaited(_guard(_completePrologue(updated, generation))),
+      onComplete: (updated) =>
+          unawaited(_guard(_completePrologue(updated, generation))),
     );
   }
 
@@ -184,6 +212,7 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_changed);
     _controller.dispose();
+    _crewMovement.dispose();
     super.dispose();
   }
 
@@ -210,6 +239,17 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
   Route<void> _route(RouteSettings settings) {
     final path = settings.name ?? '/splash';
     final fixedPrologue = path == '/prologue' ? _prologuePage() : null;
+    final requestedLevel = settings.arguments is String
+        ? settings.arguments! as String
+        : _controller.mission?['level'] as String? ??
+              _controller.progression.levelId;
+    Widget missionPage() => MissionScreen(
+      controller: _controller,
+      repository: widget.repository,
+      levelId: requestedLevel,
+      movement: _crewMovement,
+      navigate: (route) => _navigatorKey.currentState!.pushNamed(route),
+    );
     Widget page() => switch (path) {
       '/splash' => _SplashScreen(
         openHome: () {
@@ -223,7 +263,13 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
       ),
       '/home' => HomeBaseScreen(
         save: _save,
+        movement: _crewMovement,
         repository: widget.repository,
+        world: _controller.missionWorld,
+        progression: _controller.progression,
+        generationKw: (_controller.mission?['generation'] as num?)?.toDouble(),
+        solHours: _controller.missions.config.number('sol_hours'),
+        daylightHours: _controller.missions.config.number('daylight_hours'),
         navigate: (route) {
           _navigatorKey.currentState!.pushNamed(route);
         },
@@ -231,11 +277,15 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
       '/campaign' => CampaignMapScreen(
         save: _save,
         repository: widget.repository,
+        progression: _controller.progression,
         openLevel: (id) {
           _navigatorKey.currentState!.pushNamed('/briefing', arguments: id);
         },
       ),
       '/prologue' => fixedPrologue!,
+      '/briefing' when _controller.missions.supports(requestedLevel) =>
+        missionPage(),
+      '/resume-mission' => missionPage(),
       '/briefing' => _BriefingScreen(
         repository: widget.repository,
         levelId: settings.arguments is String
@@ -258,18 +308,17 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
       '/design-gallery' when kDebugMode => _DesignGalleryScreen(
         reducedMotion: _save.settings['reduceMotion'] == true,
       ),
-      '/build' => _CatalogScreen(
-        title: 'Build',
-        intro: 'Choose a facility when the mission unlocks it. Every addition belongs to this base.',
-        items: _records(widget.repository, 'buildings.json', 'buildings'),
-        saved: _save.buildingLevels,
-        unlockedLevelIds: _save.unlockedLevelIds,
-      ),
-      '/research' => _ResearchScreen(
+      '/build' => ProgressionScreen(
+        controller: _controller,
         repository: widget.repository,
-        save: _save,
       ),
-      '/crew' => _CrewScreen(save: _save),
+      '/research' => ProgressionScreen(
+        controller: _controller,
+        repository: widget.repository,
+        research: true,
+      ),
+      '/crew' => SettlementCrewScreen(controller: _controller),
+      '/certificate' => CertificateScreen(controller: _controller),
       '/notebook' => _NotebookScreen(
         repository: widget.repository,
         save: _save,
@@ -288,21 +337,7 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
           _save.missionPatchId ?? 'Choose a patch after it is unlocked.',
         ),
       ),
-      '/planning' => const _SimpleScreen(
-        title: 'Mission Planning',
-        subtitle: 'Review your goal, supplies, and forecast before choosing your next step.',
-        icon: Icons.checklist_rounded,
-      ),
-      '/play' => const _SimpleScreen(
-        title: 'Mission',
-        subtitle: 'Mission play will be built in a later step. Your campaign state is safe.',
-        icon: Icons.rocket_launch_rounded,
-      ),
-      '/debrief' => const _SimpleScreen(
-        title: 'Mission Debrief',
-        subtitle: 'Review the choices that helped your crew and base.',
-        icon: Icons.fact_check_rounded,
-      ),
+      '/planning' || '/play' || '/debrief' => missionPage(),
       '/about' => const _SimpleScreen(
         title: 'About BASE 67',
         subtitle:
@@ -335,23 +370,28 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
           : GameMotion.short,
       pageBuilder: (_, _, _) => ListenableBuilder(
         listenable: _controller,
-        builder: (context, child) => page(),
+        builder: (context, child) =>
+            const {
+              '/home',
+              '/campaign',
+              '/prologue',
+              '/data-check',
+              '/design-gallery',
+            }.contains(path)
+            ? page()
+            : Theme(
+                data: Base67Theme.missionControl(),
+                child: Builder(builder: (_) => page()),
+              ),
       ),
-      transitionsBuilder: (_, animation, _, child) => reduceMotion
+      transitionsBuilder: (context, animation, _, child) =>
+          reduceMotion ||
+              MediaQuery.disableAnimationsOf(context) ||
+              MediaQuery.accessibleNavigationOf(context)
           ? child
           : FadeTransition(opacity: animation, child: child),
     );
   }
-
-  List<Map<String, dynamic>> _records(
-    GameDataRepository repository,
-    String file,
-    String field,
-  ) =>
-      (repository.document(file)?[field] as List?)
-          ?.whereType<Map<String, dynamic>>()
-          .toList() ??
-      const [];
 }
 
 class _SplashScreen extends StatelessWidget {
@@ -361,52 +401,69 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Padding(
-            padding: const EdgeInsets.all(28),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.public_rounded,
-                  size: 70,
-                  color: GameColors.rust,
+    body: Stack(
+      fit: StackFit.expand,
+      children: [
+        const Positioned.fill(child: ColonyBackdrop()),
+        SafeArea(
+          child: LayoutBuilder(
+            builder: (context, viewport) => SingleChildScrollView(
+              child: ConstrainedBox(
+                // Center short content; tall enlarged-text content remains scrollable.
+                constraints: BoxConstraints(minHeight: viewport.maxHeight),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: GameSpacing.splashMaxWidth,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(GameSpacing.lg),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const ColonySectionHeading(
+                            title: 'MISSION CONTROL',
+                            caption: 'One crew. One lasting settlement. Fifteen missions on Mars.',
+                            icon: Icons.rocket_launch_rounded,
+                          ),
+                          const SizedBox(height: GameSpacing.md),
+                          Text(
+                            'BASE 67',
+                            style: Theme.of(context).textTheme.displaySmall
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'A new home begins with one good plan.',
+                            style: Theme.of(context).textTheme.titleMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 28),
+                          GameButton(
+                            label: 'Open Home Base',
+                            icon: Icons.home_rounded,
+                            expand: true,
+                            onPressed: openHome,
+                          ),
+                          const SizedBox(height: 10),
+                          GameButton(
+                            label: 'Watch the prologue',
+                            icon: Icons.play_circle_outline_rounded,
+                            expand: true,
+                            secondary: true,
+                            onPressed: openPrologue,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'BASE 67',
-                  style: Theme.of(context).textTheme.displaySmall
-                      ?.copyWith(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'A new home begins with one good plan.',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 28),
-                GameButton(
-                  label: 'Open Home Base',
-                  icon: Icons.home_rounded,
-                  expand: true,
-                  onPressed: openHome,
-                ),
-                const SizedBox(height: 10),
-                GameButton(
-                  label: 'Watch the prologue',
-                  icon: Icons.play_circle_outline_rounded,
-                  expand: true,
-                  secondary: true,
-                  onPressed: openPrologue,
-                ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+      ],
     ),
   );
 }
@@ -505,103 +562,6 @@ class _SimpleScreen extends StatelessWidget {
   );
 }
 
-class _CatalogScreen extends StatelessWidget {
-  const _CatalogScreen({
-    required this.title,
-    required this.intro,
-    required this.items,
-    required this.saved,
-    required this.unlockedLevelIds,
-  });
-  final String title;
-  final String intro;
-  final List<Map<String, dynamic>> items;
-  final Map<String, int> saved;
-  final Set<String> unlockedLevelIds;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
-    body: ListView(
-      padding: const EdgeInsets.all(GameSpacing.page),
-      children: [
-        Text(intro),
-        const SizedBox(height: 10),
-        for (final item in items)
-          BuildingCard(
-            name: item['name'] as String? ?? 'Facility',
-            level: saved[item['id']] ?? 0,
-            state: saved[item['id']] != null
-                ? 'Built on this base'
-                : unlockedLevelIds.contains(item['introduced_level_id'])
-                ? 'Ready for construction'
-                : 'Locked until its mission',
-            upgrade: (item['upgrade_options'] as List?)?.firstOrNull as String?,
-          ),
-      ],
-    ),
-  );
-}
-
-class _ResearchScreen extends StatelessWidget {
-  const _ResearchScreen({required this.repository, required this.save});
-  final GameDataRepository repository;
-  final CampaignSave save;
-
-  @override
-  Widget build(BuildContext context) {
-    final entries =
-        (repository.document('research.json')?['projects'] as List?)
-            ?.whereType<Map<String, dynamic>>() ??
-        const [];
-    return Scaffold(
-      appBar: AppBar(title: const Text('Research')),
-      body: ListView(
-        padding: const EdgeInsets.all(GameSpacing.page),
-        children: [
-          const Text('Learn how each technology can support your base.'),
-          for (final entry in entries)
-            ResearchCard(
-              name:
-                  entry['name'] as String? ??
-                  entry['id'] as String? ??
-                  'Research topic',
-              prerequisites:
-                  (entry['prerequisites'] as List?)?.join(', ') ??
-                  'Mission unlock',
-              state: save.completedResearchIds.contains(entry['id'])
-                  ? 'Completed'
-                  : 'Not started',
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CrewScreen extends StatelessWidget {
-  const _CrewScreen({required this.save});
-  final CampaignSave save;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Crew')),
-    body: ListView(
-      padding: const EdgeInsets.all(GameSpacing.page),
-      children: [
-        const Text('Four roles help your settlement work together.'),
-        for (final role in CrewRole.values)
-          CrewAssignmentCard(
-            name: save.crewNames[_roleLabel(role)] ?? _roleLabel(role),
-            role: _roleLabel(role),
-            task: 'Ready for a mission task',
-            status: 'At the base',
-          ),
-      ],
-    ),
-  );
-}
-
 String _roleLabel(CrewRole role) => switch (role) {
   CrewRole.commander => 'Commander',
   CrewRole.engineer => 'Engineer',
@@ -667,6 +627,12 @@ class _SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(GameSpacing.page),
         children: [
+          const ColonySectionHeading(
+            title: 'Make yourself at home',
+            caption: 'Adjust reading and motion on this device. Your settlement and progress stay with you.',
+            icon: Icons.tune_rounded,
+          ),
+          const SizedBox(height: GameSpacing.md),
           Text('Text size', style: Theme.of(context).textTheme.titleLarge),
           const Text('Choose a size that feels comfortable.'),
           const SizedBox(height: 8),
@@ -685,7 +651,9 @@ class _SettingsScreen extends StatelessWidget {
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             title: const Text('Reduce motion'),
-            subtitle: const Text('Turn off looping astronaut movement.'),
+            subtitle: const Text(
+              'Reduce decorative animation and camera easing. Movement controls stay available.',
+            ),
             value: reduced,
             onChanged: (value) => update('reduceMotion', value),
           ),

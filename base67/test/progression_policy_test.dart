@@ -77,7 +77,13 @@ void main() {
       duplicate['recovery']['damage_occurrences'][0],
     );
     expect(() => configuration(rules: duplicate), throwsFormatException);
-    expect(base.damageOccurrences, isEmpty);
+    // Combined campaign now owns one real occurrence; synthetic invalid-source
+    // cases above retain their original rejection assertions.
+    final finalOccurrence = '${base.levels.last}:meteor_shower:1';
+    expect(base.damageOccurrences.keys, [finalOccurrence]);
+    expect(base.damageOccurrences[finalOccurrence]!.levelId, base.levels.last);
+    expect(base.damageOccurrences[finalOccurrence]!.targetId, 'solar_array');
+    expect(base.damageOccurrences[finalOccurrence]!.units, 1);
   });
   test('arbitrary IDs, mismatched observations and forged unconfirmed claims cannot mint assistance', () {
     final service = RealTimeProgressionService(

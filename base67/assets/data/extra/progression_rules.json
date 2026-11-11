@@ -147,7 +147,16 @@
   "recovery": {
     "required_only": true,
     "assistance_cancel_restore_fraction": 1,
-    "damage_occurrences": [],
-    "note": "GAME VALUE, provisional. Construction identities derive from required installed counts. Essential repairs require a validated occurrence catalogue and confirmed observed damage. The catalogue is empty until missions define occurrences; arbitrary caller IDs cannot authorize assistance. Credits are restricted, target-specific, reusable after cancellation, and bounded by current verified recipe shortfall."
+    "damage_occurrences": [
+      {
+        "facility_id": "solar_array",
+        "level_id": "L15_the_final_mission",
+        "event_id": "meteor_shower",
+        "sequence": 1,
+        "units": 1,
+        "essential": true
+      }
+    ],
+    "note": "GAME VALUE, provisional. Mission-owned final panel-strike occurrence; original observe/confirm/allocation/refund/closure safeguards remain authoritative. No caller-created damage authority."
   }
 }

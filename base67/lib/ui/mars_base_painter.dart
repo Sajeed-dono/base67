@@ -1,8 +1,8 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
+import 'facility_architecture.dart';
+import 'mars_terrain.dart';
 
 class MarsFacility {
   const MarsFacility(
@@ -11,119 +11,246 @@ class MarsFacility {
     this.position, {
     this.level = 0,
     this.available = false,
+    this.installedUnits,
+    this.damagedUnits = 0,
+    this.operatingState,
+    this.jobProgress,
+    this.jobLabel,
+    this.referenceOnly = false,
   });
   final String id;
   final String label;
   final Offset position;
   final int level;
   final bool available;
+  final int? installedUnits;
+  final int damagedUnits;
+  final String? operatingState, jobLabel;
+  final double? jobProgress;
+  final bool referenceOnly;
+  int get count => installedUnits ?? (level > 0 ? 1 : 0);
+  String get canonicalId => switch (id) {
+    'habitat' || 'medical_area' => 'crew_habitat',
+    'communications' => 'mission_control_hub',
+    _ => id,
+  };
+  String get condition =>
+      operatingState ??
+      (count == 0
+          ? 'notBuilt'
+          : damagedUnits > 0
+          ? 'damaged'
+          : 'operating');
+}
+
+/// One layout for both settlement views. IDs here are painter aliases only;
+/// ownership and assignments retain their canonical progression IDs.
+abstract final class SettlementLayout {
+  static List<MarsFacility> facilities(
+    Map<String, int> units, {
+    Set<String> unlocked = const {},
+  }) => [
+    for (final row in const <(String, String, String, double, double, String)>[
+      ('habitat', 'crew_habitat', 'Habitat', .48, .57, 'L13_crew_care'),
+      ('landing_craft', 'landing_craft', 'Lander', .16, .84, ''),
+      ('solar_array', 'solar_array', 'Solar', .23, .75, 'L01_first_light'),
+      ('battery_bank', 'battery_bank', 'Power', .74, .69, 'L02_power_storage'),
+      (
+        'greenhouse',
+        'greenhouse',
+        'Greenhouse',
+        .77,
+        .49,
+        'L06_greenhouse_online',
+      ),
+      ('research_lab', 'research_lab', 'Lab', .23, .50, 'L01_first_light'),
+      (
+        'power_control_station',
+        'power_control_station',
+        'Power control',
+        .47,
+        .46,
+        'L03_energy_manager',
+      ),
+      (
+        'life_support_module',
+        'life_support_module',
+        'Life support',
+        .50,
+        .77,
+        'L07_breathing_matters',
+      ),
+      (
+        'radiation_shelter',
+        'radiation_shelter',
+        'Shelter',
+        .31,
+        .38,
+        'L09_shelter_protocol',
+      ),
+      (
+        'ice_miner_water_storage',
+        'ice_miner_water_storage',
+        'Ice and water',
+        .69,
+        .37,
+        'L11_ice_operations',
+      ),
+      (
+        'food_storage',
+        'food_storage',
+        'Food',
+        .16,
+        .62,
+        'L12_food_and_supplies',
+      ),
+      (
+        'maintenance_bay',
+        'maintenance_bay',
+        'Workshop',
+        .50,
+        .34,
+        'L04_dust_on_mars',
+      ),
+      (
+        'communications',
+        'mission_control_hub',
+        'Comms',
+        .87,
+        .59,
+        'L14_mission_control',
+      ),
+      ('rover', 'rover', 'Rover', .65, .86, 'L10_finding_water'),
+      ('medical_area', 'crew_habitat', 'Crew care', .34, .86, 'L13_crew_care'),
+    ])
+      MarsFacility(
+        row.$1,
+        row.$3,
+        Offset(row.$4, row.$5),
+        level: units[row.$2] ?? 0,
+        available: unlocked.contains(row.$6),
+        referenceOnly: const {'research_lab', 'rover'}.contains(row.$1),
+      ),
+  ];
+
+  static String painterId(String id) => switch (id) {
+    'crew_habitat' => 'habitat',
+    'mission_control_hub' => 'communications',
+    _ => id,
+  };
+
+  static double scale(Size size) =>
+      (size.shortestSide / 360).clamp(.72, 1.35).toDouble();
+
+  /// Conservative solid hull including appendages. Labels and shadows are not
+  /// solid. Even an unbuilt site has a visible shell in the existing painter.
+  static Rect hull(MarsFacility facility, Size size) {
+    final s = scale(size);
+    final center = Offset(
+      facility.position.dx * size.width,
+      facility.position.dy * size.height,
+    );
+    final halfWidth = switch (facility.id) {
+      'solar_array' => 42.0,
+      'rover' => 33.0,
+      'habitat' => 28.0,
+      _ => 27.0,
+    };
+    return Rect.fromLTRB(
+      center.dx - halfWidth * s,
+      center.dy - 30 * s,
+      center.dx + halfWidth * s,
+      center.dy + 25 * s,
+    );
+  }
+
+  static Path ground(Size size) => Path()
+    ..moveTo(0, size.height * .45)
+    ..cubicTo(
+      size.width * .18,
+      size.height * .31,
+      size.width * .30,
+      size.height * .49,
+      size.width * .48,
+      size.height * .38,
+    )
+    ..cubicTo(
+      size.width * .68,
+      size.height * .27,
+      size.width * .83,
+      size.height * .46,
+      size.width,
+      size.height * .34,
+    )
+    ..lineTo(size.width, size.height)
+    ..lineTo(0, size.height)
+    ..close();
 }
 
 class MarsBasePainter extends CustomPainter {
-  const MarsBasePainter({required this.facilities, this.sunset = false});
+  const MarsBasePainter({
+    required this.facilities,
+    this.sunset = false,
+    this.panelDust = 0,
+    this.storm = false,
+    this.terrainOnly = false,
+  });
 
   final List<MarsFacility> facilities;
   final bool sunset;
+  final double panelDust;
+  final bool storm;
+  final bool terrainOnly;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final sky = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: sunset
-            ? const [Color(0xFF5B4155), Color(0xFFCF8058), Color(0xFFEDB66B)]
-            : const [Color(0xFF283F58), Color(0xFF9D634F), Color(0xFFD98B62)],
-      ).createShader(rect);
-    canvas.drawRect(rect, sky);
-    final ground = Path()
-      ..moveTo(0, size.height * 0.45)
-      ..cubicTo(
-        size.width * 0.18,
-        size.height * 0.31,
-        size.width * 0.30,
-        size.height * 0.49,
-        size.width * 0.48,
-        size.height * 0.38,
-      )
-      ..cubicTo(
-        size.width * 0.68,
-        size.height * 0.27,
-        size.width * 0.83,
-        size.height * 0.46,
-        size.width,
-        size.height * 0.34,
-      )
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(ground, Paint()..color = const Color(0xFFB9694D));
-    canvas.drawOval(
-      Rect.fromLTWH(
-        -size.width * .12,
-        size.height * .68,
-        size.width * 1.25,
-        size.height * .40,
-      ),
-      Paint()..color = const Color(0xFFD58A61).withValues(alpha: .60),
-    );
-    _drawDistantHills(canvas, size);
-    _drawCartographicGrid(canvas, size);
+    MarsTerrain.paint(canvas, size, night: sunset);
     _drawPath(canvas, size);
-    for (final facility in facilities) {
-      _drawFacility(canvas, size, facility);
-    }
-    _drawLights(canvas, size);
-  }
-
-  void _drawCartographicGrid(Canvas canvas, Size size) {
-    final grid = Paint()
-      ..color = GameColors.ink.withValues(alpha: .085)
-      ..strokeWidth = .8;
-    const step = 36.0;
-    for (var x = step; x < size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), grid);
-    }
-    for (var y = step; y < size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
-    }
-    final marker = Paint()
-      ..color = GameColors.sand.withValues(alpha: .72)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    const inset = 14.0;
-    const length = 12.0;
-    for (final (x, direction) in [(inset, 1.0), (size.width - inset, -1.0)]) {
-      for (final (y, vertical) in [(inset, 1.0), (size.height - inset, -1.0)]) {
-        canvas.drawLine(
-          Offset(x, y),
-          Offset(x + length * direction, y),
-          marker,
-        );
-        canvas.drawLine(Offset(x, y), Offset(x, y + length * vertical), marker);
+    if (!terrainOnly) {
+      for (final facility in facilities) {
+        paintFacility(canvas, size, facility, panelDust: panelDust);
       }
     }
-  }
-
-  void _drawDistantHills(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF874D46).withValues(alpha: .68);
-    final path = Path()
-      ..moveTo(0, size.height * .50)
-      ..lineTo(size.width * .17, size.height * .32)
-      ..lineTo(size.width * .30, size.height * .46)
-      ..lineTo(size.width * .53, size.height * .26)
-      ..lineTo(size.width * .69, size.height * .43)
-      ..lineTo(size.width * .82, size.height * .31)
-      ..lineTo(size.width, size.height * .42)
-      ..lineTo(size.width, size.height * .60)
-      ..lineTo(0, size.height * .61)
-      ..close();
-    canvas.drawPath(path, paint);
+    if (sunset) _drawLights(canvas, size);
+    if (!terrainOnly) {
+      MarsTerrain.atmosphere(
+        canvas,
+        size,
+        seconds: 0,
+        reducedMotion: true,
+        storm: storm,
+      );
+    }
   }
 
   void _drawPath(Canvas canvas, Size size) {
+    // Surface access routes are decorative, traversable ground. They do not
+    // imply power connectivity, installed corridors or new facility ownership.
+    for (final end in const [
+      Offset(.23, .75),
+      Offset(.74, .69),
+      Offset(.77, .49),
+      Offset(.50, .77),
+      Offset(.34, .86),
+    ]) {
+      final route = Path()
+        ..moveTo(size.width * .48, size.height * .62)
+        ..lineTo(size.width * end.dx, size.height * (end.dy + .045));
+      canvas.drawPath(
+        route,
+        Paint()
+          ..color = GameColors.ink.withValues(alpha: .18)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 12,
+      );
+      canvas.drawPath(
+        route,
+        Paint()
+          ..color = GameColors.sand.withValues(alpha: .35)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 7,
+      );
+    }
     final path = Path()
       ..moveTo(size.width * .12, size.height * .90)
       ..cubicTo(
@@ -152,551 +279,174 @@ class MarsBasePainter extends CustomPainter {
     );
   }
 
-  void _drawFacility(Canvas canvas, Size size, MarsFacility facility) {
+  static void paintFacility(
+    Canvas canvas,
+    Size size,
+    MarsFacility facility, {
+    double panelDust = 0,
+  }) {
     final center = Offset(
       facility.position.dx * size.width,
       facility.position.dy * size.height,
     );
-    final scale = (size.shortestSide / 360).clamp(.72, 1.35);
-    final shadow = Paint()..color = GameColors.ink.withValues(alpha: .24);
-    final structure = Paint()
-      ..color = facility.level > 0
-          ? const Color(0xFFF2D8AA)
-          : const Color(0xFF8C7163);
-    final darkPaint = Paint()..color = GameColors.ink;
-    final trim = Paint()
-      ..color = facility.level > 0 ? GameColors.teal : const Color(0xFF544B4A);
+    final scale = SettlementLayout.scale(size);
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(scale);
+    // Cast shadow and pad are decorative, within the original solid footprint.
+    final cast = Path()
+      ..moveTo(-22, 4)
+      ..lineTo(22, 4)
+      ..lineTo(38, 24)
+      ..lineTo(-3, 28)
+      ..close();
+    canvas.drawPath(
+      cast,
+      Paint()..color = GameColors.marsRockShade.withValues(alpha: .3),
+    );
     canvas.drawOval(
-      Rect.fromCenter(
-        center: center.translate(0, 21 * scale),
-        width: 66 * scale,
-        height: 15 * scale,
-      ),
-      shadow,
+      const Rect.fromLTWH(-31, 14, 65, 14),
+      Paint()..color = GameColors.ink.withValues(alpha: .22),
     );
-    switch (facility.id) {
-      case 'habitat':
-        canvas.drawArc(
-          Rect.fromCenter(
-            center: center,
-            width: 54 * scale,
-            height: 49 * scale,
-          ),
-          3.14,
-          3.14,
-          true,
-          structure,
-        );
-        canvas.drawArc(
-          Rect.fromCenter(
-            center: center,
-            width: 54 * scale,
-            height: 49 * scale,
-          ),
-          3.14,
-          3.14,
-          true,
-          trim
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
-        );
-        canvas.drawLine(
-          center.translate(0, -22 * scale),
-          center.translate(0, 2 * scale),
-          Paint()
-            ..color = trim.color
-            ..strokeWidth = 2,
-        );
-      case 'solar_array':
-        for (var i = 0; i < 3; i++) {
-          final panel = Rect.fromCenter(
-            center: center.translate((i - 1) * 29 * scale, 0),
-            width: 24 * scale,
-            height: 16 * scale,
-          );
-          canvas.drawRect(panel, trim);
-          canvas.drawRect(
-            panel,
-            Paint()
-              ..color = Colors.white.withValues(alpha: .45)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 1,
-          );
-          canvas.drawLine(
-            panel.topCenter,
-            panel.bottomCenter,
-            Paint()..color = Colors.white.withValues(alpha: .35),
-          );
-          for (var fleck = 0; fleck < 2; fleck++) {
-            canvas.drawCircle(
-              Offset(
-                panel.left + 6 * scale + fleck * 10 * scale,
-                panel.top + 5 * scale,
-              ),
-              1.5 * scale,
-              Paint()..color = GameColors.rust.withValues(alpha: .72),
-            );
-          }
-        }
-        canvas.drawLine(
-          center.translate(0, 10 * scale),
-          center.translate(0, 18 * scale),
-          structure..strokeWidth = 3,
-        );
-      case 'greenhouse':
-        final dome = Rect.fromCenter(
-          center: center,
-          width: 52 * scale,
-          height: 40 * scale,
-        );
-        canvas.drawArc(
-          dome,
-          3.14,
-          3.14,
-          true,
-          Paint()..color = const Color(0xFF8DD1B2).withValues(alpha: .85),
-        );
-        canvas.drawArc(
-          dome,
-          3.14,
-          3.14,
-          true,
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-        canvas.drawLine(
-          center.translate(-24 * scale, 0),
-          center.translate(24 * scale, 0),
-          Paint()
-            ..color = trim.color
-            ..strokeWidth = 2,
-        );
-      case 'battery_bank':
-        final r = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center,
-            width: 46 * scale,
-            height: 36 * scale,
-          ),
-          Radius.circular(7 * scale),
-        );
-        canvas.drawRRect(r, structure);
-        canvas.drawRRect(
-          r,
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-        canvas.drawRect(
-          Rect.fromCenter(center: center, width: 13 * scale, height: 4 * scale),
-          trim,
-        );
-        canvas.drawRect(
-          Rect.fromCenter(center: center, width: 4 * scale, height: 16 * scale),
-          trim,
-        );
-      case 'life_support_module':
-        for (var i = -1; i <= 1; i++) {
-          final tank = RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: center.translate(i * 15 * scale, 0),
-              width: 12 * scale,
-              height: 34 * scale,
-            ),
-            Radius.circular(6 * scale),
-          );
-          canvas.drawRRect(tank, structure);
-          canvas.drawRRect(
-            tank,
-            Paint()
-              ..color = trim.color
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 2,
-          );
-        }
-        canvas.drawLine(
-          center.translate(-24 * scale, 12 * scale),
-          center.translate(25 * scale, 12 * scale),
-          Paint()
-            ..color = trim.color
-            ..strokeWidth = 2,
-        );
-      case 'radiation_shelter':
-        final shield = Path()
-          ..moveTo(center.dx, center.dy - 22 * scale)
-          ..lineTo(center.dx + 25 * scale, center.dy - 12 * scale)
-          ..lineTo(center.dx + 20 * scale, center.dy + 12 * scale)
-          ..lineTo(center.dx, center.dy + 25 * scale)
-          ..lineTo(center.dx - 20 * scale, center.dy + 12 * scale)
-          ..lineTo(center.dx - 25 * scale, center.dy - 12 * scale)
-          ..close();
-        canvas.drawPath(shield, structure);
-        canvas.drawPath(
-          shield,
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-        canvas.drawCircle(center, 7 * scale, trim);
-      case 'ice_miner_water_storage':
-        final hull = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center,
-            width: 42 * scale,
-            height: 20 * scale,
-          ),
-          Radius.circular(5 * scale),
-        );
-        canvas.drawRRect(hull, structure);
-        canvas.drawRRect(
-          hull,
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
-        );
-        canvas.drawCircle(
-          center.translate(-13 * scale, 13 * scale),
-          6 * scale,
-          darkPaint,
-        );
-        canvas.drawCircle(
-          center.translate(13 * scale, 13 * scale),
-          6 * scale,
-          darkPaint,
-        );
-        canvas.drawLine(
-          center.translate(0, -10 * scale),
-          center.translate(0, -25 * scale),
-          Paint()
-            ..color = trim.color
-            ..strokeWidth = 4,
-        );
-        canvas.drawLine(
-          center.translate(0, -25 * scale),
-          center.translate(14 * scale, -25 * scale),
-          Paint()
-            ..color = trim.color
-            ..strokeWidth = 4,
-        );
-      case 'food_storage':
-        for (var i = -1; i <= 1; i++) {
-          final crate = Rect.fromCenter(
-            center: center.translate(i * 15 * scale, 4 * scale),
-            width: 14 * scale,
-            height: 22 * scale,
-          );
-          canvas.drawRect(crate, structure);
-          canvas.drawRect(
-            crate,
-            Paint()
-              ..color = trim.color
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 2,
-          );
-          canvas.drawLine(
-            crate.topLeft,
-            crate.bottomRight,
-            Paint()
-              ..color = trim.color
-              ..strokeWidth = 1.5,
-          );
-        }
-      case 'maintenance_bay':
-        final bay = Path()
-          ..moveTo(center.dx - 24 * scale, center.dy + 15 * scale)
-          ..lineTo(center.dx - 24 * scale, center.dy - 7 * scale)
-          ..lineTo(center.dx, center.dy - 25 * scale)
-          ..lineTo(center.dx + 24 * scale, center.dy - 7 * scale)
-          ..lineTo(center.dx + 24 * scale, center.dy + 15 * scale)
-          ..close();
-        canvas.drawPath(bay, structure);
-        canvas.drawPath(
-          bay,
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-        canvas.drawRect(
-          Rect.fromCenter(
-            center: center.translate(0, 6 * scale),
-            width: 12 * scale,
-            height: 18 * scale,
-          ),
-          trim,
-        );
-      case 'research_lab':
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: center,
-              width: 45 * scale,
-              height: 31 * scale,
-            ),
-            Radius.circular(5 * scale),
-          ),
-          structure,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: center,
-              width: 45 * scale,
-              height: 31 * scale,
-            ),
-            Radius.circular(5 * scale),
-          ),
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-        canvas.drawCircle(center.translate(0, -17 * scale), 9 * scale, trim);
-        canvas.drawLine(
-          center.translate(0, -17 * scale),
-          center.translate(10 * scale, -28 * scale),
-          Paint()
-            ..color = trim.color
-            ..strokeWidth = 2,
-        );
-      case 'communications':
-        canvas.drawLine(
-          center.translate(0, 18 * scale),
-          center.translate(0, -4 * scale),
-          Paint()
-            ..color = structure.color
-            ..strokeWidth = 4,
-        );
-        canvas.drawArc(
-          Rect.fromCenter(
-            center: center.translate(0, -11 * scale),
-            width: 34 * scale,
-            height: 30 * scale,
-          ),
-          3.9,
-          1.6,
-          false,
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 4,
-        );
-        canvas.drawArc(
-          Rect.fromCenter(
-            center: center.translate(0, -11 * scale),
-            width: 52 * scale,
-            height: 48 * scale,
-          ),
-          3.9,
-          1.6,
-          false,
-          Paint()
-            ..color = trim.color.withValues(alpha: .55)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
-        );
-        canvas.drawCircle(center.translate(0, -11 * scale), 4 * scale, trim);
-      case 'rover':
-        final rover = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center.translate(0, -1 * scale),
-            width: 43 * scale,
-            height: 21 * scale,
-          ),
-          Radius.circular(5 * scale),
-        );
-        canvas.drawRRect(rover, structure);
-        canvas.drawCircle(
-          center.translate(-14 * scale, 12 * scale),
-          6 * scale,
-          darkPaint,
-        );
-        canvas.drawCircle(
-          center.translate(14 * scale, 12 * scale),
-          6 * scale,
-          darkPaint,
-        );
-        canvas.drawLine(
-          center.translate(0, -11 * scale),
-          center.translate(8 * scale, -24 * scale),
-          Paint()
-            ..color = trim.color
-            ..strokeWidth = 2,
-        );
-        canvas.drawCircle(
-          center.translate(8 * scale, -24 * scale),
-          4 * scale,
-          trim,
-        );
-        final dock = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center.translate(26 * scale, -2 * scale),
-            width: 12 * scale,
-            height: 22 * scale,
-          ),
-          Radius.circular(3 * scale),
-        );
-        canvas.drawRRect(dock, trim);
-        canvas.drawLine(
-          center.translate(15 * scale, 3 * scale),
-          center.translate(20 * scale, 3 * scale),
-          Paint()
-            ..color = GameColors.gold
-            ..strokeWidth = 2 * scale,
-        );
-      case 'medical_area':
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: center,
-              width: 44 * scale,
-              height: 30 * scale,
-            ),
-            Radius.circular(6 * scale),
-          ),
-          structure,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: center,
-              width: 44 * scale,
-              height: 30 * scale,
-            ),
-            Radius.circular(6 * scale),
-          ),
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-        canvas.drawRect(
-          Rect.fromCenter(center: center, width: 7 * scale, height: 22 * scale),
-          Paint()..color = GameColors.danger,
-        );
-        canvas.drawRect(
-          Rect.fromCenter(center: center, width: 22 * scale, height: 7 * scale),
-          Paint()..color = GameColors.danger,
-        );
-      default:
-        final box = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center,
-            width: 48 * scale,
-            height: 34 * scale,
-          ),
-          Radius.circular(6 * scale),
-        );
-        canvas.drawRRect(box, structure);
-        canvas.drawRRect(
-          box,
-          Paint()
-            ..color = trim.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-        canvas.drawRect(
-          Rect.fromCenter(
-            center: center.translate(0, -7 * scale),
-            width: 22 * scale,
-            height: 8 * scale,
-          ),
-          trim,
-        );
+    final built = facility.count > 0;
+    final inactive =
+        facility.condition == 'off' ||
+        facility.condition == 'outOfResources' ||
+        built && facility.damagedUnits >= facility.count;
+    final shell = inactive
+        ? GameColors.outline
+        : built
+        ? GameColors.structuralSurface
+        : GameColors.muted;
+    final trim = inactive
+        ? GameColors.muted
+        : built
+        ? GameColors.architecturalAccent
+        : GameColors.outline;
+    if (!built) {
+      canvas.saveLayer(
+        const Rect.fromLTWH(-50, -40, 100, 75),
+        Paint()..color = Colors.white.withValues(alpha: .55),
+      );
     }
-    if (facility.level <= 0) {
-      final marker = Paint()..color = Colors.white.withValues(alpha: .9);
-      canvas.drawCircle(center.translate(0, -25 * scale), 9 * scale, marker);
-      if (facility.available) {
-        canvas.drawLine(
-          center.translate(-4 * scale, -25 * scale),
-          center.translate(4 * scale, -25 * scale),
-          Paint()
-            ..color = GameColors.teal
-            ..strokeWidth = 2.4 * scale,
-        );
-        canvas.drawLine(
-          center.translate(0, -29 * scale),
-          center.translate(0, -21 * scale),
-          Paint()
-            ..color = GameColors.teal
-            ..strokeWidth = 2.4 * scale,
-        );
-      } else {
-        final lockPaint = Paint()..color = GameColors.muted;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: center.translate(0, -24 * scale),
-              width: 10 * scale,
-              height: 8 * scale,
-            ),
-            Radius.circular(2 * scale),
-          ),
-          lockPaint,
-        );
-        canvas.drawArc(
-          Rect.fromCenter(
-            center: center.translate(0, -29 * scale),
-            width: 7 * scale,
-            height: 8 * scale,
-          ),
-          math.pi,
-          math.pi,
-          false,
-          Paint()
-            ..color = GameColors.muted
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2 * scale,
-        );
-      }
-    } else {
-      final window = Paint()..color = const Color(0xFF8BD4D0);
-      canvas.drawCircle(center.translate(0, 5 * scale), 3 * scale, window);
-      if (facility.level > 1) {
-        canvas.drawCircle(
-          center.translate(20 * scale, -23 * scale),
-          9 * scale,
-          Paint()..color = GameColors.gold,
-        );
-        final levelText = TextPainter(
-          text: TextSpan(
-            text: '${facility.level}',
-            style: TextStyle(
-              color: GameColors.ink,
-              fontSize: 10 * scale,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        levelText.paint(
-          canvas,
-          center.translate(
-            20 * scale - levelText.width / 2,
-            -23 * scale - levelText.height / 2,
-          ),
-        );
-      }
-    }
-    final labelStyle = TextStyle(
-      color: Colors.white,
-      fontSize: 12 * scale,
-      fontWeight: FontWeight.w700,
-      shadows: const [Shadow(color: GameColors.ink, blurRadius: 3)],
+    FacilityArchitecture.paint(
+      canvas,
+      facility.id,
+      shell: shell,
+      trim: trim,
+      operational: built && !inactive,
     );
+    if (!built) {
+      canvas.restore();
+    }
+    if (facility.id == 'solar_array' && built && panelDust > 0) {
+      canvas.drawRect(
+        const Rect.fromLTWH(-41, -18, 80, 24),
+        Paint()
+          ..color = GameColors.sand.withValues(
+            alpha: (panelDust * 4).clamp(0, .8).toDouble(),
+          ),
+      );
+    }
+    if (facility.damagedUnits > 0) {
+      final fracture = Path()
+        ..moveTo(-14, -14)
+        ..lineTo(-8, -6)
+        ..lineTo(-11, -1)
+        ..lineTo(-4, 6);
+      canvas.drawPath(
+        fracture,
+        Paint()
+          ..color = GameColors.machinery
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      final warning = Path()
+        ..moveTo(21, -27)
+        ..lineTo(30, -11)
+        ..lineTo(12, -11)
+        ..close();
+      canvas.drawPath(warning, Paint()..color = GameColors.danger);
+      final mark = TextPainter(
+        text: const TextSpan(
+          text: '!',
+          style: TextStyle(
+            color: GameColors.paper,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      mark.paint(canvas, const Offset(19, -25));
+    }
+    if (facility.level > 1) {
+      canvas.drawCircle(
+        const Offset(-24, -23),
+        9,
+        Paint()..color = GameColors.gold,
+      );
+      final tier = TextPainter(
+        text: TextSpan(
+          text: '${facility.level}',
+          style: const TextStyle(
+            color: GameColors.ink,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tier.paint(canvas, Offset(-24 - tier.width / 2, -23 - tier.height / 2));
+    }
+    if (facility.jobProgress != null) {
+      if (!built) {
+        final rail = Paint()
+          ..color = GameColors.machineryHighlight
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2;
+        for (final x in [-25.0, 0.0, 25.0]) {
+          canvas.drawLine(Offset(x, -27), Offset(x, 20), rail);
+        }
+        canvas.drawLine(const Offset(-25, -27), const Offset(25, -27), rail);
+        canvas.drawLine(const Offset(-25, 0), const Offset(25, -27), rail);
+      }
+      canvas.drawRect(
+        const Rect.fromLTWH(-26, 22, 52, 4),
+        Paint()..color = GameColors.ink,
+      );
+      canvas.drawRect(
+        Rect.fromLTWH(-26, 22, 52 * facility.jobProgress!, 4),
+        Paint()..color = GameColors.gold,
+      );
+    }
+    final suffix = !built
+        ? facility.referenceOnly
+              ? ' / station site'
+              : facility.available
+              ? ' / unbuilt'
+              : ' / locked'
+        : facility.condition == 'off'
+        ? ' / off'
+        : facility.count > 1
+        ? ' / ${facility.count} units'
+        : '';
     final tp = TextPainter(
-      text: TextSpan(text: facility.label, style: labelStyle),
+      text: TextSpan(
+        text: '${facility.label}$suffix',
+        style: const TextStyle(
+          color: GameColors.paper,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          shadows: [Shadow(color: GameColors.ink, blurRadius: 3)],
+        ),
+      ),
       textDirection: TextDirection.ltr,
       maxLines: 1,
-      ellipsis: '…',
-    )..layout(maxWidth: 88 * scale);
-    tp.paint(canvas, Offset(center.dx - tp.width / 2, center.dy + 25 * scale));
+      ellipsis: '...',
+    )..layout(maxWidth: 110);
+    tp.paint(canvas, Offset(-tp.width / 2, 29));
+    canvas.restore();
   }
 
   void _drawLights(Canvas canvas, Size size) {
@@ -717,5 +467,9 @@ class MarsBasePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MarsBasePainter oldDelegate) =>
-      facilities != oldDelegate.facilities || sunset != oldDelegate.sunset;
+      facilities != oldDelegate.facilities ||
+      sunset != oldDelegate.sunset ||
+      panelDust != oldDelegate.panelDust ||
+      storm != oldDelegate.storm ||
+      terrainOnly != oldDelegate.terrainOnly;
 }

@@ -1,0 +1,232 @@
+{
+  "_meta": {
+    "file": "campaign_operations.json",
+    "version": "0.1.0",
+    "data_class": "GAME_VALUE",
+    "status": "provisional",
+    "notes": [
+      "Combined Prompts 5+6. All new durations, wellbeing effects, event timing, reserve floors and support are provisional teaching choices, not NASA claims. Existing physics, prices and real-time recipes remain unchanged."
+    ]
+  },
+  "mission_rules": {
+    "water_safe_fraction": 0.2,
+    "food_safe_fraction": 0.2,
+    "event_gap_hours": 4,
+    "event_jitter_hours": 1
+  },
+  "missions": [
+    {
+      "id": "L08_radiation_alert",
+      "hours": 3,
+      "interaction": "radiation",
+      "question": "What does a radiation meter tell us?",
+      "answer": "Exposure measured over time",
+      "alternative": "An official safe limit for every astronaut",
+      "lesson": "Radiation accumulates. NASA measurements describe a place and observation; our game limits are teaching choices.",
+      "hints": [
+        "Look at the radiation meter.",
+        "Compare exposure with the labelled game limit.",
+        "Read the NASA example and the game assessment meter, then observe safely."
+      ],
+      "advice": [
+        "Engineer: compare installed capacity, damage and power.",
+        "Scientist: use evidence and read the forecast.",
+        "Medic: preserve reserves and give tired crew time to recover."
+      ]
+    },
+    {
+      "id": "L09_shelter_protocol",
+      "hours": 6,
+      "interaction": "shelter",
+      "question": "What helps during a particle warning?",
+      "answer": "Prepared shielding and shelter",
+      "alternative": "Ignoring the warning",
+      "lesson": "Shielding and shelter reduce exposure in this game. They do not make a real space mission risk-free.",
+      "hints": [
+        "Read the warning before advancing.",
+        "Build shelter and practise the safety procedure.",
+        "Enter shelter before the announced particle event. Essential power still matters."
+      ],
+      "advice": [
+        "Engineer: compare installed capacity, damage and power.",
+        "Scientist: use evidence and read the forecast.",
+        "Medic: preserve reserves and give tired crew time to recover."
+      ]
+    },
+    {
+      "id": "L10_finding_water",
+      "hours": 3,
+      "interaction": "survey",
+      "question": "What can a survey tell us about ice?",
+      "answer": "Evidence and uncertainty for a water plan",
+      "alternative": "Guaranteed accessible water everywhere",
+      "lesson": "Evidence helps choose a strategy. A game ice tier is not confirmation of accessible ice.",
+      "hints": [
+        "Review this landing site.",
+        "Assign a survey; a Scientist can finish sooner.",
+        "Complete an ice survey and read its estimate. Any free astronaut can follow the slower checklist."
+      ],
+      "advice": [
+        "Engineer: compare installed capacity, damage and power.",
+        "Scientist: use evidence and read the forecast.",
+        "Medic: preserve reserves and give tired crew time to recover."
+      ]
+    },
+    {
+      "id": "L11_ice_operations",
+      "hours": 3,
+      "interaction": "water",
+      "question": "Does finding ice automatically fill storage?",
+      "answer": "No, extraction needs power and storage",
+      "alternative": "Yes, surveys create free water",
+      "lesson": "Extraction and storage are separate. Compare the mining rate with crew water use.",
+      "hints": [
+        "Inspect the water reserve.",
+        "Build the miner and keep its power on.",
+        "Observe powered extraction and keep the marked reserve. A low-yield site may still consume more than it produces."
+      ],
+      "advice": [
+        "Engineer: compare installed capacity, damage and power.",
+        "Scientist: use evidence and read the forecast.",
+        "Medic: preserve reserves and give tired crew time to recover."
+      ]
+    },
+    {
+      "id": "L12_food_and_supplies",
+      "hours": 4,
+      "interaction": "food",
+      "question": "Why plan food supplies as well as production?",
+      "answer": "Crew use can exceed local production",
+      "alternative": "Storage creates food",
+      "lesson": "Plants help, but food supply must cover the difference between production and crew use.",
+      "hints": [
+        "Compare food production and use.",
+        "Build storage and review supply support.",
+        "Keep the food reserve while observing. Request labelled support if depleted; it is not greenhouse production."
+      ],
+      "advice": [
+        "Engineer: compare installed capacity, damage and power.",
+        "Scientist: use evidence and read the forecast.",
+        "Medic: preserve reserves and give tired crew time to recover."
+      ]
+    },
+    {
+      "id": "L13_crew_care",
+      "hours": 4,
+      "interaction": "care",
+      "question": "What helps a tired crew?",
+      "answer": "Rest, comfortable conditions and care",
+      "alternative": "More work without breaks",
+      "lesson": "Workload and wellbeing are game indicators. Crew can always receive help; nobody is permanently lost.",
+      "hints": [
+        "Look at workload and comfort.",
+        "Plan rest, a crew check and a rally.",
+        "Use any available astronauts for rest, care and rally tasks. Medic and Commander have stronger support effects."
+      ],
+      "advice": [
+        "Engineer: compare installed capacity, damage and power.",
+        "Scientist: use evidence and read the forecast.",
+        "Medic: preserve reserves and give tired crew time to recover."
+      ]
+    },
+    {
+      "id": "L14_mission_control",
+      "hours": 20,
+      "interaction": "coordination",
+      "question": "Why combine forecasts and crew plans?",
+      "answer": "To prepare systems before challenges arrive",
+      "alternative": "To wait until every warning is missed",
+      "lesson": "Forecasts, maintenance and reserves work together. Do not confuse construction time with simulation time.",
+      "hints": [
+        "Read the full event plan.",
+        "Complete a weather study and readiness plan.",
+        "Charge storage, review loads, study weather and readiness, and shelter before the particle warning."
+      ],
+      "advice": [
+        "Engineer: compare installed capacity, damage and power.",
+        "Scientist: use evidence and read the forecast.",
+        "Medic: preserve reserves and give tired crew time to recover."
+      ]
+    },
+    {
+      "id": "L15_the_final_mission",
+      "hours": 36,
+      "interaction": "finale",
+      "question": "What makes a settlement ready?",
+      "answer": "Balanced systems, informed crew and reserves",
+      "alternative": "One powerful machine alone",
+      "lesson": "A working settlement combines supply, storage, maintenance and people. This certificate records game completion only.",
+      "hints": [
+        "Review all systems and the event plan.",
+        "Survey, coordinate, prepare shelter and keep repair supplies ready.",
+        "Protect power and all reserves. Respond to the warnings, repair the observed panel damage, and complete with a workable crew."
+      ],
+      "advice": [
+        "Engineer: compare installed capacity, damage and power.",
+        "Scientist: use evidence and read the forecast.",
+        "Medic: preserve reserves and give tired crew time to recover."
+      ]
+    }
+  ],
+  "event_profiles": {
+    "L09_shelter_protocol": [
+      {
+        "id": "particles",
+        "event_id": "sep_event",
+        "offset": 2,
+        "jitter": true,
+        "warning": "Particle event forecast: enter shelter before it arrives.",
+        "effect": "A game radiation pulse; shelter and installed shielding reduce exposure."
+      }
+    ],
+    "L14_mission_control": [
+      {
+        "id": "storm",
+        "event_id": "dust_storm",
+        "offset": 1,
+        "warning": "Dust storm approaching: charge storage and review loads.",
+        "effect": "Less sunlight and more panel dust."
+      },
+      {
+        "id": "particles",
+        "event_id": "sep_event",
+        "offset": 17,
+        "warning": "A later particle event needs shelter preparation.",
+        "effect": "Shelter reduces the game radiation pulse."
+      }
+    ],
+    "L15_the_final_mission": [
+      {
+        "id": "storm",
+        "event_id": "dust_storm",
+        "offset": 1,
+        "warning": "Dust storm first: protect stored energy.",
+        "effect": "Less sunlight and panel dust."
+      },
+      {
+        "id": "particles",
+        "event_id": "sep_event",
+        "offset": 17,
+        "warning": "Particle event follows after preparation time.",
+        "effect": "Use shelter."
+      },
+      {
+        "id": "panel_strike",
+        "event_id": "meteor_shower",
+        "offset": 22,
+        "occurrence_id": "L15_the_final_mission:meteor_shower:1",
+        "warning": "Equipment hazard exercise later: keep a repair plan and spare part ready.",
+        "effect": "One installed panel is damaged. Repair it through the existing job service."
+      }
+    ]
+  },
+  "support": {
+    "reserve_fraction": 0.4,
+    "battery_fraction": 0.8,
+    "health_floor": 40,
+    "morale_floor": 40,
+    "fatigue_ceiling": 50,
+    "note": "Explicit emergency supplies/charging and crew assistance, never materials or spare parts. Top up only to the configured floor, capped by actual installed capacity. Repeated requests without consumption grant nothing. Assisted outcomes are recorded; lifetime radiation history is retained while an explicit assessment window restarts."
+  },
+  "certificate": "BASE 67 Junior Astronaut Mission Trainer \u2014 Campaign Completed"
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/models/data_class.dart';
+import 'theme.dart';
 
 class DataClassChip extends StatelessWidget {
   const DataClassChip(this.dataClass, {super.key});
@@ -11,10 +12,17 @@ class DataClassChip extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     label: '${dataClass.label} information',
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: GameSpacing.sm,
+        vertical: GameSpacing.xs,
+      ),
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
-        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline,
+          width: GameBorders.subtle,
+        ),
+        borderRadius: BorderRadius.circular(GameRadii.chip),
       ),
       child: Text(
         dataClass.label,

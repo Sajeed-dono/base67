@@ -1575,3 +1575,678 @@ These apply to all eight prompts:
 11. **Use tests for every important mechanic.** Especially persistence, deterministic simulation, timers, offline completion, campaign progression, and resource balancing.
 12. **Update project documentation after every prompt.** Codex must leave the repository in a state that the next prompt can understand.
 13. **Complete Supplemental Prompt 6A before Prompt 7.** Hybrid astronaut movement is an owner-approved addition; preserve the original eight prompt numbers and require owner-led manual validation of 6A before starting Prompt 7.
+
+
+---
+
+# SUPPLEMENTAL DEVELOPMENT RECORD: M2-M10 AND FINAL ACCEPTANCE
+
+Consolidated: 2026-11-12. This is the authoritative home of the supplemental instructions below. The historical eight prompts, Supplemental Prompt 6A and their ordering above are preserved byte-for-byte. docs/prompts/ contains historical extracts; docs/vault/META_PROMPT.md is an onboarding aid; docs/MASTER_DEVELOPMENT_ROADMAP.md tracks execution. None is a competing implementation sequence. Read docs/PROGRESS.md for the latest status.
+
+The numbered prompts and M milestones are different sequences: M7 is Mission Gameplay, NOT Prompt 7. This supplement does not authorize new Level 3 implementation, Prompt 7, sound, new balance values or a starting-damage scenario. Preserve existing previously authorized later campaign content.
+
+Source provenance: owner-provided MASTER DEVELOPMENT ASSIGNMENT attachment b461e75d-c602-449a-9632-174ae7caa8c1. Its complete original body is embedded verbatim in section 2. A separate historical standalone M2 prompt was not found in the repository or available attachments. Section 1 therefore reproduces only the exact M2 instructions from that assignment; no missing historical wording is invented.
+
+The owner separately selected: "Design starting damage separately". Keep Level 1's existing construction-first opening until a separate damage/authority/payment/spare/pacing design is approved. Do not infer a damage occurrence or grant from reference art.
+
+The historical implementation instructions in section 2 restricted Git actions and automatic full validation during development. The owner's later consolidation/commit/push request explicitly authorizes the current packaging workflow. It does not authorize changes to simulation/gameplay, a force push, discarding user work or editing docs/vault/templates/SESSION_LOG.md. Preserve complete historical instructions rather than silently rewriting them to remove the earlier restriction.
+
+## 1. M2 MARS ENVIRONMENT AND TERRAIN - SOURCED INSTRUCTIONS
+
+The following is an exact excerpt from the owner assignment in section 2, not a reconstructed standalone historical prompt.
+
+BEGIN EXACT M2 EXCERPT
+
+## M2 — Mars Environment and Terrain
+
+Improve the existing settlement world.
+
+Implement:
+- Terrain presentation.
+- Surface details.
+- Environmental depth.
+- Lighting.
+- Shadows.
+- Dust and atmospheric effects.
+- Appropriate environmental animations.
+- Better composition.
+
+Preserve:
+- World coordinates.
+- Existing camera architecture.
+- Navigation.
+- Collision.
+- Astronaut movement.
+- Building interactions.
+- Simulation behavior.
+
+END EXACT M2 EXCERPT
+
+## 2. M2-M10 COMPLETE MASTER DEVELOPMENT ASSIGNMENT - VERBATIM
+
+BEGIN VERBATIM OWNER ASSIGNMENT
+
+# BASE 67 — MASTER DEVELOPMENT ASSIGNMENT
+## Complete the Game: M2–M10 | Visual Experience + Fully Playable Level 1 and Level 2
+
+**Project directory:** `H:\projects\base67`
+
+**Development environment:** Flutter / Dart
+
+**Objective:** Complete the remaining BASE 67 development roadmap, covering M2 through M10, delivering a cohesive, visually polished, functional Mars survival and settlement-management game through Level 2.
+
+---
+
+# 1. CURRENT PROJECT STATUS
+
+Milestone M1 has been implemented and manually validated.
+
+The following validations have passed:
+
+- Focused power mission tests.
+- Mission runtime tests.
+- Mission screen tests.
+- Flutter analyzer.
+- Full Flutter test suite.
+- Original asset pack integrity test.
+
+M1 introduced:
+
+- Mission-control panel.
+- Battery charge and capacity information.
+- Construction information.
+- Existing Build and Crew navigation.
+- Unsaved next-step power preview.
+- Level 2 habitat heater control.
+- Temperature and power readings.
+- Shared eligibility checks.
+
+M1's architecture and behavior must remain intact.
+
+The project already contains:
+
+- Pure simulation logic under `lib/sim`.
+- Real-time progression and job systems.
+- Schema-3 persistence.
+- Campaign progression and save compatibility.
+- Settlement world rendering.
+- Astronaut movement and navigation.
+- Mission presentation.
+- Resource and power calculations.
+- Existing assets and game systems.
+
+Do not rebuild existing systems unnecessarily.
+
+# 2. FIRST: INSPECT THE COMPLETE PROJECT
+
+Before implementation, inspect:
+
+1. `docs/MASTER_DEVELOPMENT_ROADMAP.md`
+2. `docs/GAME_BRIEF.md`
+3. `docs/SIM_MODEL.md`
+4. `docs/DECISIONS.md`
+5. `docs/PROGRESS.md`
+6. Existing architecture and relevant implementation files.
+7. Existing tests and assets.
+
+Determine:
+
+- Which milestones are complete.
+- Which are partially complete.
+- Which remain unimplemented.
+- Which systems can be reused.
+- Which existing limitations must be addressed.
+- Dependencies between milestones.
+
+The actual project architecture and roadmap are authoritative.
+
+Do not assume that the milestone descriptions below accurately describe every existing implementation detail. Adapt them to the real codebase.
+
+# 3. MASTER FINISH LINE
+
+The game must deliver TWO integrated outcomes.
+
+## TARGET A — COMPLETE VISUAL EXPERIENCE
+
+The game should feel like a coherent, professionally designed 2.5D Mars survival game.
+
+This includes:
+
+### A.1 Prologue
+- Cinematic introduction.
+- Atmospheric presentation.
+- Clear storytelling.
+- Commander dialogue.
+- Mission briefing.
+- Appropriate transitions.
+- Consistent visual identity.
+
+### A.2 Main Menu and Home
+- Polished splash screen.
+- Main menu.
+- Home/base interface.
+- Campaign access.
+- Settings and supporting navigation.
+- Consistent typography, spacing, icons and animations.
+
+### A.3 Campaign Map
+- Visually attractive campaign presentation.
+- Mission nodes.
+- Locked and unlocked states.
+- Completion indicators.
+- Rewards.
+- Progression.
+- Meaningful transitions between missions.
+
+### A.4 Mars Environment
+- Recognizable Martian terrain.
+- Surface variation.
+- Rocks, dust and environmental details.
+- Atmospheric depth.
+- Lighting and shadows.
+- Environmental animations.
+- Cohesive 2.5D/isometric visual language.
+
+### A.5 Buildings
+- Distinctive building appearances.
+- Clear functional identities.
+- Appropriate construction states.
+- Damaged and operational states where relevant.
+- Visual integration with terrain.
+- Functional interaction points.
+
+### A.6 Astronauts
+- Distinguishable crew members.
+- Consistent appearance.
+- Movement animations.
+- Task-related behavior.
+- Interactions with buildings and infrastructure.
+- Appropriate idle and activity states.
+
+### A.7 Camera and World Navigation
+- Camera movement.
+- Zoom.
+- World exploration.
+- Responsive interaction.
+- Correct coordinate transformations.
+- Reliable selection and hit testing.
+
+### A.8 Settlement HUD
+- Resource indicators.
+- Energy status.
+- Battery status.
+- Crew information.
+- Objectives.
+- Notifications.
+- Construction progress.
+- Building interaction panels.
+- Pause and settings.
+- Mission completion interfaces.
+
+The interface must remain responsive across supported phone and tablet sizes.
+
+# 4. TARGET B — COMPLETE GAMEPLAY THROUGH LEVEL 2
+
+The game must be genuinely playable.
+
+Decorative interfaces are not enough.
+
+Buttons must perform meaningful actions. Buildings must participate in the simulation. Astronauts must have meaningful roles. Resource consumption and production must use actual game calculations.
+
+## LEVEL 1 — FIRST LIGHT
+
+The player must experience a complete, connected mission.
+
+Required gameplay:
+
+1. Arrive at the Martian settlement.
+2. Explore the settlement.
+3. Discover and interact with crew members.
+4. Inspect damaged infrastructure.
+5. Understand the initial resource situation.
+6. Allocate available resources.
+7. Assign crew to appropriate activities.
+8. Construct or repair necessary infrastructure.
+9. Restore solar power.
+10. Observe actual power generation.
+11. Manage settlement resources.
+12. Complete objectives through genuine mission conditions.
+13. Receive appropriate mission completion feedback and rewards.
+14. Unlock the next campaign mission.
+
+The player must understand what is happening and why decisions matter.
+
+## LEVEL 2 — POWER STORAGE
+
+Level 2 must continue naturally from Level 1.
+
+Required gameplay:
+
+1. Inspect existing energy infrastructure.
+2. Understand energy production and consumption.
+3. Construct or repair battery infrastructure.
+4. Assign crew to relevant jobs.
+5. Generate electricity through solar infrastructure.
+6. Charge batteries using actual production.
+7. Observe changing battery charge.
+8. Manage energy consumption.
+9. Respond to energy shortages.
+10. Make meaningful power-management decisions.
+11. Complete mission objectives through actual simulation conditions.
+12. Receive rewards and unlock appropriate campaign progression.
+
+The existing habitat heater control and power-preview system must be preserved and integrated into the completed gameplay experience.
+
+Essential habitat power must not become an arbitrary switch that allows the player to bypass mission requirements.
+
+## GAMEPLAY ACCEPTANCE REQUIREMENTS
+
+For both levels:
+
+- Objectives must correspond to actual simulation state.
+- Construction must consume appropriate resources.
+- Crew assignments must affect actual jobs.
+- Job progress must advance through existing progression systems.
+- Power production and consumption must be calculated correctly.
+- Building states must reflect actual simulation states.
+- Mission completion must depend on real conditions.
+- Rewards must be applied correctly.
+- Save/load must preserve progression.
+- Failure or shortage conditions must have meaningful consequences where designed.
+- The player must be able to understand the current situation.
+
+Do not introduce fake progress, hardcoded victories, or cosmetic interactions pretending to be gameplay.
+
+# 5. IMPLEMENTATION MILESTONES
+
+Execute the remaining development roadmap through the following stages.
+
+## M2 — Mars Environment and Terrain
+
+Improve the existing settlement world.
+
+Implement:
+- Terrain presentation.
+- Surface details.
+- Environmental depth.
+- Lighting.
+- Shadows.
+- Dust and atmospheric effects.
+- Appropriate environmental animations.
+- Better composition.
+
+Preserve:
+- World coordinates.
+- Existing camera architecture.
+- Navigation.
+- Collision.
+- Astronaut movement.
+- Building interactions.
+- Simulation behavior.
+
+## M3 — Building Presentation
+
+Implement polished, distinctive buildings.
+
+Each building must have:
+- Recognizable visual identity.
+- Appropriate proportions.
+- Functional visual states.
+- Construction and damage presentation where applicable.
+- Proper terrain integration.
+- Correct interaction and selection behavior.
+
+Avoid generic identical building representations.
+
+## M4 — Astronaut Presentation and Interaction
+
+Improve astronaut presentation and behavior.
+
+Implement:
+- Character differentiation.
+- Movement presentation.
+- Idle animations.
+- Work animations where supported.
+- Task-related behavior.
+- Building interactions.
+- Correct movement and navigation integration.
+
+Do not create meaningless movement solely for visual decoration.
+
+## M5 — Camera and World Interaction
+
+Complete:
+- Camera navigation.
+- Zoom.
+- Viewport handling.
+- Selection.
+- Building interactions.
+- Astronaut selection where supported.
+- Responsive world exploration.
+
+Preserve world-to-screen coordinate correctness.
+
+## M6 — Settlement Interface
+
+Complete the management interface.
+
+Integrate:
+- Resource HUD.
+- Energy monitoring.
+- Battery monitoring.
+- Crew information.
+- Objective tracking.
+- Construction and repair information.
+- Building interaction panels.
+- Notifications.
+- Navigation.
+- Pause and settings.
+
+All information must reflect actual simulation state.
+
+## M7 — Mission Gameplay
+
+Complete the functional gameplay loop for Levels 1 and 2.
+
+Integrate:
+- Objectives.
+- Crew assignments.
+- Construction.
+- Repair.
+- Energy generation.
+- Energy storage.
+- Energy consumption.
+- Mission evaluation.
+- Completion.
+- Rewards.
+- Campaign progression.
+
+Reuse existing systems rather than creating duplicate simulation logic.
+
+## M8 — Campaign Presentation and Progression
+
+Complete:
+- Campaign map.
+- Mission states.
+- Unlock conditions.
+- Completion indicators.
+- Rewards.
+- Progression feedback.
+- Navigation between campaign and missions.
+
+Ensure that campaign presentation reflects persisted progression.
+
+## M9 — Prologue and Supporting Screens
+
+Complete the surrounding game experience.
+
+Include:
+- Prologue.
+- Main menu.
+- Splash.
+- Home.
+- Settings.
+- Supporting screens.
+- Transitions.
+- Mission briefings.
+- Pause.
+- Completion screens.
+
+Preserve existing story and established narrative decisions.
+
+## M10 — Integration and Final Acceptance
+
+Integrate all completed systems.
+
+Perform a systematic review of:
+
+- Visual consistency.
+- Gameplay consistency.
+- Navigation.
+- Responsive layouts.
+- Simulation correctness.
+- Save/load compatibility.
+- Campaign progression.
+- Mission completion.
+- Performance.
+- Resource calculations.
+- Interaction reliability.
+- Accessibility and text scaling.
+
+Fix issues discovered during integration.
+
+Do not simply write a report claiming everything is complete.
+
+# 6. IMPLEMENTATION RULES
+
+These rules apply to every milestone.
+
+### Preserve existing architecture
+
+- Reuse existing systems.
+- Avoid unnecessary rewrites.
+- Avoid duplicate simulation systems.
+- Preserve schema-3 persistence.
+- Preserve existing save compatibility.
+- Preserve existing world coordinates and navigation behavior.
+- Preserve established campaign and mission logic.
+
+### Visual quality
+
+Do not settle for:
+- Plain colored rectangles where distinctive presentation is needed.
+- Generic repeated buildings.
+- Static astronauts without meaningful interaction.
+- Empty maps.
+- Unfinished-looking interfaces.
+- Decorative buttons without functionality.
+
+Use existing assets where appropriate. Inspect the original asset pack before creating replacements.
+
+### Gameplay quality
+
+Do not:
+- Fake construction.
+- Fake crew assignments.
+- Fake resource calculations.
+- Fake energy production.
+- Fake battery charging.
+- Fake mission completion.
+- Award rewards without meeting conditions.
+
+### Testing
+
+Add and maintain focused regression tests.
+
+Cover:
+- Responsive layouts.
+- Building interactions.
+- Crew interactions.
+- Camera behavior.
+- Resource changes.
+- Power behavior.
+- Mission objectives.
+- Mission completion.
+- Campaign unlocks.
+- Save/load compatibility.
+
+Preserve existing assertions.
+
+### Documentation
+
+Update relevant documentation when behavior or architecture changes.
+
+Maintain:
+- `docs/MASTER_DEVELOPMENT_ROADMAP.md`
+- `docs/GAME_BRIEF.md`
+- `docs/SIM_MODEL.md`
+- `docs/DECISIONS.md`
+- `docs/PROGRESS.md`
+
+Never modify:
+
+`docs/vault/templates/SESSION_LOG.md`
+
+# 7. EXECUTION STRATEGY
+
+This is ONE master assignment covering M2–M10.
+
+However, implement it in controlled sequential stages.
+
+For each milestone:
+
+1. Inspect the relevant existing implementation.
+2. Identify dependencies.
+3. Implement the actual feature.
+4. Integrate it with existing systems.
+5. Add focused regression tests.
+6. Review for regressions.
+7. Update progress documentation.
+8. Move to the next milestone.
+
+Do not stop after producing an implementation plan.
+
+Do not stop after completing M2.
+
+Do not ask for approval after every milestone when the implementation is consistent with this assignment and the established project decisions.
+
+If a genuine architectural conflict, destructive migration, irreversible change, or important gameplay decision requires user approval, stop at that specific decision and explain the issue.
+
+If context or execution limits prevent finishing everything in one session:
+- Finish the current safe implementation stage.
+- Save the actual progress in the roadmap.
+- Identify exactly what remains.
+- Do not claim unfinished milestones are complete.
+
+Prioritize a working, integrated game over superficial completion of every item.
+
+# 8. STRICT RESTRICTIONS
+
+- Do not start Level 3.
+- Do not implement beyond Level 2.
+- Do not modify `SESSION_LOG.md`.
+- Do not stage Git changes.
+- Do not commit.
+- Do not push.
+- Do not delete original assets.
+- Do not replace the simulation architecture unnecessarily.
+- Do not introduce incompatible save migrations without a justified need.
+- Do not remove existing functionality to simplify implementation.
+- Do not create placeholder files instead of implementing features.
+- Do not replace meaningful gameplay with mock demonstrations.
+
+Do not run the full test suite, Flutter analyzer, or full builds unless explicitly authorized. Focused tests may be added and run when useful, but report exactly what was executed.
+
+# 9. FINAL REPORT
+
+When the assignment is finished, provide:
+
+1. Milestones M2–M10 status.
+2. Actual implemented visual features.
+3. Actual implemented gameplay features.
+4. Level 1 acceptance status.
+5. Level 2 acceptance status.
+6. Files created, modified and deleted.
+7. Architecture changes.
+8. Save compatibility findings.
+9. Tests added and executed.
+10. Known limitations.
+11. Remaining manual validation.
+12. Exact commands the user should execute.
+
+Use these status labels:
+
+- COMPLETE — implemented and validated.
+- IMPLEMENTED — code completed, validation pending.
+- PARTIAL — some required work remains.
+- BLOCKED — requires a decision or unresolved dependency.
+- NOT STARTED — not implemented.
+
+Never mark a milestone COMPLETE merely because code was written.
+
+# FINAL INSTRUCTION
+
+The objective is not to produce nine separate demonstrations.
+
+The objective is to finish BASE 67 as one coherent game.
+
+The Mars environment, buildings, astronauts, camera, HUD, mission systems, campaign progression and story must work together.
+
+The player should be able to experience the complete prologue, enter the campaign, play Level 1, progress into Level 2, manage the settlement, make meaningful decisions, complete both missions and see their progress persist.
+
+Treat this as the final development assignment for the current scope of BASE 67.
+
+Begin with project inspection, reconcile the roadmap, and proceed with implementation.
+
+END VERBATIM OWNER ASSIGNMENT
+
+## 3. M10 ANALYZER CLEANUP - OWNER INSTRUCTION
+
+Source: the owner's targeted analyzer-cleanup request after M2-M10 implementation. Historical line numbers refer to that request. The complete instruction is preserved below; it is not permission to repeat unrelated development.
+
+BEGIN OWNER ANALYZER-CLEANUP INSTRUCTION
+
+Fix the two remaining Flutter analyzer informational issues.
+
+Files:
+
+- lib/ui/mars_base_painter.dart:216
+- lib/ui/mars_terrain.dart:152
+
+Both concern curly_braces_in_flow_control_structures.
+
+Requirements:
+
+1. Add appropriate curly braces around the affected if statements.
+2. Do not change rendering behavior.
+3. Do not modify unrelated files.
+4. Preserve existing tests and assertions.
+5. Run flutter analyze afterward.
+6. Report the exact changes and analyzer results.
+
+Do not run the full test suite or build.
+Do not perform Git operations.
+
+END OWNER ANALYZER-CLEANUP INSTRUCTION
+
+Implementation record: braces were added around if (!terrainOnly) and if (storm). No rendering change. The prior cleanup session executed flutter analyze and returned exit 0: "No issues found! (ran in 1.0s)". This consolidation session does not claim that analysis was rerun.
+
+## 4. FINAL ACCEPTANCE AND VALIDATION REQUIREMENTS
+
+Current checkpoint, 2026-11-12:
+
+- M1: Validated.
+- M2-M9: Implemented for review.
+- M10: Partial pending Android and final acceptance.
+- Flutter analyzer: Passed, zero issues. Executed in the preceding cleanup session; not rerun during consolidation.
+- Full Flutter test suite: Passed, owner-reported in the consolidation request. No new total or raw log was supplied; do not invent one.
+- Release APK: Built successfully, 52.2 MB, owner-reported. The ignored local app-release.apk artifact is present; its existence does not establish device acceptance.
+- Android device acceptance: Pending.
+- Starting damage: separate design decision; no initial damage implementation is authorized.
+
+These results supersede earlier pending-check snapshots only for the listed checks. They do not establish Android visual quality, frame/memory performance, every possible loadout/history, physical save durability, student learning outcomes or acceptance of the full 15-level campaign.
+
+Final acceptance must cover:
+
+1. Preserve all M1 functionality, the original data pack, pure simulation boundaries, schema-3 compatibility, migration/backup guarantees, original story/crew identities, stable world coordinates and existing 15-level/five-chapter content.
+2. Review the integrated Mars environment, building states, crew activity/selection, pan/zoom/framing/picking, resource HUD, objectives, jobs, warnings, pause/settings, mission/campaign feedback and supporting screens on a real portrait Android device.
+3. Review phone/tablet layouts (360, 800 and 1024 dp where applicable), 1.4x text, legibility, at least 48 dp essential targets, screen-reader/keyboard alternatives and reduced motion. Do not hide content, shrink typography or add dummy controls to pass checks.
+4. Play the unchanged prologue into construction-first Level 1, build/assign through actual progression, observe real generation, complete actual conditions, unlock Level 2 on the SAME base, construct storage, charge it through actual simulation, manage the existing heater without disabling essential power, observe charge/discharge, handle shortages and complete the real mission.
+5. Confirm real costs, crew exclusivity, cargo ownership, repair/refund accounting, separate real/simulation clocks, meaningful activities while work runs, exactly-once completion/rewards and safe offline job reconciliation. No cosmetic progress, fake victory, automatic refill or replacement base.
+6. Reload mid-job, in planning and mid-mission; preserve resources, evidence, assignments, receipts and unlocks. Check supported legacy migration and backup recovery without discarding the old save on failure. Existing tests are evidence for their scenarios, not a universal durability guarantee.
+7. Retain focused regression assertions and run the full Flutter suite, analyzer and release build at an authorized checkpoint. Record actual commands/results or clearly attributed owner reports; never imply these were executed in a session that did not run them.
+8. Verify the original source checksums and absence of original data edits. Keep generated build/.dart_tool, local configuration, secrets and temporary files out of commits. An APK is an ignored build artifact, not source to stage.
+9. Inspect Android offline behavior, readability, gestures, lifecycle/background/resume, rendering performance and resource usage. No runtime internet dependency or new package is introduced by documentation consolidation.
+10. Resolve any genuine remaining scope/balance/architecture decision separately. Starting damage needs explicit design/approval; lab/rover gameplay, new scoring/badges/sound, new Level 3 work and Prompt 7 are not silently authorized here.
+11. Record outcomes in the existing roadmap, progress and decisions. Use COMPLETE only for implemented and validated scope; IMPLEMENTED for code awaiting validation; PARTIAL for remaining work; BLOCKED for a real decision/dependency; NOT STARTED where no implementation exists. M10 remains PARTIAL until Android/final acceptance is recorded.
+12. Final report must list M2-M10 status, actual visual/gameplay features, Level 1/2 acceptance, exact created/modified/deleted files, architecture/save compatibility, actual tests, known limitations, remaining manual validation and exact commands. Git packaging must additionally report the commit hash/message, full committed file list, push/ref status and intentionally uncommitted files.
+
+Suggested owner-run final checkpoint commands (do not claim a rerun merely because they are listed):
+
+flutter analyze
+flutter test --reporter expanded --concurrency=1
+flutter test test/original_pack_test.dart --reporter expanded
+flutter build apk --release
+flutter devices
+
+Select the real Android device for flutter run and perform the acceptance playthrough above. The successful build, full-suite and analyzer results already reported remain recorded; device acceptance is still pending.

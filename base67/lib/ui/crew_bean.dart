@@ -73,19 +73,28 @@ class _CrewBeanState extends State<CrewBean>
   );
 
   @override
-  void initState() {
-    super.initState();
-    if (!widget.reducedMotion) _breath.repeat(reverse: true);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _setMotion();
+  }
+
+  bool get _reduced =>
+      widget.reducedMotion ||
+      MediaQuery.disableAnimationsOf(context) ||
+      MediaQuery.accessibleNavigationOf(context);
+
+  void _setMotion() {
+    if (_reduced) {
+      _breath.stop();
+    } else if (!_breath.isAnimating) {
+      _breath.repeat(reverse: true);
+    }
   }
 
   @override
   void didUpdateWidget(covariant CrewBean oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.reducedMotion) {
-      _breath.stop();
-    } else if (!_breath.isAnimating) {
-      _breath.repeat(reverse: true);
-    }
+    _setMotion();
   }
 
   @override
@@ -108,7 +117,7 @@ class _CrewBeanState extends State<CrewBean>
           visorTint:
               crewVisorColors[widget.visorTintIndex % crewVisorColors.length],
           faceStyleIndex: widget.faceStyleIndex,
-          breath: widget.reducedMotion ? 0 : _breath.value,
+          breath: _reduced ? 0 : _breath.value,
         ),
       ),
     );
@@ -152,6 +161,12 @@ class CrewBeanPainter extends CustomPainter {
     required this.visorTint,
     required this.faceStyleIndex,
     required this.breath,
+    this.walking = false,
+    this.walkPhase = 0,
+    this.facing = Offset.zero,
+    this.activity,
+    this.activityPhase = 0,
+    this.carryingReservedEquipment = false,
   });
 
   final CrewRole role;
@@ -160,6 +175,12 @@ class CrewBeanPainter extends CustomPainter {
   final Color visorTint;
   final int faceStyleIndex;
   final double breath;
+  final bool walking;
+  final double walkPhase;
+  final Offset facing;
+  final String? activity;
+  final double activityPhase;
+  final bool carryingReservedEquipment;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -167,6 +188,10 @@ class CrewBeanPainter extends CustomPainter {
     final sy = size.height / 116;
     canvas.save();
     canvas.scale(sx, sy);
+    if (facing.dx < 0) {
+      canvas.translate(100, 0);
+      canvas.scale(-1, 1);
+    }
     final rise = mood == CrewMood.celebrating ? -4.0 : breath * 1.5;
     final suit = Paint()..color = suitColor;
     final trim = Paint()..color = Colors.white.withValues(alpha: 0.92);
@@ -180,7 +205,8 @@ class CrewBeanPainter extends CustomPainter {
 
     canvas.drawOval(const Rect.fromLTWH(20, 99, 62, 10), shadow);
     canvas.save();
-    canvas.translate(0, rise);
+    final stride = walking ? math.sin(walkPhase * math.pi * 2) * 5 : 0.0;
+    canvas.translate(0, rise + (walking ? stride.abs() * -.35 : 0));
     // Backpack sits behind the rounded suit.
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -199,20 +225,20 @@ class CrewBeanPainter extends CustomPainter {
     // Legs and boots.
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        const Rect.fromLTWH(31, 78, 15, 24),
+        Rect.fromLTWH(31, 78 + stride, 15, 24),
         const Radius.circular(7),
       ),
       suit,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        const Rect.fromLTWH(55, 78, 15, 24),
+        Rect.fromLTWH(55, 78 - stride, 15, 24),
         const Radius.circular(7),
       ),
       suit,
     );
-    canvas.drawOval(const Rect.fromLTWH(25, 95, 25, 9), dark);
-    canvas.drawOval(const Rect.fromLTWH(52, 95, 25, 9), dark);
+    canvas.drawOval(Rect.fromLTWH(25, 95 + stride, 25, 9), dark);
+    canvas.drawOval(Rect.fromLTWH(52, 95 - stride, 25, 9), dark);
     // Bean shaped body with a broad shoulder and narrow waist.
     final body = Path()
       ..moveTo(26, 75)
@@ -255,10 +281,41 @@ class CrewBeanPainter extends CustomPainter {
       ),
       trim,
     );
-    _drawMood(canvas);
-    _drawFaceStyle(canvas);
+    if (facing.dy < -.5) {
+      // Rear-facing helmet and pack: keep the same bean silhouette and badge.
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(29, 27, 44, 32),
+          const Radius.circular(14),
+        ),
+        suit,
+      );
+      final pack = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(39, 51, 29, 30),
+        const Radius.circular(7),
+      );
+      canvas.drawRRect(pack, trim);
+      canvas.drawRRect(pack, stroke);
+      canvas.drawLine(const Offset(43, 62), const Offset(64, 62), stroke);
+    } else {
+      canvas.save();
+      canvas.translate(facing.dx.abs() * 2, facing.dy * 2);
+      _drawMood(canvas);
+      canvas.restore();
+      _drawFaceStyle(canvas);
+    }
     _drawBadge(canvas);
     _drawMoodDetails(canvas);
+    _drawActivity(canvas);
+    if (carryingReservedEquipment) {
+      final box = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(74, 72, 21, 18),
+        const Radius.circular(3),
+      );
+      canvas.drawRRect(box, Paint()..color = GameColors.sand);
+      canvas.drawRRect(box, stroke);
+      canvas.drawLine(const Offset(84, 74), const Offset(84, 88), stroke);
+    }
     canvas.restore();
     canvas.restore();
   }
@@ -273,6 +330,64 @@ class CrewBeanPainter extends CustomPainter {
         canvas.drawCircle(const Offset(40, 41), 1.3, mark);
         canvas.drawCircle(const Offset(64, 41), 1.3, mark);
         canvas.drawCircle(const Offset(52, 56), 1.3, mark);
+    }
+  }
+
+  /// Only the map supplies an activity after arrival at an assigned station.
+  /// Optional motion describes work; it has no timing/completion side effects.
+  void _drawActivity(Canvas canvas) {
+    if (activity == null) {
+      return;
+    }
+    final swing = math.sin(activityPhase * 3) * 3;
+    final tool = Paint()
+      ..color = GameColors.sand
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    final outline = Paint()
+      ..color = GameColors.ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    switch (activity) {
+      case 'major_repair' || 'repair' || 'clean' || 'construction' || 'upgrade':
+        canvas.drawLine(Offset(76, 66 + swing), Offset(89, 57 + swing), tool);
+        canvas.drawCircle(Offset(90, 56 + swing), 4, outline);
+        if (activity == 'construction') {
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              const Rect.fromLTWH(71, 77, 21, 14),
+              const Radius.circular(3),
+            ),
+            Paint()..color = GameColors.gold,
+          );
+          canvas.drawRect(const Rect.fromLTWH(77, 73, 8, 5), outline);
+        }
+      case 'research' || 'forecast' || 'survey' || 'priorities' || 'rally':
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(73, 60 + swing, 18, 23),
+            const Radius.circular(3),
+          ),
+          Paint()..color = GameColors.ink,
+        );
+        canvas.drawLine(Offset(77, 66 + swing), Offset(86, 66 + swing), tool);
+        canvas.drawLine(Offset(77, 72 + swing), Offset(83, 72 + swing), tool);
+      case 'care':
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            const Rect.fromLTWH(74, 68, 20, 17),
+            const Radius.circular(3),
+          ),
+          Paint()..color = GameColors.paper,
+        );
+        canvas.drawLine(
+          const Offset(84, 71),
+          const Offset(84, 82),
+          tool..color = GameColors.teal,
+        );
+        canvas.drawLine(const Offset(79, 76), const Offset(89, 76), tool);
+      default:
+        break;
     }
   }
 
@@ -455,5 +570,11 @@ class CrewBeanPainter extends CustomPainter {
       suitColor != oldDelegate.suitColor ||
       visorTint != oldDelegate.visorTint ||
       faceStyleIndex != oldDelegate.faceStyleIndex ||
-      breath != oldDelegate.breath;
+      breath != oldDelegate.breath ||
+      walking != oldDelegate.walking ||
+      walkPhase != oldDelegate.walkPhase ||
+      facing != oldDelegate.facing ||
+      activity != oldDelegate.activity ||
+      activityPhase != oldDelegate.activityPhase ||
+      carryingReservedEquipment != oldDelegate.carryingReservedEquipment;
 }

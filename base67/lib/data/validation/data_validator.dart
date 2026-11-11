@@ -73,6 +73,7 @@ class DataValidator {
       'sim_params.json',
       'site_risk.json',
       'tutorial.json',
+      'campaign_operations.json',
       'scoring.json',
       'fact_cards.json',
       'display_text.json',
