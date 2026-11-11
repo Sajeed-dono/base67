@@ -5,7 +5,7 @@ You are a coding agent working on **BASE 67**, a kid-friendly (ages 10-14), offl
 ## Before you do anything
 1. Read `docs/vault/00_START_HERE.md` and follow its BEFORE-WORK checklist. Read the vault files in the order it gives.
 2. Read `docs/PROGRESS.md` (current status), `docs/DECISIONS.md` (decisions), and `docs/GAME_BRIEF.md` (source of truth for design).
-3. Work on exactly ONE prompt from `docs/prompts/`, the one the user names. Never start the next prompt.
+3. Read `docs/BASE_67_Codex_Prompt_Sequence.txt` as the authoritative master implementation sequence. Follow its global rules and supplemental prompts. Work on exactly ONE prompt or supplemental prompt explicitly named by the user. Never start the next prompt without authorization. Do not treat older prompt files in `docs/prompts/` as overriding this master document.
 
 ## Always
 - Keep the working prologue unless the approved prompt says to change it.

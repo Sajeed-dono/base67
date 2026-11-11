@@ -1017,6 +1017,235 @@ All 15 levels are playable and integrated with the persistent base. Tests cover 
 
 ---
 
+# SUPPLEMENTAL PROMPT 6A — HYBRID ASTRONAUT MOVEMENT SYSTEM
+
+This is an owner-approved supplemental implementation between Prompt 6 and Prompt 7. It adds hybrid astronaut movement to the existing BASE 67 settlement-management game without replacing or renumbering any of the original eight prompts. Complete implementation and owner-led manual validation of this supplement before beginning Prompt 7.
+
+Implement a hybrid astronaut movement system that introduces both direct player control and autonomous crew movement into BASE 67.
+
+The player must be able to directly control one selected astronaut while the remaining three astronauts autonomously move according to their existing assignments and settlement activities.
+
+This is a gameplay presentation and interaction feature. It must integrate with the existing architecture without compromising the persistent settlement, simulation engine, progression system, mission flow, or save integrity.
+
+## 1. Mandatory architecture inspection
+
+Before editing anything, inspect:
+
+- `docs/GAME_BRIEF.md`
+- `docs/PROGRESS.md`
+- `docs/DECISIONS.md`
+- `lib/ui/crew_bean.dart`
+- `lib/ui/mars_base_painter.dart`
+- `lib/game/home_base_screen.dart`
+- `lib/game/mission_screen.dart`
+- Existing routing and shared UI infrastructure.
+- Existing crew models, assignments, task reservations and saved astronaut appearance data.
+
+Identify how the current settlement map is rendered, how building positions are determined, how crew members are represented, and how their assignments are exposed to presentation.
+
+Reuse existing architecture wherever possible.
+
+Do not create a second settlement map, a parallel crew-assignment system, or another save system.
+
+## 2. Direct player control
+
+Implement direct control of one selected astronaut.
+
+Required controls:
+
+**Desktop/debug:**
+- WASD.
+- Arrow keys.
+
+**Android:**
+- On-screen virtual joystick.
+- Responsive, touch-friendly controls.
+- Optional tap-to-move on accessible map locations.
+
+The player must be able to select any of the four astronauts through an accessible crew selector.
+
+Only the selected astronaut receives direct movement input.
+
+Changing the selected astronaut must not cancel, overwrite or alter their existing simulation assignment.
+
+## 3. Autonomous movement
+
+The remaining astronauts must move autonomously using their existing assignments and statuses.
+
+Examples:
+
+- Engineer assigned to panel cleaning moves towards the solar array.
+- Engineer assigned to repair moves towards the relevant facility.
+- Scientist assigned to research moves towards the laboratory.
+- Scientist assigned to surveying moves towards the survey location.
+- Medic performing crew care moves towards the habitat or medical area.
+- Resting astronauts return to the habitat.
+- Astronauts assigned to shelter drills or emergency protection move towards the radiation shelter.
+- Commander assigned to planning or coordination moves towards Mission Control.
+
+Use actual existing task identities and facility identities.
+
+Do not invent new gameplay assignments or change task durations.
+
+Where an assignment has no physical destination, use a sensible existing crew station or idle location.
+
+If the player manually moves an astronaut who has an assignment, temporary physical movement must not cancel the assignment. The astronaut should resume autonomous behaviour when released.
+
+## 4. Movement architecture
+
+Use the existing top-down settlement coordinate system.
+
+The implementation must:
+
+- Keep character positions aligned with the actual rendered map.
+- Support different device sizes and aspect ratios.
+- Keep astronauts inside the walkable map area.
+- Prevent astronauts from walking through buildings or other solid obstacles.
+- Avoid crew members occupying exactly the same position.
+- Use simple, deterministic pathfinding or waypoint navigation appropriate to the existing map.
+- Recalculate destinations when assignments or building availability change.
+- Avoid unnecessary continuous rebuilds.
+- Keep movement smooth without consuming excessive battery or CPU.
+
+Do not introduce a heavyweight game engine or external package unless the existing architecture makes implementation impossible without one. Prefer existing Flutter animation, gesture, rendering and input facilities.
+
+If existing map geometry cannot safely support collision-aware navigation, explain the limitation and implement the smallest compatible navigation solution rather than redesigning the settlement.
+
+## 5. Character animations
+
+Extend the existing CrewBean rendering system without removing its original design.
+
+Support:
+
+- Idle breathing.
+- Walking animations.
+- Directional facing.
+- Working.
+- Resting.
+- Researching.
+- Sheltering.
+- Celebrating.
+- Appropriate existing mood expressions.
+
+Movement animation should communicate direction and activity clearly.
+
+Do not replace the original bean-shaped astronauts with unrelated artwork.
+
+Use the existing suit colours, role badges, appearance choices and mood system.
+
+Reduced-motion settings must be respected. Functional movement remains available, but unnecessary looping and decorative movement should be reduced or disabled.
+
+## 6. Player interface
+
+Provide:
+
+- A clear selected-astronaut indicator.
+- A crew selector for all four astronauts.
+- A virtual joystick on touch devices.
+- A clear indication of direct-control mode.
+- A way to release manual control and return the astronaut to autonomous behaviour.
+- Clear visual feedback when an astronaut reaches an assigned destination.
+
+Keep the interface suitable for portrait-first Android gameplay.
+
+All interactive controls must respect the existing minimum 48 dp target requirement.
+
+Do not obscure mission objectives, essential map information or existing pinned navigation controls.
+
+## 7. Integration and safety rules
+
+This feature must remain separate from the simulation's actual resource and task-completion authority.
+
+Specifically:
+
+- Walking does not consume oxygen, food, water or electricity.
+- Walking does not advance Martian time.
+- Walking does not advance real-world construction or research timers.
+- Reaching a building does not automatically complete a task.
+- Walking to a repair site does not execute a repair.
+- Walking to a laboratory does not complete research.
+- Existing assignments and reservations remain authoritative.
+- Existing crew health, morale, fatigue and comfort rules remain unchanged.
+- Existing save schema and canonical progression ownership must not be duplicated.
+- No change to original NASA data or source checksums.
+- No new network calls, ads, premium features or dependencies.
+
+Crew movement must never create a false impression that an actual simulation task has completed.
+
+## 8. Persistent settlement integration
+
+Astronauts must appear on the actual Home Base map.
+
+Where appropriate, integrate the same movement presentation into mission gameplay without duplicating the map or creating inconsistent crew positions.
+
+When navigating away from the map and returning, astronauts should appear in sensible positions based on their current assignments.
+
+Do not introduce a save-schema change merely to persist temporary animation positions. If persistent coordinates genuinely require a schema change, stop and explain why before implementing it.
+
+## 9. Tests to add
+
+Add focused tests covering:
+
+- Direct movement using directional input.
+- Virtual joystick movement.
+- Astronaut selection.
+- Releasing direct control.
+- Autonomous destination selection.
+- Assignment changes updating destinations.
+- Collision and map-boundary handling.
+- Multiple astronauts moving without occupying the same location.
+- Manual control not cancelling an existing assignment.
+- Reduced-motion behaviour.
+- Responsive layout at 360 dp and tablet width.
+- Existing crew assignments and progression remaining unchanged.
+
+Tests must demonstrate that movement cannot directly mutate simulation resources, timers or mission completion.
+
+Do not delete existing assertions to make new tests pass.
+
+## 10. Documentation
+
+Update `docs/PROGRESS.md` and `docs/DECISIONS.md` with:
+
+- Movement architecture.
+- Input methods.
+- Autonomous behaviour mapping.
+- Navigation and collision approach.
+- Reduced-motion handling.
+- Any known limitations.
+- Exact files changed.
+
+Do not modify `docs/vault/templates/SESSION_LOG.md`.
+
+## 11. Strict scope and delivery
+
+This is one focused movement implementation.
+
+- Do not begin Prompt 7.
+- Do not redesign the entire UI, Home Base, Campaign Map, mission system or simulation engine.
+- Do not change gameplay balance.
+- Do not add sound or unrelated features.
+- Do not run Flutter tests, Flutter analyze, Android builds, Git commands or routine validation scripts. The owner will execute those manually.
+
+First inspect the architecture, then implement the smallest complete solution consistent with the existing code.
+
+If a fundamental architectural blocker makes the complete feature unsafe, stop before making destructive changes and report the exact blocker and a minimal implementation proposal.
+
+At completion, report:
+
+- What direct-control features were implemented.
+- What autonomous behaviours were implemented.
+- How the controls work on desktop and Android.
+- How movement interacts with existing assignments.
+- How collision and navigation work.
+- Exact files changed.
+- Tests added but not executed.
+- Remaining limitations.
+
+Do not claim the feature is verified or playable until the owner manually validates it.
+
+---
+
 # PROMPT 7 OF 8 — BASE PROGRESSION, RESEARCH, TIMERS, REWARDS, NOTEBOOK AND SETTINGS
 
 First read `docs/GAME_BRIEF.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md`, and `docs/SIM_MODEL.md`. This is step 7 of 8. Complete the long-term progression systems that make the persistent base meaningful.
@@ -1345,3 +1574,4 @@ These apply to all eight prompts:
 10. **Do not silently invent NASA facts, sources, team names, test results, or student learning outcomes.**
 11. **Use tests for every important mechanic.** Especially persistence, deterministic simulation, timers, offline completion, campaign progression, and resource balancing.
 12. **Update project documentation after every prompt.** Codex must leave the repository in a state that the next prompt can understand.
+13. **Complete Supplemental Prompt 6A before Prompt 7.** Hybrid astronaut movement is an owner-approved addition; preserve the original eight prompt numbers and require owner-led manual validation of 6A before starting Prompt 7.
