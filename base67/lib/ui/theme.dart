@@ -53,6 +53,17 @@ abstract final class GameColors {
   static const solarCellLine = Color(0xFF8CB1C2);
   static const moduleShade = Color(0xFFC7BCA9);
   static const workLight = Color(0xFFFFDC99);
+  static const hudGlass = Color(0xBF18263A);
+  static const hudBorder = Color(0x33FFF8EB);
+
+  static const prologueBackground = Color(0xFF0B1220);
+  static const prologuePanel = Color(0xD91B2940);
+  static const prologueBorder = Color(0x667B91A4);
+  static const prologueOrange = Color(0xFFCF5738);
+  static const prologueTeal = Color(0xFF44C5BC);
+  static const prologueAmber = Color(0xFFF2BD58);
+  static const prologueGrid = Color(0x14A9C1D9);
+  static const prologueVignette = Color(0x39030A15);
 }
 
 abstract final class GameSpacing {
@@ -84,6 +95,9 @@ abstract final class GameSpacing {
   static const double joystickKnob = 48;
   static const double telemetryWide = 560;
   static const double splashMaxWidth = 480;
+  static const double compactJoystick = 92;
+  static const double compactJoystickKnob = 36;
+  static const double inspectionToastWidth = 240;
 }
 
 /// Cosmetic navigation tuning in presentation world units; never Mars units.
@@ -98,7 +112,8 @@ abstract final class CrewMotion {
 
 abstract final class SettlementView {
   static const world = Size(900, 700);
-  static const initialZoom = .9;
+  static const initialZoom = 1.3;
+  static const labelZoom = .8;
   static const maxZoom = 1.8;
   static const zoomStep = 1.2;
   static const followResponse = 8.0;
@@ -132,6 +147,8 @@ abstract final class GameOpacity {
   static const double captionSurface = .88;
   static const double captionBorder = .45;
   static const double gaugeTrack = .45;
+  static const double ghost = .35;
+  static const double joystick = .55;
 }
 
 abstract final class GameIconSizes {
@@ -243,6 +260,8 @@ abstract final class GameMotion {
   static const Duration short = Duration(milliseconds: 160);
   static const Duration normal = Duration(milliseconds: 260);
   static const Duration idle = Duration(milliseconds: 1800);
+  static const Duration objectiveTimeout = Duration(seconds: 4);
+  static const Duration inspectionTimeout = Duration(seconds: 3);
   static const Curve standard = Curves.easeOutCubic;
   static const Curve popIn = Curves.easeOutBack;
   static const Curve moves = Curves.easeInOutCubic;

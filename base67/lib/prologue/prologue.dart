@@ -1,7 +1,7 @@
 // BASE 67 — Prologue (8 scenes). Drop into a fresh `flutter create base67` project.
 // Story dialogue is sourced from docs/source/BASE_67_Prologue_Preview.pdf.
 import 'dart:async';
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +15,58 @@ import '../ui/crew_bean.dart';
 import '../ui/game_widgets.dart';
 import '../ui/prologue_scenery.dart';
 import '../ui/theme.dart';
+
+ThemeData _prologueTheme() {
+  final base = Base67Theme.missionControl();
+  final shape = BeveledRectangleBorder(
+    borderRadius: BorderRadius.circular(10),
+    side: const BorderSide(color: GameColors.prologueBorder),
+  );
+  return base.copyWith(
+    scaffoldBackgroundColor: GameColors.prologueBackground,
+    cardTheme: base.cardTheme.copyWith(
+      color: GameColors.prologuePanel,
+      elevation: 0,
+      shape: shape,
+    ),
+    inputDecorationTheme: base.inputDecorationTheme.copyWith(
+      filled: true,
+      fillColor: GameColors.prologueBackground,
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: GameColors.prologueTeal, width: 2),
+      ),
+      focusedBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: GameColors.prologueAmber, width: 2),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll(
+          Size(GameSpacing.touchTarget, GameSpacing.primaryButtonHeight),
+        ),
+        foregroundColor: const WidgetStatePropertyAll(GameColors.paper),
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.disabled)
+              ? GameColors.controlRaised
+              : GameColors.prologueOrange,
+        ),
+        shape: WidgetStatePropertyAll(shape),
+        elevation: const WidgetStatePropertyAll(2),
+        shadowColor: const WidgetStatePropertyAll(GameColors.prologueOrange),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: GameColors.prologueTeal,
+        side: const BorderSide(color: GameColors.prologueBorder),
+        shape: shape,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: GameColors.prologueTeal),
+    ),
+  );
+}
 
 // ---------------------------------------------------------------- data
 
@@ -294,17 +346,23 @@ class _PrologueState extends State<Prologue> {
         reducedMotion: widget.initialSave.settings['reduceMotion'] == true,
         onDone: next,
       ),
-      () => CrewScreen(mission: mission, onDone: next),
+      () => CrewScreen(
+        mission: mission,
+        onDone: next,
+        reducedMotion: widget.initialSave.settings['reduceMotion'] == true,
+      ),
       () => SiteScreen(
         mission: mission,
         repository: widget.repository,
         seed: widget.initialSave.deterministicSeed ?? seed,
         onDone: next,
+        reducedMotion: widget.initialSave.settings['reduceMotion'] == true,
       ),
       () => CargoScreen(
         mission: mission,
         repository: widget.repository,
         onDone: next,
+        reducedMotion: widget.initialSave.settings['reduceMotion'] == true,
       ),
       () => CineScreen(
         cine: cine6,
@@ -326,48 +384,43 @@ class _PrologueState extends State<Prologue> {
       ),
     ];
     final complete = i >= steps.length;
-    return Scaffold(
-      body: SafeArea(
-        left: complete || i >= 2 && i <= 4,
-        right: complete || i >= 2 && i <= 4,
-        child: complete
-            ? Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(GameSpacing.lg),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        height:
-                            MediaQuery.orientationOf(context) ==
-                                Orientation.landscape
-                            ? 100
-                            : MediaQuery.sizeOf(context).width / 2,
-                        child: const PrologueScenery(
-                          scene: PrologueScene.touchdown,
-                          reducedMotion: true,
-                        ),
-                      ),
-                      Text(
-                        'THE MISSION BEGINS',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: GameSpacing.sm),
-                      const Text(
-                        'This is the first step for one base that will grow throughout the campaign.',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: GameSpacing.md),
-                      GameButton(
-                        label: 'Go to Home Base',
-                        icon: Icons.rocket_launch_rounded,
-                        onPressed: () => widget.onComplete?.call(makeSave()),
-                      ),
-                    ],
+    return Theme(
+      data: _prologueTheme(),
+      child: Scaffold(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            const IgnorePointer(
+              child: CustomPaint(painter: _TacticalFramePainter()),
+            ),
+            SafeArea(
+              left: complete || i >= 2 && i <= 4,
+              right: complete || i >= 2 && i <= 4,
+              child: AnimatedSwitcher(
+                duration:
+                    widget.initialSave.settings['reduceMotion'] == true ||
+                        MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : GameMotion.medium,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: .98, end: 1).animate(animation),
+                    child: child,
                   ),
                 ),
-              )
-            : KeyedSubtree(key: ValueKey(i), child: steps[i]()),
+                child: complete
+                    ? MissionBeginsScreen(
+                        key: const ValueKey('mission-begins'),
+                        onComplete: () => widget.onComplete?.call(makeSave()),
+                        reducedMotion:
+                            widget.initialSave.settings['reduceMotion'] == true,
+                      )
+                    : KeyedSubtree(key: ValueKey(i), child: steps[i]()),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -392,15 +445,61 @@ class CineScreen extends StatefulWidget {
 class _CineScreenState extends State<CineScreen> {
   int lineIndex = 0;
   bool endCard = false;
+  bool _igniting = false;
+  int _countdown = 10;
+  Timer? _ignitionTimer;
+  Timer? _countdownTimer;
+
+  bool get _reducedMotion =>
+      widget.reducedMotion ||
+      MediaQuery.disableAnimationsOf(context) ||
+      MediaQuery.accessibleNavigationOf(context);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.scene != PrologueScene.launch) return;
+    if (_reducedMotion) {
+      _countdownTimer?.cancel();
+      _countdown = 0;
+    } else {
+      _countdownTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_countdown == 0) {
+          timer.cancel();
+        } else {
+          setState(() => _countdown--);
+        }
+      });
+    }
+  }
+
   void tap() {
+    if (_igniting) return;
     if (endCard) return widget.onDone();
     if (lineIndex < widget.cine.lines.length - 1) {
       setState(() => lineIndex++);
     } else if (widget.cine.endCard != null) {
       setState(() => endCard = true);
+    } else if (widget.scene == PrologueScene.launch && !_reducedMotion) {
+      setState(() => _igniting = true);
+      _ignitionTimer = Timer(const Duration(milliseconds: 1400), () {
+        if (mounted) widget.onDone();
+      });
     } else {
       widget.onDone();
     }
+  }
+
+  void skip() {
+    _ignitionTimer?.cancel();
+    widget.onDone();
+  }
+
+  @override
+  void dispose() {
+    _ignitionTimer?.cancel();
+    _countdownTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -418,112 +517,285 @@ class _CineScreenState extends State<CineScreen> {
         children: [
           PrologueScenery(
             scene: visualScene,
-            reducedMotion: widget.reducedMotion,
+            reducedMotion: _reducedMotion,
+            launching: _igniting,
           ),
-          Padding(
-            padding: const EdgeInsets.all(GameSpacing.lg),
-            child: Column(
-              children: [
-                GestureDetector(
-                  key: kDebugMode && widget.cine.title == cine1.title
-                      ? const ValueKey('base67-debug-data-check-entry')
-                      : null,
-                  onLongPress: kDebugMode && widget.cine.title == cine1.title
-                      ? () async {
-                          final repository = await GameDataRepository.load();
-                          if (!context.mounted) return;
-                          await Navigator.of(context).push<void>(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  DataCheckScreen(repository: repository),
-                            ),
-                          );
-                        }
-                      : null,
-                  child: Text(
-                    widget.cine.title.toUpperCase(),
-                    style: text.labelLarge?.copyWith(color: GameColors.sand),
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(painter: _TacticalFramePainter()),
+            ),
+          ),
+          if (widget.scene == PrologueScene.launch)
+            _launchOverlay(context, line)
+          else
+            Padding(
+              padding: const EdgeInsets.all(GameSpacing.lg),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    key: kDebugMode && widget.cine.title == cine1.title
+                        ? const ValueKey('base67-debug-data-check-entry')
+                        : null,
+                    onLongPress: kDebugMode && widget.cine.title == cine1.title
+                        ? () async {
+                            final repository = await GameDataRepository.load();
+                            if (!context.mounted) return;
+                            await Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    DataCheckScreen(repository: repository),
+                              ),
+                            );
+                          }
+                        : null,
+                    child: Text(
+                      widget.cine.title.toUpperCase(),
+                      style: text.labelLarge?.copyWith(color: GameColors.sand),
+                    ),
                   ),
-                ),
-                Text(
-                  widget.cine.place,
-                  style: text.labelSmall?.copyWith(color: GameColors.sand),
-                ),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: FractionallySizedBox(
-                      widthFactor:
-                          MediaQuery.orientationOf(context) ==
-                              Orientation.landscape
-                          ? .62
-                          : 1,
+                  Text(
+                    widget.cine.place,
+                    style: text.labelSmall?.copyWith(color: GameColors.sand),
+                  ),
+                  Expanded(
+                    child: Align(
                       alignment: Alignment.centerRight,
-                      child: Center(
-                        child: SingleChildScrollView(
-                          child: endCard
-                              ? Text(
-                                  widget.cine.endCard!,
-                                  key: const ValueKey('card'),
-                                  textAlign: TextAlign.center,
-                                  style: text.displaySmall?.copyWith(
-                                    color: GameColors.sand,
-                                  ),
-                                )
-                              : Column(
-                                  key: ValueKey(lineIndex),
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (line.who != null)
-                                      Text(
-                                        line.who!,
-                                        style: text.labelLarge?.copyWith(
-                                          color: GameColors.sand,
-                                        ),
-                                      ),
-                                    const SizedBox(height: GameSpacing.sm),
-                                    CinematicCaption(
-                                      child: Text(
-                                        line.who == null
-                                            ? line.text
-                                            : '“${line.text}”',
-                                        textAlign: TextAlign.center,
-                                        style: text.titleLarge?.copyWith(
-                                          color: GameColors.paper,
-                                          fontStyle: line.who == null
-                                              ? FontStyle.italic
-                                              : FontStyle.normal,
-                                        ),
-                                      ),
+                      child: FractionallySizedBox(
+                        widthFactor:
+                            MediaQuery.orientationOf(context) ==
+                                Orientation.landscape
+                            ? .62
+                            : 1,
+                        alignment: Alignment.centerRight,
+                        child: Center(
+                          child: SingleChildScrollView(
+                            child: endCard
+                                ? Text(
+                                    widget.cine.endCard!,
+                                    key: const ValueKey('card'),
+                                    textAlign: TextAlign.center,
+                                    style: text.displaySmall?.copyWith(
+                                      color: GameColors.sand,
                                     ),
-                                  ],
-                                ),
+                                  )
+                                : Column(
+                                    key: ValueKey(lineIndex),
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (line.who != null)
+                                        Text(
+                                          line.who!,
+                                          style: text.labelLarge?.copyWith(
+                                            color: GameColors.sand,
+                                          ),
+                                        ),
+                                      const SizedBox(height: GameSpacing.sm),
+                                      _TacticalPanel(
+                                        child: _TypingText(
+                                          line.who == null
+                                              ? line.text
+                                              : '“${line.text}”',
+                                          reducedMotion: _reducedMotion,
+                                          textAlign: TextAlign.center,
+                                          style: text.titleLarge?.copyWith(
+                                            color: GameColors.paper,
+                                            fontStyle: line.who == null
+                                                ? FontStyle.italic
+                                                : FontStyle.normal,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Text(
-                  'Tap to continue · Skip',
-                  style: text.labelMedium?.copyWith(color: GameColors.paper),
-                ),
-                TextButton(
-                  onPressed: widget.onDone,
-                  child: const Text('Skip scene'),
-                ),
-              ],
+                  Text(
+                    'Tap to continue · Skip',
+                    style: text.labelMedium?.copyWith(color: GameColors.paper),
+                  ),
+                  Semantics(
+                    button: true,
+                    label: 'Skip scene',
+                    child: TextButton(
+                      key: const ValueKey('prologue-skip'),
+                      onPressed: skip,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          const Icon(Icons.skip_next_rounded),
+                          ExcludeSemantics(
+                            child: Opacity(
+                              opacity: 0,
+                              child: const Text('Skip scene'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
   }
+
+  Widget _launchOverlay(BuildContext context, Line line) => Padding(
+    padding: const EdgeInsets.all(GameSpacing.md),
+    child: Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.cine.title.toUpperCase(),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: GameColors.prologueAmber,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  Semantics(
+                    label: widget.cine.place,
+                    child: ExcludeSemantics(
+                      child: Text(
+                        widget.cine.place.toUpperCase(),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: GameColors.onControlSecondary,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _TacticalPanel(
+              padding: GameSpacing.xs,
+              accent: GameColors.prologueTeal,
+              child: Column(
+                children: [
+                  Text(
+                    'T-00:${_countdown.toString().padLeft(2, '0')}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: GameColors.paper,
+                      fontFamily: 'monospace',
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  ExcludeSemantics(
+                    child: Row(
+                      children: [
+                        for (var index = 0; index < 3; index++)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            child: Icon(
+                              Icons.circle,
+                              size: 10,
+                              color:
+                                  index <
+                                      (lineIndex *
+                                          3 ~/
+                                          (widget.cine.lines.length - 1))
+                                  ? GameColors.prologueTeal
+                                  : GameColors.muted,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const Spacer(),
+        Align(
+          alignment: MediaQuery.orientationOf(context) == Orientation.landscape
+              ? Alignment.bottomLeft
+              : Alignment.bottomCenter,
+          child: SizedBox(
+            width: MediaQuery.orientationOf(context) == Orientation.landscape
+                ? MediaQuery.sizeOf(context).width * .4
+                : MediaQuery.sizeOf(context).width,
+            child: _TacticalPanel(
+              accent: GameColors.prologueTeal,
+              padding: GameSpacing.sm,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (line.who != null)
+                    Text(
+                      line.who!,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: GameColors.prologueTeal,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  _TypingText(
+                    line.who == null ? line.text : '?${line.text}?',
+                    reducedMotion: _reducedMotion,
+                    style: Theme.of(context).textTheme.bodyLarge
+                        ?.copyWith(color: GameColors.paper),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Tap to continue · Skip',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Semantics(
+                        button: true,
+                        label: 'Skip scene',
+                        child: IconButton(
+                          key: const ValueKey('prologue-skip'),
+                          tooltip: 'Skip scene',
+                          onPressed: skip,
+                          icon: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              const Icon(Icons.skip_next_rounded),
+                              Opacity(
+                                opacity: 0,
+                                child: const Text('Skip scene'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class CrewScreen extends StatefulWidget {
-  const CrewScreen({super.key, required this.mission, required this.onDone});
+  const CrewScreen({
+    super.key,
+    required this.mission,
+    required this.onDone,
+    this.reducedMotion = false,
+  });
   final Mission mission;
   final VoidCallback onDone;
+  final bool reducedMotion;
   @override
   State<CrewScreen> createState() => _CrewScreenState();
 }
@@ -558,15 +830,30 @@ class _CrewScreenState extends State<CrewScreen> {
   @override
   Widget build(BuildContext context) {
     final styles = Theme.of(context).textTheme;
+    final filled = widget.mission.crew
+        .where((member) => member.name.trim().isNotEmpty)
+        .length;
     return Padding(
       padding: const EdgeInsets.all(GameSpacing.md),
       child: _SetupColumns(
         children: [
-          Text('Scene 3 -- Your Crew, Your Mission', style: styles.titleLarge),
-          DaveBubble(
+          Semantics(
+            label: 'Scene 3 -- Your Crew, Your Mission',
+            child: ExcludeSemantics(
+              child: Text(
+                'SCENE 3 -- YOUR CREW, YOUR MISSION',
+                style: styles.titleLarge?.copyWith(
+                  color: GameColors.paper,
+                  letterSpacing: 1.4,
+                ),
+              ),
+            ),
+          ),
+          _DaveComms(
             message: confirmed
                 ? 'Crew registration complete. Four personnel confirmed. Commander, your team is ready.'
                 : 'Welcome, Commander. Crew configuration interface is ready. Please register your expedition personnel.',
+            reducedMotion: widget.reducedMotion,
           ),
           Expanded(
             child: ListView.builder(
@@ -574,134 +861,261 @@ class _CrewScreenState extends State<CrewScreen> {
               itemBuilder: (context, index) {
                 final member = widget.mission.crew[index];
                 final role = CrewRole.values[index];
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(GameSpacing.sm),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CrewBean(
-                              role: role,
-                              suitColorIndex: member.suitColorIndex,
-                              visorTintIndex: member.visorTintIndex,
-                              faceStyleIndex: member.faceStyleIndex,
-                              size: 56,
-                              reducedMotion: true,
-                            ),
-                            const SizedBox(width: GameSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                '${member.role} — ${member.tagline}',
-                                style: styles.titleMedium,
+                return _PrologueEntrance(
+                  index: index,
+                  reducedMotion: widget.reducedMotion,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(GameSpacing.sm),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 112,
+                                height: 128,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    const CustomPaint(
+                                      size: Size(112, 128),
+                                      painter: _OperatorPlatformPainter(),
+                                    ),
+                                    AnimatedSwitcher(
+                                      duration:
+                                          widget.reducedMotion ||
+                                              MediaQuery.disableAnimationsOf(
+                                                context,
+                                              )
+                                          ? Duration.zero
+                                          : GameMotion.fast,
+                                      transitionBuilder: (child, animation) =>
+                                          FadeTransition(
+                                            opacity: animation,
+                                            child: ScaleTransition(
+                                              scale: animation,
+                                              child: child,
+                                            ),
+                                          ),
+                                      child: CrewBean(
+                                        key: ValueKey(
+                                          '${member.suitColorIndex}-${member.visorTintIndex}-${member.faceStyleIndex}',
+                                        ),
+                                        role: role,
+                                        suitColorIndex: member.suitColorIndex,
+                                        visorTintIndex: member.visorTintIndex,
+                                        faceStyleIndex: member.faceStyleIndex,
+                                        size: 104,
+                                        reducedMotion: true,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Text(member.profile),
-                        Text(
-                          'Special characteristic: ${member.trait}',
-                          style: styles.bodyMedium?.copyWith(
-                            fontStyle: FontStyle.italic,
+                              const SizedBox(width: GameSpacing.sm),
+                              Expanded(
+                                child: Semantics(
+                                  label: '${member.role} — ${member.tagline}',
+                                  child: ExcludeSemantics(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _RoleTag(role: member.role),
+                                        const SizedBox(height: GameSpacing.xs),
+                                        Text(
+                                          member.tagline.toUpperCase(),
+                                          style: styles.titleMedium?.copyWith(
+                                            color: GameColors.paper,
+                                            letterSpacing: .7,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        TextField(
-                          key: ValueKey('crew-name-${member.role}'),
-                          controller: controllers[index],
-                          enabled: !confirmed,
-                          maxLength: 20,
-                          onChanged: (value) =>
-                              setState(() => member.name = value.trim()),
-                          decoration: const InputDecoration(labelText: 'Name'),
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: confirmed
-                                ? null
-                                : () {
-                                    final name =
-                                        namePool[Random().nextInt(
-                                          namePool.length,
-                                        )];
-                                    controllers[index].text = name;
-                                    member.name = name;
-                                    setState(() {});
-                                  },
-                            child: const Text('Random name'),
+                          Text(
+                            member.profile,
+                            style: styles.bodyMedium?.copyWith(
+                              color: GameColors.onControlSecondary,
+                            ),
                           ),
-                        ),
-                        Wrap(
-                          spacing: GameSpacing.sm,
-                          runSpacing: GameSpacing.xs,
-                          children: [
-                            DropdownButton<int>(
-                              value: member.suitColorIndex,
-                              items: [
-                                for (var i = 0; i < crewSuitColors.length; i++)
-                                  DropdownMenuItem(
-                                    value: i,
-                                    child: Text('Suit ${i + 1}'),
-                                  ),
-                              ],
-                              onChanged: confirmed
-                                  ? null
-                                  : (value) => setState(
-                                      () => member.suitColorIndex = value ?? 0,
+                          _TacticalPanel(
+                            accent: GameColors.prologueAmber,
+                            padding: GameSpacing.sm,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.workspace_premium_outlined,
+                                  size: 18,
+                                  color: GameColors.prologueAmber,
+                                ),
+                                const SizedBox(width: GameSpacing.xs),
+                                Expanded(
+                                  child: Text(
+                                    'Special characteristic: ${member.trait}',
+                                    style: styles.bodyMedium?.copyWith(
+                                      color: GameColors.paper,
                                     ),
-                            ),
-                            DropdownButton<int>(
-                              value: member.visorTintIndex,
-                              items: [
-                                for (var i = 0; i < crewVisorColors.length; i++)
-                                  DropdownMenuItem(
-                                    value: i,
-                                    child: Text('Visor ${i + 1}'),
                                   ),
+                                ),
                               ],
-                              onChanged: confirmed
-                                  ? null
-                                  : (value) => setState(
-                                      () => member.visorTintIndex = value ?? 0,
-                                    ),
                             ),
-                            DropdownButton<int>(
-                              value: member.faceStyleIndex,
-                              items: [
-                                for (var i = 0; i < 3; i++)
-                                  DropdownMenuItem(
-                                    value: i,
-                                    child: Text('Face ${i + 1}'),
-                                  ),
-                              ],
-                              onChanged: confirmed
-                                  ? null
-                                  : (value) => setState(
-                                      () => member.faceStyleIndex = value ?? 0,
-                                    ),
+                          ),
+                          TextField(
+                            key: ValueKey('crew-name-${member.role}'),
+                            controller: controllers[index],
+                            enabled: !confirmed,
+                            maxLength: 20,
+                            onChanged: (value) =>
+                                setState(() => member.name = value.trim()),
+                            decoration: const InputDecoration(
+                              labelText: 'Name',
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: OutlinedButton.icon(
+                              onPressed: confirmed
+                                  ? null
+                                  : () {
+                                      final name =
+                                          namePool[math.Random().nextInt(
+                                            namePool.length,
+                                          )];
+                                      controllers[index].text = name;
+                                      member.name = name;
+                                      setState(() {});
+                                    },
+                              icon: const Icon(Icons.casino_outlined),
+                              label: const Text('Random name'),
+                            ),
+                          ),
+                          Wrap(
+                            spacing: GameSpacing.sm,
+                            runSpacing: GameSpacing.xs,
+                            children: [
+                              DropdownButton<int>(
+                                value: member.suitColorIndex,
+                                isDense: true,
+                                dropdownColor: GameColors.controlRaised,
+                                style: const TextStyle(color: GameColors.paper),
+                                underline: const SizedBox.shrink(),
+                                items: [
+                                  for (
+                                    var i = 0;
+                                    i < crewSuitColors.length;
+                                    i++
+                                  )
+                                    DropdownMenuItem(
+                                      value: i,
+                                      child: Text('Suit ${i + 1}'),
+                                    ),
+                                ],
+                                onChanged: confirmed
+                                    ? null
+                                    : (value) => setState(
+                                        () =>
+                                            member.suitColorIndex = value ?? 0,
+                                      ),
+                              ),
+                              DropdownButton<int>(
+                                value: member.visorTintIndex,
+                                isDense: true,
+                                dropdownColor: GameColors.controlRaised,
+                                style: const TextStyle(color: GameColors.paper),
+                                underline: const SizedBox.shrink(),
+                                items: [
+                                  for (
+                                    var i = 0;
+                                    i < crewVisorColors.length;
+                                    i++
+                                  )
+                                    DropdownMenuItem(
+                                      value: i,
+                                      child: Text('Visor ${i + 1}'),
+                                    ),
+                                ],
+                                onChanged: confirmed
+                                    ? null
+                                    : (value) => setState(
+                                        () =>
+                                            member.visorTintIndex = value ?? 0,
+                                      ),
+                              ),
+                              DropdownButton<int>(
+                                value: member.faceStyleIndex,
+                                isDense: true,
+                                dropdownColor: GameColors.controlRaised,
+                                style: const TextStyle(color: GameColors.paper),
+                                underline: const SizedBox.shrink(),
+                                items: [
+                                  for (var i = 0; i < 3; i++)
+                                    DropdownMenuItem(
+                                      value: i,
+                                      child: Text('Face ${i + 1}'),
+                                    ),
+                                ],
+                                onChanged: confirmed
+                                    ? null
+                                    : (value) => setState(
+                                        () =>
+                                            member.faceStyleIndex = value ?? 0,
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
             ),
           ),
-          GameButton(
-            key: const ValueKey('crew-confirm'),
-            label: confirmed ? 'Continue' : 'Confirm crew',
-            onPressed: !ready
-                ? null
-                : () {
-                    if (confirmed) {
-                      widget.onDone();
-                    } else {
-                      setState(() => confirmed = true);
-                    }
-                  },
+          Row(
+            children: [
+              ExcludeSemantics(
+                child: SizedBox(
+                  width: GameSpacing.touchTarget,
+                  height: GameSpacing.touchTarget,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: filled / widget.mission.crew.length,
+                        strokeWidth: 3,
+                        backgroundColor: GameColors.controlOutline,
+                        color: GameColors.prologueTeal,
+                      ),
+                      Text('$filled/4', style: styles.labelSmall),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: GameSpacing.sm),
+              Expanded(
+                child: GameButton(
+                  key: const ValueKey('crew-confirm'),
+                  expand: true,
+                  label: confirmed ? 'Continue' : 'Confirm crew',
+                  onPressed: !ready
+                      ? null
+                      : () {
+                          if (confirmed) {
+                            widget.onDone();
+                          } else {
+                            setState(() => confirmed = true);
+                          }
+                        },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -716,11 +1130,13 @@ class SiteScreen extends StatefulWidget {
     required this.repository,
     required this.seed,
     required this.onDone,
+    this.reducedMotion = false,
   });
   final Mission mission;
   final GameDataRepository repository;
   final int seed;
   final VoidCallback onDone;
+  final bool reducedMotion;
   @override
   State<SiteScreen> createState() => _SiteScreenState();
 }
@@ -794,7 +1210,8 @@ class _SiteScreenState extends State<SiteScreen> {
           SizedBox(
             height: GameSpacing.messageViewport,
             child: SingleChildScrollView(
-              child: DaveBubble(
+              child: _DaveComms(
+                reducedMotion: widget.reducedMotion,
                 message: confirmed
                     ? 'Landing zone confirmed. Mission parameters updated.'
                     : expired
@@ -902,10 +1319,12 @@ class CargoScreen extends StatefulWidget {
     required this.mission,
     required this.repository,
     required this.onDone,
+    this.reducedMotion = false,
   });
   final Mission mission;
   final GameDataRepository repository;
   final VoidCallback onDone;
+  final bool reducedMotion;
   @override
   State<CargoScreen> createState() => _CargoScreenState();
 }
@@ -1007,7 +1426,8 @@ class _CargoScreenState extends State<CargoScreen> {
           SizedBox(
             height: GameSpacing.messageViewport,
             child: SingleChildScrollView(
-              child: DaveBubble(
+              child: _DaveComms(
+                reducedMotion: widget.reducedMotion,
                 message: confirmed
                     ? 'Cargo manifest confirmed. Mission equipment registered.'
                     : cost > budget
@@ -1128,6 +1548,573 @@ class _CargoScreenState extends State<CargoScreen> {
       ),
     );
   }
+}
+
+class MissionBeginsScreen extends StatelessWidget {
+  const MissionBeginsScreen({
+    super.key,
+    required this.onComplete,
+    required this.reducedMotion,
+  });
+
+  final VoidCallback onComplete;
+  final bool reducedMotion;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    children: [
+      PrologueScenery(
+        scene: PrologueScene.touchdown,
+        reducedMotion: reducedMotion,
+      ),
+      const Positioned.fill(
+        child: IgnorePointer(
+          child: CustomPaint(painter: _TacticalFramePainter()),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(GameSpacing.md),
+        child: Column(
+          children: [
+            _TypingText(
+              'THE MISSION BEGINS',
+              reducedMotion: reducedMotion,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineMedium
+                  ?.copyWith(color: GameColors.paper, letterSpacing: 3),
+            ),
+            Container(
+              height: 2,
+              width: 112,
+              margin: const EdgeInsets.only(top: GameSpacing.xs),
+              color: GameColors.prologueOrange,
+            ),
+            const Spacer(),
+            const _TacticalPanel(
+              accent: GameColors.prologueTeal,
+              child: Text(
+                'This is the first step for one base that will grow throughout the campaign.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: GameColors.paper),
+              ),
+            ),
+            const SizedBox(height: GameSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              child: GameButton(
+                label: 'Go to Home Base',
+                icon: Icons.rocket_launch_rounded,
+                onPressed: onComplete,
+                reducedMotion: reducedMotion,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+class _TacticalPanel extends StatelessWidget {
+  const _TacticalPanel({
+    required this.child,
+    this.padding = GameSpacing.md,
+    this.accent = GameColors.prologueOrange,
+  });
+
+  final Widget child;
+  final double padding;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: _TacticalPanelPainter(accent),
+    child: ClipPath(
+      clipper: const _CutPanelClipper(),
+      child: Padding(padding: EdgeInsets.all(padding), child: child),
+    ),
+  );
+}
+
+Path _cutPanelPath(Rect rect, double cut) => Path()
+  ..moveTo(rect.left + cut, rect.top)
+  ..lineTo(rect.right - cut, rect.top)
+  ..lineTo(rect.right, rect.top + cut)
+  ..lineTo(rect.right, rect.bottom - cut)
+  ..lineTo(rect.right - cut, rect.bottom)
+  ..lineTo(rect.left + cut, rect.bottom)
+  ..lineTo(rect.left, rect.bottom - cut)
+  ..lineTo(rect.left, rect.top + cut)
+  ..close();
+
+class _CutPanelClipper extends CustomClipper<Path> {
+  const _CutPanelClipper();
+  @override
+  Path getClip(Size size) => _cutPanelPath(Offset.zero & size, 12);
+  @override
+  bool shouldReclip(covariant _CutPanelClipper oldClipper) => false;
+}
+
+class _TacticalPanelPainter extends CustomPainter {
+  const _TacticalPanelPainter(this.accent);
+  final Color accent;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    final panel = _cutPanelPath(bounds.deflate(.5), 12);
+    canvas.drawPath(
+      panel,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [GameColors.prologuePanel, GameColors.prologueBackground],
+        ).createShader(bounds),
+    );
+    canvas.drawPath(
+      panel,
+      Paint()
+        ..color = GameColors.prologueBorder
+        ..style = PaintingStyle.stroke,
+    );
+    canvas.drawLine(
+      Offset(12, 1),
+      Offset(math.min(size.width - 12, 126), 1),
+      Paint()
+        ..color = accent
+        ..strokeWidth = 2,
+    );
+    final bracket = Paint()
+      ..color = accent.withValues(alpha: .75)
+      ..strokeWidth = 1.2;
+    for (final corner in const [
+      Offset(8, 8),
+      Offset(-8, 8),
+      Offset(-8, -8),
+      Offset(8, -8),
+    ]) {
+      final at = Offset(
+        corner.dx < 0 ? size.width + corner.dx : corner.dx,
+        corner.dy < 0 ? size.height + corner.dy : corner.dy,
+      );
+      canvas.drawLine(at, at.translate(corner.dx.abs() * .65, 0), bracket);
+      canvas.drawLine(at, at.translate(0, corner.dy.abs() * .65), bracket);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TacticalPanelPainter oldDelegate) =>
+      accent != oldDelegate.accent;
+}
+
+class _TacticalFramePainter extends CustomPainter {
+  const _TacticalFramePainter();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final grid = Paint()
+      ..color = GameColors.prologueGrid
+      ..strokeWidth = .7;
+    for (var x = 0.0; x < size.width; x += 36) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), grid);
+    }
+    for (var y = 0.0; y < size.height; y += 36) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
+    }
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Colors.transparent, GameColors.prologueVignette],
+          stops: [0.48, 1],
+        ).createShader(Offset.zero & size),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TacticalFramePainter oldDelegate) => false;
+}
+
+class _RoleTag extends StatelessWidget {
+  const _RoleTag({required this.role});
+  final String role;
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(
+      horizontal: GameSpacing.sm,
+      vertical: GameSpacing.xs,
+    ),
+    decoration: BoxDecoration(
+      color: GameColors.prologueTeal.withValues(alpha: .16),
+      border: Border.all(color: GameColors.prologueTeal.withValues(alpha: .7)),
+    ),
+    child: Semantics(
+      label: role,
+      child: ExcludeSemantics(
+        child: Text(
+          role.toUpperCase(),
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(color: GameColors.prologueTeal, letterSpacing: 1.3),
+        ),
+      ),
+    ),
+  );
+}
+
+class _OperatorPlatformPainter extends CustomPainter {
+  const _OperatorPlatformPainter();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cone = Path()
+      ..moveTo(size.width * .5, 0)
+      ..lineTo(size.width * .93, size.height * .89)
+      ..lineTo(size.width * .07, size.height * .89)
+      ..close();
+    canvas.drawPath(
+      cone,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            GameColors.prologueTeal.withValues(alpha: .04),
+            GameColors.prologueTeal.withValues(alpha: .13),
+          ],
+        ).createShader(Offset.zero & size),
+    );
+    final hex = Path()
+      ..moveTo(size.width * .18, size.height * .89)
+      ..lineTo(size.width * .29, size.height * .80)
+      ..lineTo(size.width * .71, size.height * .80)
+      ..lineTo(size.width * .82, size.height * .89)
+      ..lineTo(size.width * .71, size.height * .98)
+      ..lineTo(size.width * .29, size.height * .98)
+      ..close();
+    canvas.drawPath(
+      hex,
+      Paint()..color = GameColors.prologueTeal.withValues(alpha: .2),
+    );
+    canvas.drawPath(
+      hex,
+      Paint()
+        ..color = GameColors.prologueTeal.withValues(alpha: .8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _OperatorPlatformPainter oldDelegate) => false;
+}
+
+class _TypingText extends StatefulWidget {
+  const _TypingText(
+    this.message, {
+    required this.reducedMotion,
+    this.textAlign,
+    this.style,
+  });
+  final String message;
+  final bool reducedMotion;
+  final TextAlign? textAlign;
+  final TextStyle? style;
+  @override
+  State<_TypingText> createState() => _TypingTextState();
+}
+
+class _TypingTextState extends State<_TypingText>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _reveal = AnimationController(
+    vsync: this,
+    duration: Duration(
+      milliseconds: (widget.message.length * 13).clamp(350, 2400).toInt(),
+    ),
+  )..forward();
+
+  bool get _reduced =>
+      widget.reducedMotion || MediaQuery.disableAnimationsOf(context);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_reduced) {
+      _reveal.stop();
+      _reveal.value = 1;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _TypingText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message != widget.message ||
+        oldWidget.reducedMotion != widget.reducedMotion) {
+      if (_reduced) {
+        _reveal.value = 1;
+      } else {
+        _reveal.duration = Duration(
+          milliseconds: (widget.message.length * 13).clamp(350, 2400).toInt(),
+        );
+        _reveal.forward(from: 0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _reveal.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _reveal,
+    builder: (context, _) => ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (bounds) {
+        final reveal = _reduced ? 1.0 : _reveal.value.clamp(.01, 1).toDouble();
+        return LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [Colors.white, Colors.white, Colors.transparent],
+          stops: [0, reveal, 1],
+        ).createShader(bounds);
+      },
+      child: Text(
+        widget.message,
+        textAlign: widget.textAlign,
+        style: widget.style,
+      ),
+    ),
+  );
+}
+
+class _DaveComms extends StatefulWidget {
+  const _DaveComms({required this.message, required this.reducedMotion});
+  final String message;
+  final bool reducedMotion;
+  @override
+  State<_DaveComms> createState() => _DaveCommsState();
+}
+
+class _DaveCommsState extends State<_DaveComms>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _typing = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  bool get _reduced =>
+      widget.reducedMotion || MediaQuery.disableAnimationsOf(context);
+
+  void _start() {
+    if (_reduced) {
+      _typing.stop();
+      _typing.value = 1;
+    } else {
+      _typing.forward(from: 0);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _typing.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_reduced) _start();
+  }
+
+  @override
+  void didUpdateWidget(covariant _DaveComms oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message != widget.message ||
+        oldWidget.reducedMotion != widget.reducedMotion) {
+      _start();
+    }
+  }
+
+  @override
+  void dispose() {
+    _typing.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => _TacticalPanel(
+    accent: GameColors.prologueTeal,
+    padding: GameSpacing.sm,
+    child: AnimatedBuilder(
+      animation: _typing,
+      builder: (context, _) {
+        final value = _reduced ? 1.0 : _typing.value;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color.lerp(
+                      GameColors.prologueTeal.withValues(alpha: .35),
+                      GameColors.prologueTeal,
+                      .5 + value * .5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: GameColors.prologueTeal.withValues(alpha: .42),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: GameSpacing.xs),
+                Text(
+                  'DAVE',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: GameColors.prologueTeal,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const Spacer(),
+                CustomPaint(
+                  size: const Size(82, 18),
+                  painter: _WaveformPainter(value),
+                ),
+              ],
+            ),
+            const SizedBox(height: GameSpacing.xs),
+            ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Colors.white, Colors.white, Colors.transparent],
+                stops: [0, value.clamp(.01, 1).toDouble(), 1],
+              ).createShader(bounds),
+              child: Text(
+                widget.message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: GameColors.paper,
+                  fontSize: GameTypography.caption,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+class _WaveformPainter extends CustomPainter {
+  const _WaveformPainter(this.phase);
+  final double phase;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = GameColors.prologueTeal.withValues(alpha: .78)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 17; i++) {
+      final x = size.width * i / 16;
+      final height = 3 + math.sin(i * .8 + phase * math.pi * 5).abs() * 12;
+      canvas.drawLine(
+        Offset(x, (size.height - height) / 2),
+        Offset(x, (size.height + height) / 2),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WaveformPainter oldDelegate) =>
+      phase != oldDelegate.phase;
+}
+
+class _PrologueEntrance extends StatefulWidget {
+  const _PrologueEntrance({
+    required this.index,
+    required this.reducedMotion,
+    required this.child,
+  });
+  final int index;
+  final bool reducedMotion;
+  final Widget child;
+  @override
+  State<_PrologueEntrance> createState() => _PrologueEntranceState();
+}
+
+class _PrologueEntranceState extends State<_PrologueEntrance>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
+  Timer? _stagger;
+  bool get _reduced =>
+      widget.reducedMotion || MediaQuery.disableAnimationsOf(context);
+
+  void _start() {
+    _stagger?.cancel();
+    if (_reduced) {
+      _controller.value = 1;
+    } else {
+      _controller.value = 0;
+      _stagger = Timer(Duration(milliseconds: widget.index * 60), () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.value = widget.reducedMotion ? 1 : 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _start();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_reduced) _start();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PrologueEntrance oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index ||
+        oldWidget.reducedMotion != widget.reducedMotion) {
+      _start();
+    }
+  }
+
+  @override
+  void dispose() {
+    _stagger?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _controller,
+    child: widget.child,
+    builder: (context, child) => Opacity(
+      opacity: _controller.value,
+      child: Transform.translate(
+        offset: Offset(0, 12 * (1 - _controller.value)),
+        child: child,
+      ),
+    ),
+  );
 }
 
 // Keep the original setup choices and story beside a scrollable landscape form.

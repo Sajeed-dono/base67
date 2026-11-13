@@ -199,143 +199,342 @@ class CrewBeanPainter extends CustomPainter {
       canvas.scale(-1, 1);
     }
     final ink = GameColors.ink;
-    final light = Color.lerp(suitColor, Colors.white, .36)!;
-    final shade = Color.lerp(suitColor, ink, .4)!;
-    void pixels(Rect rect, Color color) => canvas.drawRect(
-      rect,
-      Paint()
-        ..color = color
-        ..isAntiAlias = false,
-    );
-    void panel(Rect rect, Color color) {
-      pixels(rect.inflate(2), ink);
-      pixels(rect, color);
-    }
+    final roleColor = crewSuitColors[role.index];
+    final light = Color.lerp(suitColor, Colors.white, .46)!;
+    final shade = Color.lerp(suitColor, ink, .42)!;
+    final outline = Paint()
+      ..color = ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2;
+    final seam = Paint()
+      ..color = shade
+      ..strokeWidth = 1.1
+      ..strokeCap = StrokeCap.round;
+    final shell = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [light, suitColor, shade],
+        stops: const [.04, .52, 1],
+      ).createShader(const Rect.fromLTWH(20, 14, 68, 89));
+    final whiteShell = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Colors.white, GameColors.paper, GameColors.machineryHighlight],
+      ).createShader(const Rect.fromLTWH(20, 14, 60, 47));
 
-    void shape(List<Offset> points, Color color) => canvas.drawPath(
-      Path()..addPolygon(points, true),
-      Paint()
-        ..color = color
-        ..isAntiAlias = false,
-    );
-    // The top-left light casts this cached-paint shadow down and right.
-    canvas.drawOval(const Rect.fromLTWH(24, 105, 64, 10), _groundShadow);
-    final stride = walking
-        ? (math.sin(walkPhase * math.pi * 2) * 3).roundToDouble()
-        : 0.0;
+    // Top-left key light falls across the suit and casts its shadow down-right.
+    canvas.drawOval(const Rect.fromLTWH(22, 104, 68, 11), _groundShadow);
+    final stride = walking ? math.sin(walkPhase * math.pi * 2) * 4 : 0.0;
     final bob = mood == CrewMood.celebrating ? -4.0 : breath * 1.5;
     canvas.save();
-    canvas.translate(0, bob - (walking ? stride.abs() * .35 : 0));
-    panel(const Rect.fromLTWH(15, 36, 17, 42), shade);
-    pixels(const Rect.fromLTWH(15, 38, 5, 35), visorTint);
-    for (final leg in [(30.0, stride), (55.0, -stride)]) {
-      panel(Rect.fromLTWH(leg.$1, 83 + leg.$2, 16, 22), suitColor);
-      pixels(Rect.fromLTWH(leg.$1 + 1, 86 + leg.$2, 5, 16), light);
-      panel(Rect.fromLTWH(leg.$1 - 4, 102 + leg.$2, 23, 9), GameColors.paper);
-      pixels(
-        Rect.fromLTWH(leg.$1 - 4, 108 + leg.$2, 23, 3),
-        GameColors.machinery,
+    canvas.translate(0, bob - (walking ? stride.abs() * .28 : 0));
+
+    void boot(Rect rect) {
+      final shape = RRect.fromRectAndRadius(rect, const Radius.circular(5));
+      canvas.drawRRect(shape, Paint()..color = GameColors.paper);
+      canvas.drawRRect(shape, outline);
+      canvas.drawLine(
+        rect.bottomLeft.translate(2, -3),
+        rect.bottomRight.translate(-2, -3),
+        Paint()
+          ..color = GameColors.machinery
+          ..strokeWidth = 2,
       );
-      pixels(Rect.fromLTWH(leg.$1, 98 + leg.$2, 16, 4), ink);
+      canvas.drawLine(
+        rect.bottomLeft.translate(3, -1),
+        rect.bottomRight.translate(-3, -1),
+        Paint()
+          ..color = GameColors.machineryHighlight
+          ..strokeWidth = 1,
+      );
     }
-    panel(const Rect.fromLTWH(28, 55, 46, 34), suitColor);
-    pixels(const Rect.fromLTWH(30, 57, 7, 27), light);
-    pixels(const Rect.fromLTWH(66, 58, 7, 27), shade);
-    pixels(const Rect.fromLTWH(35, 86, 32, 5), shade);
-    for (final x in [17.0, 75.0]) {
-      panel(Rect.fromLTWH(x, 59, 11, 25), suitColor);
-      pixels(Rect.fromLTWH(x, 61, 4, 20), light);
-      panel(Rect.fromLTWH(x, 86, 11, 9), GameColors.paper);
-      pixels(Rect.fromLTWH(x, 82, 11, 4), ink);
+
+    // Backpack and articulated legs sit behind the torso.
+    final pack = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(65, 43, 24, 39),
+      const Radius.circular(9),
+    );
+    canvas.drawRRect(pack, shell);
+    canvas.drawRRect(pack, outline);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(69, 48, 16, 20),
+        const Radius.circular(4),
+      ),
+      Paint()..color = GameColors.machinery,
+    );
+    for (var y = 51.0; y <= 64; y += 4) {
+      canvas.drawLine(
+        Offset(71, y),
+        Offset(83, y),
+        Paint()
+          ..color = GameColors.machineryHighlight
+          ..strokeWidth = 1.2,
+      );
     }
-    final roleColor = crewSuitColors[role.index];
-    pixels(const Rect.fromLTWH(19, 58, 8, 5), roleColor);
-    pixels(const Rect.fromLTWH(77, 58, 7, 5), roleColor);
-    pixels(const Rect.fromLTWH(42, 80, 18, 4), GameColors.paper);
-    pixels(const Rect.fromLTWH(48, 81, 6, 2), suitColor);
-    const helmet = [
-      Offset(22, 27),
-      Offset(28, 27),
-      Offset(28, 19),
-      Offset(36, 19),
-      Offset(36, 13),
-      Offset(63, 13),
-      Offset(63, 19),
-      Offset(72, 19),
-      Offset(72, 27),
-      Offset(79, 27),
-      Offset(79, 48),
-      Offset(73, 48),
-      Offset(73, 57),
-      Offset(65, 57),
-      Offset(65, 62),
-      Offset(33, 62),
-      Offset(33, 57),
-      Offset(25, 57),
-      Offset(25, 48),
-      Offset(22, 48),
-    ];
-    shape(helmet, ink);
-    shape(const [
-      Offset(26, 29),
-      Offset(31, 29),
-      Offset(31, 22),
-      Offset(38, 22),
-      Offset(38, 17),
-      Offset(61, 17),
-      Offset(61, 22),
-      Offset(69, 22),
-      Offset(69, 29),
-      Offset(75, 29),
-      Offset(75, 47),
-      Offset(69, 47),
-      Offset(69, 54),
-      Offset(62, 54),
-      Offset(62, 58),
-      Offset(35, 58),
-      Offset(35, 54),
-      Offset(29, 54),
-      Offset(29, 47),
-      Offset(26, 47),
-    ], GameColors.paper);
-    pixels(const Rect.fromLTWH(44, 27, 24, 3), GameColors.solarCellLine);
-    panel(const Rect.fromLTWH(22, 31, 8, 15), GameColors.machineryHighlight);
-    pixels(const Rect.fromLTWH(23, 32, 3, 12), Colors.white);
-    pixels(const Rect.fromLTWH(71, 31, 5, 18), GameColors.machinery);
+    for (final leg in [(32.0, stride), (55.0, -stride)]) {
+      final rect = Rect.fromLTWH(leg.$1, 79 + leg.$2, 16, 25);
+      final armor = RRect.fromRectAndRadius(rect, const Radius.circular(6));
+      canvas.drawRRect(armor, shell);
+      canvas.drawRRect(armor, outline);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(leg.$1 + 1, 83 + leg.$2, 14, 8),
+          const Radius.circular(3),
+        ),
+        Paint()..color = shade,
+      );
+      canvas.drawLine(
+        Offset(leg.$1 + 3, 94 + leg.$2),
+        Offset(leg.$1 + 13, 94 + leg.$2),
+        seam,
+      );
+      boot(Rect.fromLTWH(leg.$1 - 5, 100 + leg.$2, 26, 11));
+    }
+
+    // Armored torso and padded shoulders.
+    for (final side in [-1.0, 1.0]) {
+      final arm = RRect.fromRectAndRadius(
+        Rect.fromLTWH(side < 0 ? 16 : 72, 54, 13, 31),
+        const Radius.circular(6),
+      );
+      canvas.drawRRect(arm, shell);
+      canvas.drawRRect(arm, outline);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(side < 0 ? 14 : 70, 50, 17, 13),
+          const Radius.circular(6),
+        ),
+        Paint()..color = GameColors.machineryHighlight,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(side < 0 ? 14 : 70, 50, 17, 13),
+          const Radius.circular(6),
+        ),
+        outline,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(side < 0 ? 17 : 73, 68, 11, 7),
+          const Radius.circular(2),
+        ),
+        Paint()..color = roleColor,
+      );
+      canvas.drawLine(
+        Offset(side < 0 ? 20 : 76, 70),
+        Offset(side < 0 ? 26 : 82, 70),
+        Paint()
+          ..color = Colors.white.withValues(alpha: .72)
+          ..strokeWidth = 1.5,
+      );
+    }
+    final body = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(25, 51, 50, 39),
+      const Radius.circular(13),
+    );
+    canvas.drawRRect(body, shell);
+    canvas.drawRRect(body, outline);
+    canvas.drawLine(
+      const Offset(31, 59),
+      const Offset(31, 81),
+      Paint()
+        ..color = light.withValues(alpha: .8)
+        ..strokeWidth = 2,
+    );
+    canvas.drawLine(const Offset(69, 59), const Offset(69, 81), seam);
+    canvas.drawLine(const Offset(33, 86), const Offset(67, 86), seam);
+
+    // Utility belt, chest life-support readout and role-lit shoulder stripe.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(29, 80, 42, 8),
+        const Radius.circular(3),
+      ),
+      Paint()..color = GameColors.machinery,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(45, 79, 11, 9),
+        const Radius.circular(2),
+      ),
+      Paint()..color = GameColors.prologueAmber,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(38, 61, 24, 15),
+        const Radius.circular(5),
+      ),
+      Paint()..color = GameColors.machinery,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(40, 63, 20, 11),
+        const Radius.circular(3),
+      ),
+      Paint()..color = GameColors.solarGlass,
+    );
+    canvas.drawCircle(const Offset(55, 68), 2.2, Paint()..color = roleColor);
+    canvas.drawCircle(
+      const Offset(55, 68),
+      4.2,
+      Paint()
+        ..color = roleColor.withValues(alpha: .22)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+    canvas.drawLine(
+      const Offset(28, 55),
+      const Offset(36, 58),
+      Paint()
+        ..color = roleColor
+        ..strokeWidth = 4,
+    );
+    canvas.drawLine(
+      const Offset(64, 58),
+      const Offset(72, 55),
+      Paint()
+        ..color = roleColor
+        ..strokeWidth = 4,
+    );
+
+    // Rounded pressure helmet with glossy HUD visor.
+    final helmet = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(22, 14, 56, 46),
+      const Radius.circular(21),
+    );
+    canvas.drawRRect(helmet, whiteShell);
+    canvas.drawRRect(helmet, outline);
+    canvas.drawArc(
+      const Rect.fromLTWH(27, 17, 43, 29),
+      math.pi * 1.08,
+      math.pi * .60,
+      false,
+      Paint()
+        ..color = Colors.white.withValues(alpha: .95)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    for (final x in [18.0, 76.0]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, 31, 8, 17),
+          const Radius.circular(3),
+        ),
+        Paint()..color = GameColors.machineryHighlight,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, 31, 8, 17),
+          const Radius.circular(3),
+        ),
+        outline,
+      );
+    }
     if (facing.dy < -.5) {
-      panel(const Rect.fromLTWH(34, 32, 31, 15), GameColors.machineryHighlight);
-      pixels(const Rect.fromLTWH(40, 38, 19, 3), suitColor);
-      panel(const Rect.fromLTWH(38, 58, 27, 23), GameColors.paper);
-      pixels(const Rect.fromLTWH(41, 61, 20, 5), shade);
-      pixels(const Rect.fromLTWH(42, 73, 18, 3), suitColor);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(30, 31, 40, 23),
+          const Radius.circular(9),
+        ),
+        Paint()..color = GameColors.machineryHighlight,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(30, 31, 40, 23),
+          const Radius.circular(9),
+        ),
+        outline,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(39, 60, 22, 15),
+          const Radius.circular(4),
+        ),
+        Paint()..color = GameColors.paper,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(39, 60, 22, 15),
+          const Radius.circular(4),
+        ),
+        outline,
+      );
     } else {
-      shape(const [
-        Offset(34, 31),
-        Offset(70, 31),
-        Offset(70, 48),
-        Offset(65, 48),
-        Offset(65, 54),
-        Offset(38, 54),
-        Offset(38, 50),
-        Offset(34, 50),
-      ], ink);
-      pixels(const Rect.fromLTWH(67, 33, 3, 13), GameColors.solarGlass);
-      pixels(const Rect.fromLTWH(40, 54, 22, 3), GameColors.machinery);
+      final visor = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(30, 29, 40, 25),
+        const Radius.circular(12),
+      );
+      canvas.drawRRect(
+        visor,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              ink,
+              GameColors.solarGlass,
+              Color.lerp(visorTint, ink, .3)!,
+            ],
+          ).createShader(const Rect.fromLTWH(30, 29, 40, 25)),
+      );
+      canvas.drawRRect(
+        visor,
+        Paint()
+          ..color = ink
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      canvas.drawArc(
+        const Rect.fromLTWH(34, 30, 24, 14),
+        math.pi * 1.12,
+        math.pi * .43,
+        false,
+        Paint()
+          ..color = Colors.white.withValues(alpha: .88)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.2
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.drawLine(
+        const Offset(63, 34),
+        const Offset(67, 39),
+        Paint()
+          ..color = GameColors.prologueTeal.withValues(alpha: .9)
+          ..strokeWidth = 1.5,
+      );
       _drawFaceStyle(canvas);
     }
+
     canvas.save();
     canvas.translate(34, 69);
     canvas.scale(.55);
     canvas.translate(-34, -69);
     _drawBadge(canvas);
     canvas.restore();
-    panel(const Rect.fromLTWH(59, 66, 7, 5), GameColors.solarGlass);
-    pixels(const Rect.fromLTWH(60, 67, 3, 1), visorTint);
     _drawMoodDetails(canvas);
     _drawActivity(canvas);
     if (carryingReservedEquipment) {
-      panel(const Rect.fromLTWH(75, 74, 18, 17), GameColors.sand);
-      pixels(const Rect.fromLTWH(82, 74, 3, 17), shade);
+      final box = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(75, 74, 18, 17),
+        const Radius.circular(3),
+      );
+      canvas.drawRRect(box, Paint()..color = GameColors.sand);
+      canvas.drawRRect(
+        box,
+        Paint()
+          ..color = ink
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+      canvas.drawLine(
+        const Offset(84, 75),
+        const Offset(84, 89),
+        Paint()
+          ..color = shade
+          ..strokeWidth = 1.3,
+      );
     }
     canvas.restore();
     canvas.restore();
