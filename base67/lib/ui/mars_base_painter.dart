@@ -212,6 +212,16 @@ class MarsBasePainter extends CustomPainter {
       for (final facility in facilities) {
         paintFacility(canvas, size, facility, panelDust: panelDust);
       }
+      final labels = <Rect>[];
+      for (final facility in facilities.where((site) => site.count > 0)) {
+        final rect = paintFacilityLabel(
+          canvas,
+          size,
+          facility,
+          occupied: labels,
+        );
+        if (rect != null) labels.add(rect);
+      }
     }
     if (sunset) _drawLights(canvas, size);
     if (!terrainOnly) {
@@ -226,7 +236,8 @@ class MarsBasePainter extends CustomPainter {
   }
 
   void _drawPath(Canvas canvas, Size size) {
-    // Surface roads are decorative and never imply system connectivity.
+    // Trails and conduits are decorative, never resource connectivity.
+    final routes = <Path>[];
     for (final end in const [
       Offset(.23, .75),
       Offset(.74, .69),
@@ -240,119 +251,128 @@ class MarsBasePainter extends CustomPainter {
         (start.dx + finish.dx) / 2 + (finish.dy - start.dy) * .12,
         (start.dy + finish.dy) / 2 - 17,
       );
-      final route = Path()
-        ..moveTo(start.dx, start.dy)
-        ..quadraticBezierTo(control.dx, control.dy, finish.dx, finish.dy);
-      canvas.drawPath(
-        route,
-        Paint()
-          ..color = GameColors.ink.withValues(alpha: .3)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 16
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      routes.add(
+        Path()
+          ..moveTo(start.dx, start.dy)
+          ..quadraticBezierTo(control.dx, control.dy, finish.dx, finish.dy),
       );
-      canvas.drawPath(
-        route,
-        Paint()
-          ..color = GameColors.marsRockShade.withValues(alpha: .72)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 11
-          ..strokeCap = StrokeCap.round,
-      );
-      canvas.drawPath(
-        route,
-        Paint()
-          ..color = GameColors.sand.withValues(alpha: .72)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 7
-          ..strokeCap = StrokeCap.round,
-      );
-      _drawDashes(
-        canvas,
-        route,
-        Paint()
-          ..color = GameColors.paper.withValues(alpha: .34)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..strokeCap = StrokeCap.round,
-        dashLength: 4,
-        gapLength: 10,
-      );
-      for (final offset in const [-2.4, 2.4]) {
-        final track = Path()
-          ..moveTo(start.dx + offset, start.dy + offset)
-          ..quadraticBezierTo(
-            control.dx + offset,
-            control.dy + offset,
-            finish.dx + offset,
-            finish.dy + offset,
-          );
+    }
+    routes.add(
+      Path()
+        ..moveTo(size.width * .12, size.height * .90)
+        ..cubicTo(
+          size.width * .35,
+          size.height * .82,
+          size.width * .55,
+          size.height * .92,
+          size.width * .80,
+          size.height * .76,
+        ),
+    );
+    final hulls = SettlementLayout.facilities(const {})
+        .map((s) => SettlementLayout.hull(s, size).inflate(8))
+        .toList();
+    for (var index = 0; index < routes.length; index++) {
+      for (final metric in routes[index].computeMetrics()) {
+        final left = <Offset>[], right = <Offset>[];
+        final cable = Path();
+        for (var d = 0.0; d < metric.length + 6; d += 6) {
+          final tangent = metric.getTangentForOffset(
+            math.min(d, metric.length),
+          )!;
+          final normal = Offset(-tangent.vector.dy, tangent.vector.dx);
+          final edge =
+              10 + math.sin(d * .14 + index) * 1.5 + math.sin(d * .43) * .7;
+          left.add(tangent.position + normal * edge);
+          right.add(tangent.position - normal * edge);
+          final conduit = tangent.position + normal * 15;
+          if (d == 0) {
+            cable.moveTo(conduit.dx, conduit.dy);
+          } else {
+            cable.lineTo(conduit.dx, conduit.dy);
+          }
+        }
+        final trail = Path()..addPolygon([...left, ...right.reversed], true);
         canvas.drawPath(
-          track,
+          trail.shift(const Offset(2, 3)),
           Paint()
-            ..color = GameColors.marsRockShade.withValues(alpha: .24)
+            ..color = GameColors.marsRockShade.withValues(alpha: .3)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        );
+        canvas.drawPath(
+          trail,
+          Paint()
+            ..color = Color.lerp(
+              GameColors.sand,
+              GameColors.marsGround,
+              sunset ? .72 : .48,
+            )!
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2),
+        );
+        canvas.drawPath(
+          routes[index],
+          Paint()
+            ..color = GameColors.marsHaze.withValues(alpha: sunset ? .10 : .18)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = .8
+            ..strokeWidth = 11
             ..strokeCap = StrokeCap.round,
         );
-      }
-    }
-    final path = Path()
-      ..moveTo(size.width * .12, size.height * .90)
-      ..cubicTo(
-        size.width * .35,
-        size.height * .82,
-        size.width * .55,
-        size.height * .92,
-        size.width * .80,
-        size.height * .76,
-      );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = const Color(0xFFE9BB8A).withValues(alpha: .70)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 11
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = const Color(0xFF8C5044).withValues(alpha: .25)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round,
-    );
-    _drawDashes(
-      canvas,
-      path,
-      Paint()
-        ..color = GameColors.paper.withValues(alpha: .38)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..strokeCap = StrokeCap.round,
-      dashLength: 5,
-      gapLength: 12,
-    );
-  }
-
-  static void _drawDashes(
-    Canvas canvas,
-    Path path,
-    Paint paint, {
-    required double dashLength,
-    required double gapLength,
-  }) {
-    for (final metric in path.computeMetrics()) {
-      for (var start = 0.0; start < metric.length; start += dashLength + gapLength) {
-        canvas.drawPath(
-          metric.extractPath(
-            start,
-            math.min(start + dashLength, metric.length).toDouble(),
-          ),
-          paint,
-        );
+        if (index.isEven) {
+          canvas.drawPath(
+            cable,
+            Paint()
+              ..color = GameColors.ink.withValues(alpha: .4)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2.2,
+          );
+          canvas.drawPath(
+            cable,
+            Paint()
+              ..color = GameColors.machineryHighlight
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = .9,
+          );
+        }
+        for (var d = 38.0; d < metric.length - 20; d += 96) {
+          final tangent = metric.getTangentForOffset(d)!;
+          final at =
+              tangent.position +
+              Offset(-tangent.vector.dy, tangent.vector.dx) * 18;
+          if (hulls.any((hull) => hull.contains(at))) continue;
+          canvas.drawOval(
+            Rect.fromCenter(center: at.translate(3, 2), width: 9, height: 4),
+            Paint()..color = GameColors.ink.withValues(alpha: .28),
+          );
+          canvas.drawLine(
+            at,
+            at.translate(0, -12),
+            Paint()
+              ..color = GameColors.machinery
+              ..strokeWidth = 2,
+          );
+          canvas.drawLine(
+            at.translate(-1, -11),
+            at.translate(-1, -16),
+            Paint()
+              ..color = GameColors.workLight
+              ..strokeWidth = 2.5
+              ..strokeCap = StrokeCap.round,
+          );
+          if (sunset) {
+            final center = at.translate(0, -14);
+            canvas.drawCircle(
+              center,
+              15,
+              Paint()
+                ..shader = RadialGradient(
+                  colors: [
+                    GameColors.workLight.withValues(alpha: .48),
+                    Colors.transparent,
+                  ],
+                ).createShader(Rect.fromCircle(center: center, radius: 15)),
+            );
+          }
+        }
       }
     }
   }
@@ -372,17 +392,10 @@ class MarsBasePainter extends CustomPainter {
     canvas.translate(center.dx, center.dy);
     canvas.scale(scale);
     final built = facility.count > 0;
-    if (built) {
-      canvas.drawOval(
-        const Rect.fromLTWH(-39, 14, 78, 20),
-        Paint()..color = GameColors.marsLit.withValues(alpha: .22),
-      );
-      canvas.drawOval(
-        const Rect.fromLTWH(-39, 14, 78, 20),
-        Paint()
-          ..color = GameColors.sand.withValues(alpha: .25)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
+    if (!built) {
+      canvas.saveLayer(
+        null,
+        Paint()..color = Colors.white.withValues(alpha: GameOpacity.ghost),
       );
     }
     canvas.drawOval(
@@ -409,12 +422,6 @@ class MarsBasePainter extends CustomPainter {
         : built
         ? GameColors.architecturalAccent
         : GameColors.outline;
-    if (!built) {
-      canvas.saveLayer(
-        const Rect.fromLTWH(-50, -40, 100, 75),
-        Paint()..color = Colors.white.withValues(alpha: .55),
-      );
-    }
     FacilityArchitecture.paint(
       canvas,
       facility.id,
@@ -422,9 +429,6 @@ class MarsBasePainter extends CustomPainter {
       trim: trim,
       operational: built && !inactive,
     );
-    if (!built) {
-      canvas.restore();
-    }
     if (facility.id == 'solar_array' && built && panelDust > 0) {
       canvas.drawRect(
         const Rect.fromLTWH(-41, -18, 80, 24),
@@ -523,23 +527,44 @@ class MarsBasePainter extends CustomPainter {
       );
       canvas.drawRRect(fill, Paint()..color = GameColors.gold);
     }
-    final suffix = !built
-        ? facility.referenceOnly
-              ? ' / station site'
-              : facility.available
-              ? ' / unbuilt'
-              : ' / locked'
-        : facility.condition == 'off'
-        ? ' / off'
-        : facility.count > 1
-        ? ' / ${facility.count} units'
-        : '';
+    if (!built) {
+      canvas.restore();
+      final lock = Paint()
+        ..color = GameColors.paper.withValues(alpha: .7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = GameBorders.standard;
+      canvas.drawArc(
+        const Rect.fromLTWH(-3, 12, 6, 8),
+        math.pi,
+        math.pi,
+        false,
+        lock,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(-5, 16, 10, 8),
+          const Radius.circular(2),
+        ),
+        lock,
+      );
+    }
+    canvas.restore();
+  }
+
+  /// Labels are separate from cached buildings so they always paint on top.
+  static Rect? paintFacilityLabel(
+    Canvas canvas,
+    Size size,
+    MarsFacility facility, {
+    Iterable<Rect> occupied = const [],
+  }) {
+    if (facility.count == 0) return null;
     final tp = TextPainter(
       text: TextSpan(
-        text: '${facility.label}$suffix',
+        text: facility.label,
         style: const TextStyle(
           color: GameColors.paper,
-          fontSize: 10,
+          fontSize: GameTypography.labelSmall,
           fontWeight: FontWeight.w700,
           shadows: [Shadow(color: GameColors.ink, blurRadius: 3)],
         ),
@@ -550,21 +575,34 @@ class MarsBasePainter extends CustomPainter {
     )..layout(maxWidth: 110);
     final labelRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(-tp.width / 2 - 6, 27, tp.width + 12, tp.height + 5),
-      const Radius.circular(7),
+      const Radius.circular(GameRadii.chip),
     );
-    canvas.drawRRect(
-      labelRect,
-      Paint()..color = GameColors.night.withValues(alpha: .86),
+    final scale = SettlementLayout.scale(size);
+    final center = Offset(
+      facility.position.dx * size.width,
+      facility.position.dy * size.height,
     );
+    final bounds = Rect.fromLTWH(
+      center.dx + labelRect.left * scale,
+      center.dy + labelRect.top * scale,
+      labelRect.width * scale,
+      labelRect.height * scale,
+    );
+    if (occupied.any((rect) => rect.overlaps(bounds))) return null;
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(scale);
+    canvas.drawRRect(labelRect, Paint()..color = GameColors.hudGlass);
     canvas.drawRRect(
       labelRect,
       Paint()
-        ..color = GameColors.sand.withValues(alpha: .46)
+        ..color = GameColors.hudBorder
         ..style = PaintingStyle.stroke
-        ..strokeWidth = .7,
+        ..strokeWidth = GameBorders.subtle,
     );
     tp.paint(canvas, Offset(-tp.width / 2, 29.5));
     canvas.restore();
+    return bounds;
   }
 
   void _drawLights(Canvas canvas, Size size) {
@@ -573,7 +611,10 @@ class MarsBasePainter extends CustomPainter {
       Offset(.48, .56),
       Offset(.80, .62),
     ]) {
-      final center = Offset(size.width * fraction.dx, size.height * fraction.dy);
+      final center = Offset(
+        size.width * fraction.dx,
+        size.height * fraction.dy,
+      );
       const radius = 16.0;
       canvas.drawCircle(
         center,

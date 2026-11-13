@@ -22,25 +22,129 @@ abstract final class MarsTerrain {
     ..strokeWidth = 1.2
     ..strokeCap = StrokeCap.round;
 
-  static void paint(Canvas canvas, Size size, {required bool night}) {
-    _paintSky(canvas, size, night: night);
-    _paintRidges(canvas, size, seed: 0);
-    canvas.save();
-    canvas.clipPath(SettlementLayout.ground(size));
-    _paintGround(canvas, size, night: night);
-    final hulls = SettlementLayout.facilities(const {})
-        .map((site) => SettlementLayout.hull(site, size).inflate(20))
-        .toList();
-    _paintRocks(canvas, size, hulls);
-    _paintDunes(canvas, size);
-    canvas.restore();
+  static final _scenes = <(Size, bool), ui.Picture>{};
+  static final ui.Image _ripple = _rippleTile();
+  static final Paint _ripplePaint = Paint()
+    ..shader = ui.ImageShader(
+      _ripple,
+      TileMode.repeated,
+      TileMode.repeated,
+      Matrix4.identity().storage,
+    );
+
+  static ui.Image _rippleTile() {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    for (var row = -1; row < 5; row++) {
+      final wave = Path();
+      for (var x = -4; x <= 68; x += 2) {
+        final y = row * 16 + math.sin(x * math.pi / 32) * 3;
+        if (x == -4) {
+          wave.moveTo(x.toDouble(), y);
+        } else {
+          wave.lineTo(x.toDouble(), y);
+        }
+      }
+      canvas.drawPath(
+        wave.shift(const Offset(1, 2)),
+        Paint()
+          ..color = GameColors.marsRockShade.withValues(alpha: .12)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
+      );
+      canvas.drawPath(
+        wave,
+        Paint()
+          ..color = GameColors.sand.withValues(alpha: .16)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(64, 64);
+    picture.dispose();
+    return image;
   }
 
-  static void paintBackdrop(
-    Canvas canvas,
-    Size size, {
-    required int seed,
-  }) {
+  static void paint(Canvas canvas, Size size, {required bool night}) {
+    final key = (size, night);
+    var picture = _scenes[key];
+    if (picture == null) {
+      final recorder = ui.PictureRecorder();
+      final terrain = Canvas(recorder);
+      terrain.drawRect(
+        Offset.zero & size,
+        Paint()..color = GameColors.marsRockShade,
+      );
+      final hulls = SettlementLayout.facilities(const {})
+          .map((site) => SettlementLayout.hull(site, size).inflate(20))
+          .toList();
+      terrain.save();
+      terrain.clipPath(SettlementLayout.ground(size));
+      _paintGround(terrain, size, night: night);
+      _paintRocks(terrain, size, hulls);
+      terrain.restore();
+      _paintCliffs(terrain, size, hulls);
+      if (night) {
+        terrain.drawRect(
+          Offset.zero & size,
+          Paint()..color = GameColors.marsNight.withValues(alpha: .35),
+        );
+      }
+      picture = recorder.endRecording();
+      if (_scenes.length >= 4) _scenes.remove(_scenes.keys.first)?.dispose();
+      _scenes[key] = picture;
+    }
+    canvas.drawPicture(picture);
+  }
+
+  static void _paintCliffs(Canvas canvas, Size size, List<Rect> hulls) {
+    final ground = SettlementLayout.ground(size);
+    final scale = (size.shortestSide / 500).clamp(.6, 1.6);
+    for (var i = 0; i < 70; i++) {
+      final x = size.width * i / 69;
+      var low = 0.0, high = size.height * .6;
+      for (var j = 0; j < 10; j++) {
+        final y = (low + high) / 2;
+        if (ground.contains(Offset(x.clamp(1, size.width - 1).toDouble(), y))) {
+          high = y;
+        } else {
+          low = y;
+        }
+      }
+      final center = Offset(x, high - 9 * scale);
+      for (var j = 0; j < 3; j++) {
+        final at = center.translate((j - 1) * 7 * scale, -j * 11 * scale);
+        if (!hulls.any((hull) => hull.contains(at))) {
+          _drawRock(canvas, at, (12 + (i * 7 + j * 3) % 9) * scale, i * 3 + j);
+        }
+      }
+    }
+    for (var i = 0; i < 30; i++) {
+      final y = size.height * (.48 + i / 30 * .52);
+      for (final x in [2.0, size.width - 2]) {
+        final at = Offset(x + math.sin(i * 2) * 3, y);
+        if (!hulls.any((hull) => hull.contains(at))) {
+          _drawRock(canvas, at, (10 + i % 6) * scale, i + 90);
+        }
+      }
+    }
+    for (var i = 0; i < 4; i++) {
+      final center = Offset(
+        size.width * (.06 + i * .29),
+        size.height * (.64 + (i % 3) * .13),
+      );
+      for (var j = 0; j < 5; j++) {
+        final at = center.translate((j % 3) * 9 * scale, (j ~/ 3) * 8 * scale);
+        if (ground.contains(at) && !hulls.any((hull) => hull.contains(at))) {
+          _drawRock(canvas, at, (6 + j % 3 * 2) * scale, i * 13 + j);
+        }
+      }
+    }
+  }
+
+  static void paintBackdrop(Canvas canvas, Size size, {required int seed}) {
     _paintSky(canvas, size, night: false);
     _paintRidges(canvas, size, seed: seed + 17);
     final ground = Path()
@@ -181,14 +285,24 @@ abstract final class MarsTerrain {
         final previous = points[i - 1];
         final point = points[i];
         final middle = (previous.dx + point.dx) / 2;
-        ridge.cubicTo(middle, previous.dy, middle, point.dy, point.dx, point.dy);
+        ridge.cubicTo(
+          middle,
+          previous.dy,
+          middle,
+          point.dy,
+          point.dx,
+          point.dy,
+        );
       }
       ridge
         ..lineTo(size.width, size.height)
         ..close();
       final depth = layer / 3;
-      final base = Color.lerp(GameColors.marsDistant, GameColors.marsRock, depth)!
-          .withValues(alpha: .64 + depth * .23);
+      final base = Color.lerp(
+        GameColors.marsDistant,
+        GameColors.marsRock,
+        depth,
+      )!.withValues(alpha: .64 + depth * .23);
       canvas.drawPath(ridge, Paint()..color = base);
 
       for (var i = 1; i < points.length - 1; i++) {
@@ -208,16 +322,20 @@ abstract final class MarsTerrain {
         canvas.drawPath(
           litFace,
           Paint()
-            ..color = Color.lerp(base, GameColors.marsLit, .19)!.withValues(
-              alpha: .56,
-            ),
+            ..color = Color.lerp(
+              base,
+              GameColors.marsLit,
+              .19,
+            )!.withValues(alpha: .56),
         );
         canvas.drawPath(
           shadeFace,
           Paint()
-            ..color = Color.lerp(base, GameColors.marsRockShade, .3)!.withValues(
-              alpha: .58,
-            ),
+            ..color = Color.lerp(
+              base,
+              GameColors.marsRockShade,
+              .3,
+            )!.withValues(alpha: .58),
         );
       }
     }
@@ -240,6 +358,7 @@ abstract final class MarsTerrain {
                 ],
         ).createShader(rect),
     );
+    canvas.drawRect(rect, _ripplePaint);
     for (var i = 0; i < 8; i++) {
       final x = ((i * 157 + 47) % 997) / 997 * size.width;
       final y = size.height * (.48 + ((i * 83) % 47) / 100);
@@ -358,10 +477,13 @@ abstract final class MarsTerrain {
         ),
       );
     }
-    final shadow = Path()..addPolygon(
-      points.map((point) => point.translate(radius * .3, radius * .36)).toList(),
-      true,
-    );
+    final shadow = Path()
+      ..addPolygon(
+        points
+            .map((point) => point.translate(radius * .3, radius * .36))
+            .toList(),
+        true,
+      );
     canvas.drawPath(
       shadow,
       Paint()
@@ -369,9 +491,13 @@ abstract final class MarsTerrain {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
     );
     final rock = Path()..addPolygon(points, true);
+    canvas.drawPath(rock, Paint()..color = GameColors.marsRock);
     canvas.drawPath(
       rock,
-      Paint()..color = GameColors.marsRock,
+      Paint()
+        ..color = GameColors.marsRockShade
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .8,
     );
     final ridge = points.length ~/ 2;
     final lit = Path()
@@ -393,29 +519,6 @@ abstract final class MarsTerrain {
       shade,
       Paint()..color = GameColors.marsRockShade.withValues(alpha: .52),
     );
-  }
-
-  static void _paintDunes(Canvas canvas, Size size) {
-    for (var i = 0; i < 13; i++) {
-      final y = size.height * (.48 + i * .039);
-      final ripple = Path()
-        ..moveTo(0, y)
-        ..cubicTo(
-          size.width * .24,
-          y - 11 - i % 3 * 3,
-          size.width * .63,
-          y + 15 + i % 4 * 3,
-          size.width,
-          y - 7,
-        );
-      canvas.drawPath(
-        ripple,
-        Paint()
-          ..color = GameColors.marsHaze.withValues(alpha: .10 + i % 3 * .025)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = .7 + i % 2 * .35,
-      );
-    }
   }
 
   static void atmosphere(

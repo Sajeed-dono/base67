@@ -199,22 +199,24 @@ class CrewBeanPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color.lerp(suitColor, Colors.white, .34)!,
-          suitColor,
-          Color.lerp(suitColor, GameColors.ink, .24)!,
+          Color.lerp(crewSuitColors.first, GameColors.paper, .24)!,
+          crewSuitColors.first,
+          GameColors.rust,
         ],
       ).createShader(const Rect.fromLTWH(20, 14, 70, 88));
     final trim = Paint()..color = Colors.white.withValues(alpha: 0.92);
     final dark = Paint()..color = GameColors.ink;
-    final shadow = Paint()..color = GameColors.ink.withValues(alpha: 0.15);
+    final shadow = Paint()
+      ..color = GameColors.ink.withValues(alpha: .24)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
     final visor = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color.lerp(visorTint, GameColors.ink, .58)!,
-          Color.lerp(visorTint, GameColors.night, .18)!,
-          Color.lerp(visorTint, GameColors.ink, .42)!,
+          GameColors.solarCellLine,
+          Color.lerp(GameColors.solarGlass, visorTint, .15)!,
+          GameColors.marsNight,
         ],
       ).createShader(const Rect.fromLTWH(34, 31, 35, 22));
     final stroke = Paint()
@@ -279,27 +281,81 @@ class CrewBeanPainter extends CustomPainter {
     );
     canvas.drawOval(Rect.fromLTWH(25, 95 + stride, 25, 9), dark);
     canvas.drawOval(Rect.fromLTWH(52, 95 - stride, 25, 9), dark);
-    // Bean shaped body with a broad shoulder and narrow waist.
-    final body = Path()
-      ..moveTo(26, 75)
-      ..cubicTo(18, 65, 17, 41, 25, 27)
-      ..cubicTo(31, 13, 68, 13, 75, 28)
-      ..cubicTo(83, 44, 80, 67, 71, 77)
-      ..cubicTo(58, 87, 39, 86, 26, 75)
-      ..close();
-    canvas.drawPath(body, suit);
-    canvas.drawPath(body, stroke);
-    final rim = Path()
-      ..moveTo(28, 67)
-      ..cubicTo(22, 56, 20, 41, 28, 27)
-      ..cubicTo(34, 17, 44, 14, 52, 14);
-    canvas.drawPath(
-      rim,
+    // Separate pressure helmet, orange torso and shoulder patches keep the
+    // small map sprite readable without changing its animation coordinates.
+    final body = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(26, 54, 48, 34),
+      const Radius.circular(9),
+    );
+    canvas.drawRRect(body, suit);
+    canvas.drawRRect(body, stroke);
+    for (final x in [20.0, 70.0]) {
+      final arm = RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, 57, 12, 29),
+        const Radius.circular(5),
+      );
+      canvas.drawRRect(arm, suit);
+      canvas.drawRRect(arm, stroke);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, 78, 12, 8),
+          const Radius.circular(3),
+        ),
+        trim,
+      );
+    }
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(27, 77, 46, 8),
+        const Radius.circular(3),
+      ),
+      trim,
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(46, 78, 9, 6),
+      Paint()..color = suitColor,
+    );
+    final helmet = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(23, 14, 56, 46),
+      const Radius.circular(20),
+    );
+    canvas.drawRRect(
+      helmet,
       Paint()
-        ..color = GameColors.paper.withValues(alpha: .64)
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            GameColors.paper,
+            GameColors.machineryHighlight,
+          ],
+        ).createShader(const Rect.fromLTWH(23, 14, 56, 46)),
+    );
+    canvas.drawRRect(helmet, stroke);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(19, 33, 7, 15),
+        const Radius.circular(2),
+      ),
+      trim,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(76, 33, 7, 15),
+        const Radius.circular(2),
+      ),
+      trim,
+    );
+    canvas.drawArc(
+      const Rect.fromLTWH(28, 18, 44, 33),
+      3.4,
+      1.4,
+      false,
+      Paint()
+        ..color = Colors.white
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..strokeCap = StrokeCap.round,
+        ..strokeWidth = 2,
     );
     // Visor, shine and lower suit panel.
     canvas.drawRRect(
@@ -344,7 +400,7 @@ class CrewBeanPainter extends CustomPainter {
     };
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        const Rect.fromLTWH(25, 31, 5, 17),
+        const Rect.fromLTWH(21, 59, 9, 10),
         const Radius.circular(2),
       ),
       Paint()..color = accent,
@@ -357,13 +413,13 @@ class CrewBeanPainter extends CustomPainter {
       trim,
     );
     if (facing.dy < -.5) {
-      // Rear-facing helmet and pack: keep the same bean silhouette and badge.
+      // Rear view retains the helmet, backpack and role badge.
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           const Rect.fromLTWH(29, 27, 44, 32),
           const Radius.circular(14),
         ),
-        suit,
+        trim,
       );
       final pack = RRect.fromRectAndRadius(
         const Rect.fromLTWH(39, 51, 29, 30),
@@ -379,7 +435,12 @@ class CrewBeanPainter extends CustomPainter {
       canvas.restore();
       _drawFaceStyle(canvas);
     }
+    canvas.save();
+    canvas.translate(34, 69);
+    canvas.scale(.65);
+    canvas.translate(-34, -69);
     _drawBadge(canvas);
+    canvas.restore();
     _drawMoodDetails(canvas);
     _drawActivity(canvas);
     if (carryingReservedEquipment) {
