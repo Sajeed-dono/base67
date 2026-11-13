@@ -1,5 +1,20 @@
 # Design decisions
 
+## 2026-11-13 - Setup and presentation polish
+
+- Crew setup collects names only and writes an empty `crewAges` map. The save model and legacy age fields remain unchanged for backwards compatibility.
+- Settlement and campaign-map polish stays presentation-only: deterministic code-drawn art, unchanged settlement geometry and movement rules, and no new assets or dependencies.
+- New motion is gated by reduced-motion/accessibility settings and reuses the settlement actor ticker for construction effects. No gameplay, NASA, or balance values were introduced.
+
+## 2026-11-13 ? Owner-authorized Android submission finishing pass
+
+New GAME VALUE jobs use 8 seconds for solar installation, 15?30 seconds for other construction, 20 seconds for repair (10 with the existing Engineer bonus), 30 seconds for optional upgrades, and 40 seconds for research. Canonical recipe references were changed; exact previous recipe durations are allowlisted for all saved job states, while cost, prerequisite, clock and crew validation remain strict. Simulation time and original NASA data are unchanged.
+
+Rewards reuse legacy badge identities with explicit current-campaign topic completion criteria in extra/campaign.json, plus the existing retry badge. Notebook facts unlock after their actual completed missions; saved cosmetic rewards reconcile without issuing materials or resupply. Patch options come from the original definitions. No unsupported performance stars or NASA accreditation is claimed. Certificate dates are shown only when actual first-completion timestamps exist.
+
+Use a single MaterialApp navigator and one initial route; next missions replace old mission pages, and phase keys reset mission scroll positions. Keep the original prologue. The Android app and library NDK are pinned to installed 30.0.16248370 to resolve the local build blocker; retain existing debug signing for this direct-install submission, with no Play Store readiness claim. The raw original-pack checksum failure is a pre-existing CRLF checkout issue and is reported, not hidden by changing data or assertions.
+
+
 ## Consolidation and release checkpoint (2026-11-12)
 
 - Owner-authorized task: consolidate the new milestone instructions in docs/BASE_67_Codex_Prompt_Sequence.txt, then review/stage/commit/push intended work to origin/main. No new gameplay implementation is authorized by this packaging task.

@@ -5,7 +5,8 @@
     "data_class": "GAME_VALUE",
     "status": "provisional",
     "notes": [
-      "Campaign structure follows docs/GAME_BRIEF.md. Mission success thresholds and rewards remain unbalanced placeholders."
+      "Campaign structure follows docs/GAME_BRIEF.md. Mission success thresholds and rewards remain unbalanced placeholders.",
+      "Submission rewards reuse original badge identities with explicit 15-mission topic-completion criteria; legacy six-level performance thresholds are not applied. No star ratings or economic rewards are inferred."
     ]
   },
   "chapters": [
@@ -296,6 +297,49 @@
       "prerequisite_level_ids": [
         "L14_mission_control"
       ]
+    }
+  ],
+  "badges": [
+    {
+      "id": "night_owl",
+      "name": "Night Owl",
+      "level_id": "L02_power_storage",
+      "description": "Complete Power Storage and learn why night needs stored energy."
+    },
+    {
+      "id": "dust_fighter",
+      "name": "Dust Fighter",
+      "level_id": "L05_the_great_storm",
+      "description": "Complete The Great Storm and plan for dusty skies."
+    },
+    {
+      "id": "air_keeper",
+      "name": "Air Keeper",
+      "level_id": "L07_breathing_matters",
+      "description": "Complete Breathing Matters and balance life support."
+    },
+    {
+      "id": "shield_up",
+      "name": "Shield Up",
+      "level_id": "L09_shelter_protocol",
+      "description": "Complete Shelter Protocol and practise protecting the crew."
+    },
+    {
+      "id": "ice_hunter",
+      "name": "Ice Hunter",
+      "level_id": "L11_ice_operations",
+      "description": "Complete Ice Operations and turn a water plan into action."
+    },
+    {
+      "id": "commander",
+      "name": "Commander",
+      "level_id": "L15_the_final_mission",
+      "description": "Complete the full BASE 67 campaign with your persistent base."
+    },
+    {
+      "id": "good_failure",
+      "name": "Learned the Hard Way",
+      "description": "Review an unsuccessful mission debrief and choose Retry."
     }
   ]
 }

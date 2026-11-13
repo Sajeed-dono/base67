@@ -192,21 +192,61 @@ class CrewBeanPainter extends CustomPainter {
       canvas.translate(100, 0);
       canvas.scale(-1, 1);
     }
-    final rise = mood == CrewMood.celebrating ? -4.0 : breath * 1.5;
-    final suit = Paint()..color = suitColor;
+    final stride = walking ? math.sin(walkPhase * math.pi * 2) * 5 : 0.0;
+    final bob = mood == CrewMood.celebrating ? -4.0 : breath * 1.5;
+    final suit = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color.lerp(suitColor, Colors.white, .34)!,
+          suitColor,
+          Color.lerp(suitColor, GameColors.ink, .24)!,
+        ],
+      ).createShader(const Rect.fromLTWH(20, 14, 70, 88));
     final trim = Paint()..color = Colors.white.withValues(alpha: 0.92);
     final dark = Paint()..color = GameColors.ink;
     final shadow = Paint()..color = GameColors.ink.withValues(alpha: 0.15);
-    final visor = Paint()..color = visorTint;
+    final visor = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color.lerp(visorTint, GameColors.ink, .58)!,
+          Color.lerp(visorTint, GameColors.night, .18)!,
+          Color.lerp(visorTint, GameColors.ink, .42)!,
+        ],
+      ).createShader(const Rect.fromLTWH(34, 31, 35, 22));
     final stroke = Paint()
-      ..color = GameColors.ink.withValues(alpha: 0.45)
+      ..color = Color.lerp(suitColor, GameColors.ink, .62)!
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeWidth = 1;
 
-    canvas.drawOval(const Rect.fromLTWH(20, 99, 62, 10), shadow);
+    canvas.drawOval(const Rect.fromLTWH(23, 100, 62, 9), shadow);
     canvas.save();
-    final stride = walking ? math.sin(walkPhase * math.pi * 2) * 5 : 0.0;
-    canvas.translate(0, rise + (walking ? stride.abs() * -.35 : 0));
+    final squash = walking ? math.sin(walkPhase * math.pi * 2) * .025 : 0.0;
+    canvas.translate(0, bob + (walking ? stride.abs() * -.35 : 0));
+    canvas.translate(52, 70);
+    canvas.rotate(
+      walking
+          ? facing.dx * -.045 + facing.dy * .02
+          : math.sin(breath * math.pi * 2) * .012,
+    );
+    canvas.scale(1 + squash, 1 - squash);
+    canvas.translate(-52, -70);
+    if (walking) {
+      final dust = Paint();
+      final phase = (walkPhase % 1 + 1) % 1;
+      for (var i = 0; i < 3; i++) {
+        final age = (phase + i / 3) % 1;
+        dust.color = GameColors.sand.withValues(alpha: (1 - age) * .34);
+        canvas.drawCircle(
+          Offset(34 + age * 10, 99 - age * 4 + i * 1.5),
+          1.2 + age * 1.3,
+          dust,
+        );
+      }
+    }
     // Backpack sits behind the rounded suit.
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -249,6 +289,18 @@ class CrewBeanPainter extends CustomPainter {
       ..close();
     canvas.drawPath(body, suit);
     canvas.drawPath(body, stroke);
+    final rim = Path()
+      ..moveTo(28, 67)
+      ..cubicTo(22, 56, 20, 41, 28, 27)
+      ..cubicTo(34, 17, 44, 14, 52, 14);
+    canvas.drawPath(
+      rim,
+      Paint()
+        ..color = GameColors.paper.withValues(alpha: .64)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..strokeCap = StrokeCap.round,
+    );
     // Visor, shine and lower suit panel.
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -273,6 +325,29 @@ class CrewBeanPainter extends CustomPainter {
         ..color = Colors.white.withValues(alpha: 0.65)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
+    );
+    canvas.drawArc(
+      const Rect.fromLTWH(38, 35, 24, 15),
+      3.25,
+      .85,
+      false,
+      Paint()
+        ..color = Colors.white.withValues(alpha: .22)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+    final accent = switch (role) {
+      CrewRole.commander => GameColors.gold,
+      CrewRole.engineer => GameColors.colorBlindSafeBlue,
+      CrewRole.scientist => GameColors.teal,
+      CrewRole.medic => const Color(0xFFCA6686),
+    };
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(25, 31, 5, 17),
+        const Radius.circular(2),
+      ),
+      Paint()..color = accent,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(

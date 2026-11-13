@@ -248,7 +248,9 @@ class ProgressionCodec {
       final j = e.value, r = j.recipe, expected = config.recipes[j.recipe.key];
       if (j.id != e.key || expected == null ||
           r.levelId != expected.levelId || r.crewRole != expected.crewRole ||
-          r.duration != expected.duration || !_sameMap(r.cost, expected.cost) ||
+          (r.duration != expected.duration &&
+            !(config.savedRecipeDurations[r.key]?.contains(r.duration) ?? false)) ||
+          !_sameMap(r.cost, expected.cost) ||
           !_sameSet(r.buildings, expected.buildings) || !_sameSet(r.research, expected.research) ||
           !const {'queued','blocked','active','completed','cancelled'}.contains(j.status)) { _bad('Job recipe/status'); }
       final unpaid = j.clock == null;

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../app/campaign_save.dart';
@@ -58,6 +60,15 @@ class HomeBaseScreen extends StatelessWidget {
         .where((item) => item['id'] == chapterId)
         .firstOrNull;
     final chapterName = chapter?['name'] as String? ?? 'Chapter 1';
+    final complete = save.completedLevelIds.containsAll(
+      levels.map((row) => (row as Map)['id'] as String),
+    );
+    final mission = save.missionJson == null
+        ? null
+        : jsonDecode(save.missionJson!) as Map;
+    final ongoing =
+        mission != null &&
+        (mission['phase'] != 'debrief' || mission['result'] != 'success');
     final facilities = settlementFacilities(save);
     final width = MediaQuery.sizeOf(context).width;
 
@@ -80,6 +91,24 @@ class HomeBaseScreen extends StatelessWidget {
           ),
         ],
       ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(GameSpacing.md),
+          child: GameButton(
+            label: complete ? 'View certificate' : 'Continue mission',
+            expand: true,
+            icon: Icons.rocket_launch_rounded,
+            onPressed: () => navigate(
+              complete
+                  ? '/certificate'
+                  : ongoing
+                  ? '/resume-mission'
+                  : '/next-mission',
+            ),
+          ),
+        ),
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1080),
@@ -91,8 +120,14 @@ class HomeBaseScreen extends StatelessWidget {
               28,
             ),
             children: [
-              _Header(nextTitle: nextTitle, chapterName: chapterName),
-              if (world != null) ...[
+              _Header(
+                nextTitle: complete ? 'Expedition complete' : nextTitle,
+                chapterName: complete
+                    ? 'All 15 missions completed'
+                    : chapterName,
+              ),
+              const SizedBox(height: GameSpacing.md),
+              if (world != null && width >= 720) ...[
                 const SizedBox(height: GameSpacing.md),
                 SettlementStatusPanel(
                   world: world!,
@@ -111,14 +146,19 @@ class HomeBaseScreen extends StatelessWidget {
                 )
               else ...[
                 _baseMap(context, facilities),
+                if (world != null) ...[
+                  const SizedBox(height: GameSpacing.md),
+                  SettlementStatusPanel(
+                    world: world!,
+                    generationKw: generationKw,
+                  ),
+                ],
                 const SizedBox(height: 14),
                 _resourceSummary(context),
                 const SizedBox(height: 14),
                 _crewPanel(context),
                 const SizedBox(height: 14),
                 _equipmentSummary(context),
-                const SizedBox(height: 14),
-                _nextMission(context, nextTitle, chapterName),
               ],
               const SizedBox(height: 16),
               _navigationGrid(context),
@@ -218,8 +258,6 @@ class HomeBaseScreen extends StatelessWidget {
       _crewPanel(context),
       const SizedBox(height: 14),
       _equipmentSummary(context),
-      const SizedBox(height: 14),
-      _nextMission(context, nextTitle, 'Current Chapter'),
     ],
   );
 
@@ -321,38 +359,6 @@ class HomeBaseScreen extends StatelessWidget {
     );
   }
 
-  Widget _nextMission(BuildContext context, String nextTitle, String chapter) =>
-      MarsPanel(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              chapter,
-              style: Theme.of(context).textTheme.labelLarge
-                  ?.copyWith(color: GameColors.teal),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Next goal: $nextTitle',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Choose a mission when you are ready. Your base stays with you.',
-            ),
-            const SizedBox(height: 12),
-            GameButton(
-              label: 'Continue mission',
-              icon: Icons.rocket_launch_rounded,
-              expand: true,
-              onPressed: () => navigate(
-                save.missionJson == null ? '/campaign' : '/resume-mission',
-              ),
-            ),
-          ],
-        ),
-      );
-
   Widget _navigationGrid(BuildContext context) {
     final actions = <(String, IconData, String)>[
       ('Campaign Map', Icons.route_rounded, '/campaign'),
@@ -400,7 +406,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 2),
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 2),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

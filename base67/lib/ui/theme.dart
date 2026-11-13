@@ -237,9 +237,15 @@ abstract final class GameTypography {
 }
 
 abstract final class GameMotion {
+  static const Duration fast = Duration(milliseconds: 120);
+  static const Duration medium = Duration(milliseconds: 320);
+  static const Duration slow = Duration(milliseconds: 520);
   static const Duration short = Duration(milliseconds: 160);
   static const Duration normal = Duration(milliseconds: 260);
   static const Duration idle = Duration(milliseconds: 1800);
+  static const Curve standard = Curves.easeOutCubic;
+  static const Curve popIn = Curves.easeOutBack;
+  static const Curve moves = Curves.easeInOutCubic;
 }
 
 const textScaleOptions = <double>[0.9, 1.0, 1.2, 1.4];

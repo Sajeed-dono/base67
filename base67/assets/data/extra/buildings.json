@@ -37,7 +37,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "solar_panel_installation",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 1,
       "required_progression": true,
       "required_from_level_id": "L01_first_light",
@@ -69,7 +69,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "battery_construction",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 1,
       "required_progression": true,
       "required_from_level_id": "L02_power_storage",
@@ -100,7 +100,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "support_facility_construction",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 0,
       "required_progression": true,
       "required_from_level_id": "L03_energy_manager",
@@ -130,7 +130,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "support_facility_construction",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 0,
       "required_progression": true,
       "required_from_level_id": "L04_dust_on_mars",
@@ -165,7 +165,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "greenhouse_construction",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 1,
       "required_progression": true,
       "required_from_level_id": "L06_greenhouse_online",
@@ -195,7 +195,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "oxygen_system_upgrade",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 1,
       "required_progression": true,
       "required_from_level_id": "L07_breathing_matters",
@@ -225,7 +225,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "advanced_radiation_shielding",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 0,
       "required_progression": true,
       "required_from_level_id": "L09_shelter_protocol",
@@ -257,7 +257,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "ice_extraction_facility",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 1,
       "required_progression": true,
       "required_from_level_id": "L11_ice_operations",
@@ -287,7 +287,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "support_facility_construction",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 1,
       "required_progression": true,
       "required_from_level_id": "L12_food_and_supplies",
@@ -315,7 +315,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "habitat_expansion",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 0,
       "required_progression": true,
       "required_from_level_id": "L13_crew_care",
@@ -343,7 +343,7 @@
         "spare_part": 1
       },
       "repair_timer_id": "routine_equipment_repair",
-      "upgrade_timer_id": "support_facility_construction",
+      "upgrade_timer_id": "submission_optional_upgrade",
       "max_upgrade_tier": 0,
       "required_progression": true,
       "required_from_level_id": "L14_mission_control",

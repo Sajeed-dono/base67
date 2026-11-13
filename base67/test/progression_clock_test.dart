@@ -7,6 +7,8 @@ import 'progression_service_test.dart' show configuration, observation;
 void main() {
   final now = DateTime.utc(2026, 11, 10, 12);
   const duration = Duration(minutes: 5);
+  final jobDuration =
+      configuration().recipes['construction:solar_array']!.duration;
 
   test('delayed and duplicate observations cannot count an interval twice', () {
     final capturedStart = ClockObservation(token: 0, utc: now);
@@ -63,7 +65,7 @@ void main() {
       expect(invalid.code, 'unknown_recipe');
       state = invalid.state;
       expect(state.lastObservationToken, 2);
-      expect(state.jobs['active']!.clock!.remaining, duration);
+      expect(state.jobs['active']!.clock!.remaining, jobDuration);
       final delayed = ClockObservation(
         token: 1,
         utc: now.add(const Duration(days: 1)),
@@ -148,14 +150,14 @@ void main() {
       observation: ClockObservation(token: 11, utc: DateTime.utc(2020)),
     );
     expect(state.lastObservationToken, 11);
-    expect(state.jobs['active']!.clock!.remaining, duration);
+    expect(state.jobs['active']!.clock!.remaining, jobDuration);
     state = service
         .cancel(
           state,
           jobId: 'active',
           observation: ClockObservation(
             token: 12,
-            utc: DateTime.utc(2020).add(duration),
+            utc: DateTime.utc(2020).add(jobDuration),
           ),
         )
         .state;
@@ -259,10 +261,10 @@ void main() {
           )
           .state;
       expect(state.jobs['new']!.startedAtUtc, now);
-      expect(state.jobs['new']!.deadlineUtc, now.add(duration));
+      expect(state.jobs['new']!.deadlineUtc, now.add(jobDuration));
       state = service.reconcile(
         state,
-        observation: observation(state, now.add(duration)),
+        observation: observation(state, now.add(jobDuration)),
       );
       expect(state.jobs['new']!.status, 'completed');
     },
@@ -324,11 +326,11 @@ void main() {
         .state;
     final deadline = state.jobs['future']!.deadlineUtc;
     state = service.reconcile(state, observation: observation(state, now));
-    expect(service.remaining(state, 'future'), duration);
+    expect(service.remaining(state, 'future'), jobDuration);
     service = RealTimeProgressionService(config);
     state = service.reconcile(
       state,
-      observation: observation(state, now.add(duration)),
+      observation: observation(state, now.add(jobDuration)),
     );
     expect(state.jobs['future']!.status, 'completed');
     expect(state.jobs['future']!.deadlineUtc, deadline);

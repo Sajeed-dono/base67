@@ -6,8 +6,7 @@ import 'package:base67/app/campaign_save_store.dart';
 import 'package:base67/app/game_router.dart';
 import 'package:base67/data/repositories/game_data_repository.dart';
 import 'package:base67/game/campaign_map_screen.dart';
-import 'package:base67/game/mission_screen.dart';
-import 'package:base67/ui/game_widgets.dart';
+import 'package:base67/game/settlement_game_screen.dart';
 
 void main() {
   late GameDataRepository repository;
@@ -17,6 +16,7 @@ void main() {
   });
 
   testWidgets('splash opens the preserved prologue route', (tester) async {
+    _landscape(tester);
     await tester.pumpWidget(_router(repository));
     expect(find.text('Open Home Base'), findsOneWidget);
     await tester.tap(find.text('Watch the prologue'));
@@ -25,74 +25,97 @@ void main() {
     expect(find.textContaining('Tap to continue'), findsOneWidget);
   });
 
-  testWidgets('Home Base and Campaign Map routes open', (tester) async {
-    await tester.pumpWidget(
-      _router(
-        repository,
-        save: const CampaignSave(
-          prologueComplete: true,
-          selectedSiteId: 'gale',
-          buildingLevels: {'crew_habitat': 1},
-          settings: {'reduceMotion': true},
+  testWidgets(
+    'landscape world, campaign drawer and canonical mission flow open',
+    (tester) async {
+      _landscape(tester);
+      await tester.pumpWidget(
+        _router(
+          repository,
+          save: const CampaignSave(
+            prologueComplete: true,
+            selectedSiteId: 'gale',
+            buildingLevels: {'crew_habitat': 1},
+            settings: {'reduceMotion': true},
+          ),
         ),
-      ),
-    );
-    await tester.tap(find.text('Open Home Base'));
-    await _finishRouteTransition(tester);
-    expect(find.text('Your Mars settlement'), findsOneWidget);
+      );
+      await tester.tap(find.text('Open Home Base'));
+      await _finishRouteTransition(tester);
+      expect(find.byType(SettlementGameScreen), findsOneWidget);
+      expect(
+        tester.getSize(find.byKey(const ValueKey('settlement-viewport'))),
+        const Size(640, 360),
+      );
+      await tester.tap(find.byTooltip('Missions'));
+      await tester.pumpAndSettle();
+      expect(find.text('One base. Fifteen missions.'), findsOneWidget);
+      final campaignScrollable = find
+          .descendant(
+            of: find.byType(CampaignMapScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      final firstMission = find.byKey(
+        const ValueKey('campaign-node-L01_first_light'),
+      );
+      await tester.scrollUntilVisible(
+        firstMission,
+        250,
+        scrollable: campaignScrollable,
+        continuous: true,
+      );
+      await tester.pumpAndSettle();
+      expect(firstMission.hitTestable(), findsOneWidget);
+      await tester.tap(firstMission);
+      await tester.pumpAndSettle();
+      final game = tester.widget<SettlementGameScreen>(
+        find.byType(SettlementGameScreen),
+      );
+      expect(game.controller.mission?['level'], 'L01_first_light');
+      expect(game.controller.mission?['phase'], 'briefing');
+      final review = find.widgetWithText(FilledButton, 'Review base');
+      expect(review.hitTestable(), findsOneWidget);
+      await tester.tap(review);
+      await tester.pumpAndSettle();
+      expect(game.controller.mission?['phase'], 'review');
+      await tester.tap(find.widgetWithText(FilledButton, 'Make a plan'));
+      await tester.pumpAndSettle();
+      expect(game.controller.mission?['phase'], 'planning');
+      expect(
+        find.widgetWithText(FilledButton, 'Build equipment').hitTestable(),
+        findsOneWidget,
+      );
+      await tester.tap(find.byTooltip('Missions'));
+      await tester.pumpAndSettle();
+      final scroll = find
+          .descendant(
+            of: find.byType(CampaignMapScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        find.text('The Final Mission'),
+        400,
+        scrollable: scroll,
+        continuous: true,
+      );
+      expect(find.text('The Final Mission'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(SettlementGameScreen), findsOneWidget);
+      expect(find.byTooltip('Back'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+}
 
-    await tester.tap(find.byTooltip('Campaign Map'));
-    await _finishRouteTransition(tester);
-    expect(find.text('One base. Fifteen missions.'), findsOneWidget);
-
-    final campaignScrollable = find.descendant(
-      of: find.byType(CampaignMapScreen),
-      matching: find.byType(Scrollable),
-    ).first;
-    final firstMission = find.byKey(
-      const ValueKey('campaign-node-L01_first_light'),
-    );
-    await tester.scrollUntilVisible(
-      firstMission,
-      300,
-      scrollable: campaignScrollable,
-      continuous: true,
-    );
-    expect(firstMission.hitTestable(), findsOneWidget);
-    await tester.tap(firstMission);
-    await _finishRouteTransition(tester);
-    await tester.pumpAndSettle();
-    final mission = find.byType(MissionScreen);
-    expect(mission, findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(AppBar),
-        matching: find.text('First Light'),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      tester.widget<MissionScreen>(mission).controller.mission?['phase'],
-      'briefing',
-    );
-    final review = find.widgetWithText(GameButton, 'Review this base');
-    expect(review, findsOneWidget);
-    expect(review.hitTestable(), findsOneWidget);
-    expect(tester.widget<GameButton>(review).onPressed, isNotNull);
-    expect(tester.takeException(), isNull);
-    tester.state<NavigatorState>(find.byType(Navigator).last).pop();
-    await _finishRouteTransition(tester);
-
-    await tester.scrollUntilVisible(
-      find.text('The Final Mission'),
-      500,
-      scrollable: campaignScrollable,
-      continuous: true,
-    );
-    expect(find.text('The Final Mission'), findsOneWidget);
-    tester.state<NavigatorState>(find.byType(Navigator).last).pop();
-    await _finishRouteTransition(tester);
-  });
+void _landscape(WidgetTester tester) {
+  tester.view.physicalSize = const Size(640, 360);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
 }
 
 GameRouter _router(

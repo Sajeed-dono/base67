@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../app/campaign_save.dart';
 import '../data/repositories/game_data_repository.dart';
 import '../ui/game_widgets.dart';
+import '../ui/mars_terrain.dart';
 import '../ui/theme.dart';
 import '../data/models/data_class.dart';
 import '../progression/progression_service.dart';
@@ -94,6 +97,7 @@ class CampaignMapScreen extends StatelessWidget {
                 ),
                 GameButton(
                   label: 'Open mission briefing',
+                  reducedMotion: save.settings['reduceMotion'] == true,
                   onPressed: () => Navigator.pop(context, true),
                 ),
                 TextButton(
@@ -177,6 +181,8 @@ class CampaignMapScreen extends StatelessWidget {
                         GameButton(
                           label: 'Mission details',
                           secondary: true,
+                          reducedMotion:
+                              save.settings['reduceMotion'] == true,
                           onPressed: () => _details(context, nextId),
                         ),
                       ],
@@ -221,7 +227,7 @@ class CampaignMapScreen extends StatelessWidget {
   }
 }
 
-class _ChapterMap extends StatelessWidget {
+class _ChapterMap extends StatefulWidget {
   const _ChapterMap({
     required this.title,
     required this.chapterIndex,
@@ -243,12 +249,103 @@ class _ChapterMap extends StatelessWidget {
   final ValueChanged<String> showDetails;
 
   @override
+  State<_ChapterMap> createState() => _ChapterMapState();
+}
+
+class _ChapterMapState extends State<_ChapterMap>
+    with TickerProviderStateMixin {
+  late final AnimationController _entrance = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
+  late final AnimationController _route = AnimationController(
+    vsync: this,
+    duration: GameMotion.idle,
+  );
+  String get title => widget.title;
+  int get chapterIndex => widget.chapterIndex;
+  List<String> get levelIds => widget.levelIds;
+  List<Map<String, dynamic>> get levels => widget.levels;
+  CampaignSave get save => widget.save;
+  String? get nextLevelId => widget.nextLevelId;
+  ValueChanged<String> get openLevel => widget.openLevel;
+  ValueChanged<String> get showDetails => widget.showDetails;
+  bool _reducedMotion = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateMotion();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ChapterMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateMotion();
+  }
+
+  void _updateMotion() {
+    final reduced =
+        save.settings['reduceMotion'] == true ||
+        MediaQuery.disableAnimationsOf(context) ||
+        MediaQuery.accessibleNavigationOf(context);
+    if (reduced != _reducedMotion) {
+      _reducedMotion = reduced;
+      if (reduced) {
+        _entrance.value = 1;
+        _route.stop();
+      }
+    }
+    if (!_reducedMotion && !_entrance.isAnimating && _entrance.value < 1) {
+      _entrance.forward();
+    }
+    if (_reducedMotion || _nextSegment() == null) {
+      _route.stop();
+    } else if (!_route.isAnimating) {
+      _route.repeat();
+    }
+  }
+
+  int? _nextSegment() {
+    for (var i = 0; i < levelIds.length - 1; i++) {
+      if (save.unlockedLevelIds.contains(levelIds[i]) &&
+          !save.completedLevelIds.contains(levelIds[i])) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  Set<int> _completedSegments() => {
+    for (var i = 0; i < levelIds.length - 1; i++)
+      if (save.completedLevelIds.contains(levelIds[i]) &&
+          save.unlockedLevelIds.contains(levelIds[i + 1]))
+        i,
+  };
+
+  @override
+  void dispose() {
+    _entrance.dispose();
+    _route.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final points = _pathPoints(levelIds.length);
     const rowHeight = _chapterRowHeight;
     final height = levelIds.length * rowHeight;
     return MarsPanel(
-      child: Column(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: _ChapterBackdropPainter(chapterIndex),
+              ),
+            ),
+          ),
+          Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Material(
@@ -309,7 +406,10 @@ class _ChapterMap extends StatelessWidget {
                     child: CustomPaint(
                       painter: _WindingPathPainter(
                         points: points,
-                        color: GameColors.rust.withValues(alpha: .55),
+                        completedSegments: _completedSegments(),
+                        nextSegment: _nextSegment(),
+                        phase: _route.value,
+                        routeAnimation: _route,
                       ),
                     ),
                   ),
@@ -324,6 +424,8 @@ class _ChapterMap extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
         ],
       ),
     );
@@ -358,43 +460,69 @@ class _ChapterMap extends StatelessWidget {
         label: isOpen
             ? 'Level $number, $title, ${state.name}'
             : 'Locked: $title',
-        child: InkWell(
-          key: ValueKey('campaign-node-$id'),
-          borderRadius: BorderRadius.circular(16),
-          onTap: isOpen ? () => openLevel(id) : null,
-          onLongPress: isOpen ? () => showDetails(id) : null,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              MapPin(
-                number: number,
-                state: state,
-                size: 52,
-                strongOutline: true,
-                onTap: isOpen ? () => openLevel(id) : null,
-              ),
-              const SizedBox(height: 2),
-              SizedBox(
-                width: nodeWidth - 4,
-                height: 28,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
+        child: AnimatedBuilder(
+          animation: _entrance,
+          child: InkWell(
+            key: ValueKey('campaign-node-$id'),
+            borderRadius: BorderRadius.circular(16),
+            onTap: isOpen ? () => openLevel(id) : null,
+            onLongPress: isOpen ? () => showDetails(id) : null,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MapPin(
+                  number: number,
+                  state: state,
+                  size: 52,
+                  strongOutline: true,
+                  reducedMotion: save.settings['reduceMotion'] == true,
+                  onTap: isOpen ? () => openLevel(id) : null,
+                ),
+                const SizedBox(height: 2),
+                Container(
+                  width: nodeWidth - 4,
+                  height: 24,
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: GameColors.night.withValues(alpha: .84),
+                    borderRadius: BorderRadius.circular(7),
+                    border: Border.all(
+                      color: GameColors.sand.withValues(alpha: .45),
+                      width: .7,
+                    ),
+                  ),
                   child: Text(
                     title,
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     softWrap: false,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: state == MapPinState.locked
-                          ? GameColors.muted
-                          : GameColors.ink,
+                      color: GameColors.paper,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          builder: (context, child) {
+            final stagger = index * 40 / 520;
+            final progress = _reducedMotion
+                ? 1.0
+                : ((_entrance.value - stagger) / (1 - stagger))
+                      .clamp(0, 1)
+                      .toDouble();
+            final value = GameMotion.popIn.transform(progress);
+            return Opacity(
+              opacity: progress,
+              child: Transform.translate(
+                offset: Offset(0, (1 - value) * 9),
+                child: child,
+              ),
+            );
+          },
         ),
       ),
     );
@@ -402,8 +530,6 @@ class _ChapterMap extends StatelessWidget {
 
   MapPinState _stateFor(String id) {
     if (save.completedLevelIds.contains(id)) {
-      final result = save.levelResults[id];
-      if (result is Map && result['stars'] == 3) return MapPinState.mastered;
       return MapPinState.completed;
     }
     if (save.unlockedLevelIds.contains(id)) return MapPinState.available;
@@ -420,62 +546,115 @@ List<Offset> _pathPoints(int count) {
   );
 }
 
-class _WindingPathPainter extends CustomPainter {
-  const _WindingPathPainter({required this.points, required this.color});
+class _ChapterBackdropPainter extends CustomPainter {
+  const _ChapterBackdropPainter(this.seed);
+  final int seed;
+  @override
+  void paint(Canvas canvas, Size size) =>
+      MarsTerrain.paintBackdrop(canvas, size, seed: seed);
+  @override
+  bool shouldRepaint(covariant _ChapterBackdropPainter oldDelegate) =>
+      seed != oldDelegate.seed;
+}
 
+class _WindingPathPainter extends CustomPainter {
+  _WindingPathPainter({
+    required this.points,
+    required this.completedSegments,
+    required this.nextSegment,
+    required this.phase,
+    required this.routeAnimation,
+  }) : super(repaint: routeAnimation);
   final List<Offset> points;
-  final Color color;
+  final Set<int> completedSegments;
+  final int? nextSegment;
+  final double phase;
+  final Animation<double> routeAnimation;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (points.length < 2) return;
-    final path = Path();
-    var current = Offset(
-      points.first.dx * size.width,
-      points.first.dy * size.height,
-    );
-    path.moveTo(current.dx, current.dy);
-    for (var i = 1; i < points.length; i++) {
-      final next = Offset(
-        points[i].dx * size.width,
-        points[i].dy * size.height,
+    final pointsInPixels = [
+      for (final point in points)
+        Offset(point.dx * size.width, point.dy * size.height),
+    ];
+    for (var i = 0; i < pointsInPixels.length - 1; i++) {
+      final start = pointsInPixels[i];
+      final end = pointsInPixels[i + 1];
+      final middleY = (start.dy + end.dy) / 2;
+      final path = Path()
+        ..moveTo(start.dx, start.dy)
+        ..cubicTo(start.dx, middleY, end.dx, middleY, end.dx, end.dy);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = GameColors.ink.withValues(alpha: .36)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 12
+          ..strokeCap = StrokeCap.round,
       );
-      final middleY = (current.dy + next.dy) / 2;
-      path.cubicTo(current.dx, middleY, next.dx, middleY, next.dx, next.dy);
-      current = next;
+      if (completedSegments.contains(i)) {
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = GameColors.tealLight.withValues(alpha: .34)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 9
+            ..strokeCap = StrokeCap.round,
+        );
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = GameColors.tealLight
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3.5
+            ..strokeCap = StrokeCap.round,
+        );
+      } else if (nextSegment == i) {
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = GameColors.sand.withValues(alpha: .48)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3.5
+            ..strokeCap = StrokeCap.round,
+        );
+        _drawDashed(
+          canvas,
+          path,
+          GameColors.tealLight,
+          routeAnimation.value * 18,
+        );
+      } else {
+        _drawDashed(canvas, path, GameColors.muted.withValues(alpha: .76), 0);
+      }
     }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = GameColors.ink.withValues(alpha: .35)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 15
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = GameColors.sand
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 11
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 5
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
+  }
+
+  void _drawDashed(Canvas canvas, Path path, Color color, double offset) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    for (final metric in path.computeMetrics()) {
+      final spacing = 15.0;
+      for (var start = -offset; start < metric.length; start += spacing) {
+        final from = math.max(0.0, start).toDouble();
+        final to = math.min(metric.length, start + 7).toDouble();
+        if (to > from) {
+          canvas.drawPath(metric.extractPath(from, to), paint);
+        }
+      }
+    }
   }
 
   @override
   bool shouldRepaint(covariant _WindingPathPainter oldDelegate) =>
-      points != oldDelegate.points || color != oldDelegate.color;
+      points != oldDelegate.points ||
+      completedSegments != oldDelegate.completedSegments ||
+      nextSegment != oldDelegate.nextSegment ||
+      phase != oldDelegate.phase;
 }
 
 IconData _chapterIcon(int index) => const [

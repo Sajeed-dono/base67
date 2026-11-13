@@ -1,8 +1,22 @@
 # BASE 67 Development Progress
 
-Updated: 2026-11-12
+Updated: 2026-11-13
 
-## Current prompt and gate
+## Android submission finishing pass ? 2026-11-13
+
+Owner authorization: continuous finish/build/record assignment; older numbered-prompt and manual-build gates are historical for this pass.
+
+- Delivered `dist/BASE67.apk`: universal release, 54,836,349 bytes, ARM 32/64-bit and x86-64; existing Android Debug signing certificate, for direct installation. Signature verified; no Internet permission. `dist/BASE67.apk.sha256` contains its SHA-256.
+- Delivered `dist/BASE67_gameplay.mp4`: 69.711 seconds, 720?1280, silent, unedited Android screen recording. Real launch, settlement, Engineer construction, First Light replay/debrief, Notebook and Power Storage progression on a separate emulator save. No manufactured campaign progress is packaged in the APK. Exported MP4 frames were decoded with Windows Media APIs and inspected.
+- Completed: canonical submission job pacing; exact known legacy-duration compatibility without changing saved costs/clocks/crew; 15 progress-unlocked NASA-reference cards; seven topic/retry badges; cosmetic backfill without economic rewards; patch/name saving and personalized completion certificate. Existing data, prologue, dependencies and simulation rules are retained. Completion replaces unsupported star-rating presentation.
+- Usability: pinned Continue, visible required-build guidance and lesson, human-readable job feedback, original Android icon/splash, one app navigator with a single root route, replacement navigation for next missions, and phase-specific scroll reset so completion feedback is visible. Successful missions retain a real replay action.
+- Actual checks: analyzer reports **No issues found**; the named all-15-level reference strategy passes with the same base/save and now asserts Notebook/badge unlocks. Focused campaign/runtime/progression/clock/persistence checks passed after affected timing fixtures were updated. Final submission regressions: **5 passed**; router tests: **2 passed**; navigation/detail checks at 360/800/1024 dp and 1.4? text: **6 passed**; the existing 18-case mission-screen matrix passed. `python check_data.py`: `facts: 40 | sources: 24 | ALL OK`. `git diff --check` passed. Full suite intentionally not run under owner instructions.
+- Integrity limitation: the strict original-pack test fails on this Windows checkout's pre-existing CRLF bytes (first failure: `nasa_data.json`). All **16** LF-normalized hashes match the supplied manifest; no original pack file was edited and the assertion was retained.
+- Android emulator checks (API 37, 360 dp): fresh story/setup, first construction and real L1 completion, next mission unlock, L2 construction/play, pause, native Back, force-stop/relaunch, pending-job completion without advancing simulation, unchanged mission energy on relaunch, offline play with airplane mode/Wi-Fi/data disabled, and patch save/reopen. Physical ARM hardware and an entire 15-mission device playthrough were not checked. All-15 evidence is automated, not a claim of student testing or final balance.
+- Build setup: reused installed NDK 30 for app/libraries; standard Flutter pub step regenerated missing native plugin registration from locked dependencies. Release was rebuilt and installed after the runtime fixes. No dependency upgrade or `flutter clean`.
+- Final setup/visual polish (2026-11-13): removed crew age entry while retaining legacy save fields; added deterministic terrain, facility, crew, and campaign-map presentation. `flutter analyze`: "No issues found!" (ran before the one token-style correction). The requested test command still fails; the follow-up prologue run had 5 passed and 2 failed (three pre-existing font-size-token violations outside scope, plus the persistent-base title assertion). The settlement visual test passed. No format/build/emulator/full-suite run; hot restart unavailable because no app was connected.
+
+## Historical prompt and gate (before the finishing pass)
 
 - Prompt 2 status: **COMPLETE** — visual reference pass reviewed by the owner and committed as `43e15ac`.
 - Prompt 3 status: **COMPLETE** — committed as `c61af76` (analyzer and 24 tests were recorded in the Prompt 3 handoff).

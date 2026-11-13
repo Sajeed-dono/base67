@@ -12,7 +12,6 @@ Update this file every session. Remove an item only when it is resolved, and rec
 | 7 | Student playtest of the game | Not done | Team | Keep the "not tested with students" label |
 | 9 | Anything an agent could not verify in a session | Add here | Agent | State it plainly in the handoff |
 | 10 | Prompt 3 cites `docs/source/BASE_67.pdf`, which is not found; owner to correct the vault/source reference if another canonical file is intended | Open | Project owner | Keep using `docs/source/BASE_67_Prologue_Preview.pdf`, which contains the eight-scene prologue |
-| 11 | The source gives no age range for the crew setup field | Open | Project owner | Keep a positive whole number with a one- or two-digit technical limit; do not invent an age range |
 | 12 | Construction material source resolved for 4B-1 | Owner-approved GAME VALUE, provisional | Project owner | Deterministic resupply 80/200/+10 for first levels 1-14; receipts/catch-up; restricted recovery supersedes bounded salvage; implementation balance remains provisional |
 | 13 | 4A balance and simplified temperature/event/protection models | Provisional, unverified | Project owner | Mark every new gameplay input and response rule GAME VALUE, provisional; tests establish numerical behavior, not physical accuracy or campaign balance |
 | 14 | Recovery corrections: occurrence-bound allocations independent of payment, closure, full assistance restoration and ordinary 50% refunds | Owner-approved corrections locally verified (136 tests); independent read-only review REQUIRED, not accepted | Agent / owner | Keep allocations/receipts together; no retrospective binding or durability/solvability claim |
@@ -26,6 +25,7 @@ Update this file every session. Remove an item only when it is resolved, and rec
 | 22 | Hybrid movement device/layout, crowded routes and battery/CPU review | Implementation and tests added; NOT RUN or verified | Project owner | Keep movement presentation-only, conservative exterior collision, ephemeral positions and shared styling; validate 360/tablet, Android joystick, accessibility and reduced motion manually before acceptance |
 
 | 23 | Phase 1 fixed-world/camera/2.5D inspection acceptance | Code and regression specifications added; no tests/analyzer/builds run in this phase | Project owner | Validate pan/pinch/picking, keyboard/joystick, enlarged text, safe navigation, reference-site labels, prologue and Level 1/2 on Android; profile scene repaint cost before claiming performance or visual acceptance |
+| 24 | HUD resource-number tween and "Show on map"/focus transition | Deferred in this scoped pass; no changes made outside the permitted UI files | Project owner | Keep existing behavior until the relevant screen/camera surface is explicitly in scope |
 
 - Owner may request a visual redesign pass after the game is feature complete; all styling must stay token-based so this stays cheap.
 

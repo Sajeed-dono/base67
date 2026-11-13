@@ -7,7 +7,8 @@ plugins {
 android {
     namespace = "com.example.base67"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Reuse the installed NDK for the Android submission build.
+    ndkVersion = "30.0.16248370"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

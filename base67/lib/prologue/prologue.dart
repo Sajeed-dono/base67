@@ -5,7 +5,6 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../data/repositories/game_data_repository.dart';
 import '../data/validation/data_check_screen.dart';
@@ -253,10 +252,6 @@ class _PrologueState extends State<Prologue> {
     final crewNames = {
       for (final member in mission.crew) member.role: member.name.trim(),
     };
-    final crewAges = {
-      for (final member in mission.crew)
-        if (member.age != null) member.role: member.age!,
-    };
     final appearance = {
       for (final member in mission.crew)
         member.role: {
@@ -268,7 +263,7 @@ class _PrologueState extends State<Prologue> {
     final startingCargo = Map<String, int>.from(mission.cargo);
     return widget.initialSave.copyWith(
       crewNames: crewNames,
-      crewAges: crewAges,
+      crewAges: const {},
       crewAppearance: appearance,
       selectedSiteId: mission.siteId,
       startingCargo: startingCargo,
@@ -333,6 +328,8 @@ class _PrologueState extends State<Prologue> {
     final complete = i >= steps.length;
     return Scaffold(
       body: SafeArea(
+        left: complete || i >= 2 && i <= 4,
+        right: complete || i >= 2 && i <= 4,
         child: complete
             ? Center(
                 child: SingleChildScrollView(
@@ -340,9 +337,13 @@ class _PrologueState extends State<Prologue> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const AspectRatio(
-                        aspectRatio: 2,
-                        child: PrologueScenery(
+                      SizedBox(
+                        height:
+                            MediaQuery.orientationOf(context) ==
+                                Orientation.landscape
+                            ? 100
+                            : MediaQuery.sizeOf(context).width / 2,
+                        child: const PrologueScenery(
                           scene: PrologueScene.touchdown,
                           reducedMotion: true,
                         ),
@@ -449,45 +450,56 @@ class _CineScreenState extends State<CineScreen> {
                   style: text.labelSmall?.copyWith(color: GameColors.sand),
                 ),
                 Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      child: endCard
-                          ? Text(
-                              widget.cine.endCard!,
-                              key: const ValueKey('card'),
-                              textAlign: TextAlign.center,
-                              style: text.displaySmall?.copyWith(
-                                color: GameColors.sand,
-                              ),
-                            )
-                          : Column(
-                              key: ValueKey(lineIndex),
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (line.who != null)
-                                  Text(
-                                    line.who!,
-                                    style: text.labelLarge?.copyWith(
-                                      color: GameColors.sand,
-                                    ),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: FractionallySizedBox(
+                      widthFactor:
+                          MediaQuery.orientationOf(context) ==
+                              Orientation.landscape
+                          ? .62
+                          : 1,
+                      alignment: Alignment.centerRight,
+                      child: Center(
+                        child: SingleChildScrollView(
+                          child: endCard
+                              ? Text(
+                                  widget.cine.endCard!,
+                                  key: const ValueKey('card'),
+                                  textAlign: TextAlign.center,
+                                  style: text.displaySmall?.copyWith(
+                                    color: GameColors.sand,
                                   ),
-                                const SizedBox(height: GameSpacing.sm),
-                                CinematicCaption(
-                                  child: Text(
-                                    line.who == null
-                                        ? line.text
-                                        : '“${line.text}”',
-                                    textAlign: TextAlign.center,
-                                    style: text.titleLarge?.copyWith(
-                                      color: GameColors.paper,
-                                      fontStyle: line.who == null
-                                          ? FontStyle.italic
-                                          : FontStyle.normal,
+                                )
+                              : Column(
+                                  key: ValueKey(lineIndex),
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (line.who != null)
+                                      Text(
+                                        line.who!,
+                                        style: text.labelLarge?.copyWith(
+                                          color: GameColors.sand,
+                                        ),
+                                      ),
+                                    const SizedBox(height: GameSpacing.sm),
+                                    CinematicCaption(
+                                      child: Text(
+                                        line.who == null
+                                            ? line.text
+                                            : '“${line.text}”',
+                                        textAlign: TextAlign.center,
+                                        style: text.titleLarge?.copyWith(
+                                          color: GameColors.paper,
+                                          fontStyle: line.who == null
+                                              ? FontStyle.italic
+                                              : FontStyle.normal,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -521,10 +533,6 @@ class _CrewScreenState extends State<CrewScreen> {
     for (final member in widget.mission.crew)
       TextEditingController(text: member.name),
   ];
-  late final ageControllers = [
-    for (final member in widget.mission.crew)
-      TextEditingController(text: member.age?.toString() ?? ''),
-  ];
   bool confirmed = false;
   static const namePool = [
     'Ari',
@@ -538,22 +546,21 @@ class _CrewScreenState extends State<CrewScreen> {
   ];
   @override
   void dispose() {
-    for (final controller in [...controllers, ...ageControllers]) {
+    for (final controller in controllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  bool get ready => widget.mission.crew.every(
-    (member) => member.name.trim().isNotEmpty && (member.age ?? 0) > 0,
-  );
+  bool get ready =>
+      widget.mission.crew.every((member) => member.name.trim().isNotEmpty);
 
   @override
   Widget build(BuildContext context) {
     final styles = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.all(GameSpacing.md),
-      child: Column(
+      child: _SetupColumns(
         children: [
           Text('Scene 3 -- Your Crew, Your Mission', style: styles.titleLarge),
           DaveBubble(
@@ -608,42 +615,22 @@ class _CrewScreenState extends State<CrewScreen> {
                               setState(() => member.name = value.trim()),
                           decoration: const InputDecoration(labelText: 'Name'),
                         ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                key: ValueKey('crew-age-${member.role}'),
-                                controller: ageControllers[index],
-                                enabled: !confirmed,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(2),
-                                ],
-                                onChanged: (value) {
-                                  member.age = int.tryParse(value);
-                                  setState(() {});
-                                },
-                                decoration: const InputDecoration(
-                                  labelText: 'Age',
-                                ),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: confirmed
-                                  ? null
-                                  : () {
-                                      final name =
-                                          namePool[Random().nextInt(
-                                            namePool.length,
-                                          )];
-                                      controllers[index].text = name;
-                                      member.name = name;
-                                      setState(() {});
-                                    },
-                              child: const Text('Random name'),
-                            ),
-                          ],
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: confirmed
+                                ? null
+                                : () {
+                                    final name =
+                                        namePool[Random().nextInt(
+                                          namePool.length,
+                                        )];
+                                    controllers[index].text = name;
+                                    member.name = name;
+                                    setState(() {});
+                                  },
+                            child: const Text('Random name'),
+                          ),
                         ),
                         Wrap(
                           spacing: GameSpacing.sm,
@@ -798,7 +785,7 @@ class _SiteScreenState extends State<SiteScreen> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(GameSpacing.md),
-      child: Column(
+      child: _SetupColumns(
         children: [
           Text(
             'Scene 4 -- Four Possible Worlds',
@@ -1011,7 +998,7 @@ class _CargoScreenState extends State<CargoScreen> {
     final capacity = (batteryData['capacity_kwh'] as num?)?.toDouble();
     return Padding(
       padding: const EdgeInsets.all(GameSpacing.md),
-      child: Column(
+      child: _SetupColumns(
         children: [
           Text(
             'Scene 5 -- Every Kilogram Counts',
@@ -1141,4 +1128,48 @@ class _CargoScreenState extends State<CargoScreen> {
       ),
     );
   }
+}
+
+// Keep the original setup choices and story beside a scrollable landscape form.
+class _SetupColumns extends StatelessWidget {
+  const _SetupColumns({required this.children});
+  final List<Widget> children;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, bounds) {
+      if (bounds.maxWidth < 480 ||
+          MediaQuery.orientationOf(context) != Orientation.landscape) {
+        return Column(children: children);
+      }
+      final form = children.whereType<Expanded>().single;
+      final footer = children.last;
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: children
+                          .where((item) => item != form && item != footer)
+                          .toList(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                footer,
+              ],
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(flex: 7, child: form.child),
+        ],
+      );
+    },
+  );
 }

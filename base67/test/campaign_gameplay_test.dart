@@ -257,6 +257,10 @@ void main() {
       }
       expect(c.mission!['result'], 'success', reason: '$number: ${c.mission!['message']}');
       expect(c.save.completedLevelIds, contains(id));
+      expect(c.save.notebookFactIds, contains(c.notebookCards.singleWhere((card) => card['level_id'] == id)['id']));
+      for (final badge in c.badgeDefinitions.where((badge) => badge['level_id'] == id)) {
+        expect(c.save.badgeIds, contains(badge['id']));
+      }
       expect(c.progression.facilities['solar_array'], number == 1 ? 1 : migration.config.maxUnits['solar_array']);
       expect(c.save.selectedSiteId, 'gale');
     }

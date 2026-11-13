@@ -175,7 +175,7 @@ class MissionComparison extends StatelessWidget {
   }
 }
 
-class GameButton extends StatelessWidget {
+class GameButton extends StatefulWidget {
   const GameButton({
     super.key,
     required this.label,
@@ -183,6 +183,7 @@ class GameButton extends StatelessWidget {
     this.icon,
     this.secondary = false,
     this.expand = false,
+    this.reducedMotion = false,
   });
 
   final String label;
@@ -190,23 +191,54 @@ class GameButton extends StatelessWidget {
   final IconData? icon;
   final bool secondary;
   final bool expand;
+  final bool reducedMotion;
+
+  @override
+  State<GameButton> createState() => _GameButtonState();
+}
+
+class _GameButtonState extends State<GameButton> {
+  bool _pressed = false;
+
+  bool get _reducedMotion =>
+      widget.reducedMotion ||
+      MediaQuery.disableAnimationsOf(context) ||
+      MediaQuery.accessibleNavigationOf(context);
+
+  void _setPressed(bool pressed) {
+    final next = pressed && widget.onPressed != null && !_reducedMotion;
+    if (next != _pressed) setState(() => _pressed = next);
+  }
 
   @override
   Widget build(BuildContext context) {
     final child = Row(
-      mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+      mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (icon != null) ...[
-          Icon(icon, size: GameIconSizes.button),
+        if (widget.icon != null) ...[
+          Icon(widget.icon, size: GameIconSizes.button),
           const SizedBox(width: GameSpacing.sm),
         ],
-        Flexible(child: Text(label, textAlign: TextAlign.center)),
+        Flexible(child: Text(widget.label, textAlign: TextAlign.center)),
       ],
     );
-    return secondary
-        ? OutlinedButton(onPressed: onPressed, child: child)
-        : FilledButton(onPressed: onPressed, child: child);
+    final button = widget.secondary
+        ? OutlinedButton(onPressed: widget.onPressed, child: child)
+        : FilledButton(onPressed: widget.onPressed, child: child);
+    return Listener(
+      onPointerDown: (_) => _setPressed(true),
+      onPointerUp: (_) => _setPressed(false),
+      onPointerCancel: (_) => _setPressed(false),
+      child: AnimatedScale(
+        scale: !_reducedMotion && _pressed ? .97 : 1,
+        duration: _reducedMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 90),
+        curve: GameMotion.standard,
+        child: button,
+      ),
+    );
   }
 }
 
@@ -286,7 +318,7 @@ class MarsPanel extends StatelessWidget {
 
 enum MapPinState { locked, available, completed, mastered }
 
-class MapPin extends StatelessWidget {
+class MapPin extends StatefulWidget {
   const MapPin({
     super.key,
     required this.number,
@@ -295,6 +327,7 @@ class MapPin extends StatelessWidget {
     this.onTap,
     this.size = 56,
     this.strongOutline = false,
+    this.reducedMotion = false,
   });
 
   final int number;
@@ -303,6 +336,57 @@ class MapPin extends StatelessWidget {
   final VoidCallback? onTap;
   final double size;
   final bool strongOutline;
+  final bool reducedMotion;
+
+  @override
+  State<MapPin> createState() => _MapPinState();
+}
+
+class _MapPinState extends State<MapPin>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: GameMotion.idle,
+  );
+  bool _pressed = false;
+  int get number => widget.number;
+  MapPinState get state => widget.state;
+  String? get label => widget.label;
+  VoidCallback? get onTap => widget.onTap;
+  double get size => widget.size;
+  bool get strongOutline => widget.strongOutline;
+
+  bool get _reducedMotion =>
+      widget.reducedMotion ||
+      MediaQuery.disableAnimationsOf(context) ||
+      MediaQuery.accessibleNavigationOf(context);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updatePulse();
+  }
+
+  @override
+  void didUpdateWidget(covariant MapPin oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updatePulse();
+  }
+
+  void _updatePulse() {
+    if (widget.state == MapPinState.available && !_reducedMotion) {
+      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
+    } else {
+      _pulse.stop();
+      _pulse.value = .5;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -318,6 +402,12 @@ class MapPin extends StatelessWidget {
       MapPinState.completed => Icons.check_rounded,
       MapPinState.mastered => Icons.star_rounded,
     };
+    final shape = BeveledRectangleBorder(
+      borderRadius: BorderRadius.circular(size * .28),
+      side: strongOutline
+          ? const BorderSide(color: GameColors.ink, width: 2)
+          : BorderSide.none,
+    );
     return Semantics(
       button: onTap != null,
       label: label == null
@@ -327,45 +417,101 @@ class MapPin extends StatelessWidget {
         width: size,
         height: size,
         child: Material(
-          color: color,
-          shape: CircleBorder(
-            side: strongOutline
-                ? const BorderSide(color: GameColors.ink, width: 3)
-                : BorderSide.none,
-          ),
+          color: Colors.transparent,
+          shape: shape,
           elevation: state == MapPinState.available ? 4 : 1,
           child: InkWell(
-            customBorder: const CircleBorder(),
+            customBorder: shape,
             onTap: onTap,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                state == MapPinState.locked
-                    ? Icon(icon, color: Colors.white, size: 21)
-                    : Text(
-                        '$number',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
+            onHighlightChanged: (highlighted) {
+              if (!_reducedMotion && onTap != null) {
+                setState(() => _pressed = highlighted);
+              }
+            },
+            child: AnimatedScale(
+              scale: !_reducedMotion && _pressed ? .97 : 1,
+              duration: _reducedMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 90),
+              curve: GameMotion.standard,
+              child: Ink(
+                decoration: ShapeDecoration(
+                  shape: shape,
+                  gradient: RadialGradient(
+                    center: const Alignment(-.3, -.55),
+                    radius: 1.15,
+                    colors: [
+                      Color.lerp(color, Colors.white, .32)!,
+                      color,
+                      Color.lerp(color, GameColors.ink, .27)!,
+                    ],
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (state == MapPinState.available)
+                      Positioned.fill(
+                        child: AnimatedBuilder(
+                          animation: _pulse,
+                          builder: (context, _) {
+                            final value = _reducedMotion ? .5 : _pulse.value;
+                            return Opacity(
+                              opacity: .20 + value * .32,
+                              child: Transform.scale(
+                                scale: .88 + value * .15,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      size * .28,
+                                    ),
+                                    border: Border.all(
+                                      color: GameColors.tealLight,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                if (state != MapPinState.locked)
-                  Positioned(
-                    right: 1,
-                    bottom: 1,
-                    child: DecoratedBox(
-                      decoration: const BoxDecoration(
+                    Text(
+                      '$number',
+                      style: const TextStyle(
                         color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(2),
-                        child: Icon(icon, size: 12, color: color),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        shadows: [
+                          Shadow(color: GameColors.ink, blurRadius: 2),
+                        ],
                       ),
                     ),
-                  ),
-              ],
+                    Positioned(
+                      right: 1,
+                      bottom: 1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: GameColors.night,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: GameColors.paper,
+                            width: .8,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: Icon(
+                            icon,
+                            size: 11,
+                            color: GameColors.paper,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

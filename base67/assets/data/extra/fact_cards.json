@@ -1,1 +1,118 @@
-{"_meta":{"file":"fact_cards.json","version":"0.1.0","data_class":"GAME_VALUE","status":"provisional","notes":["Cards must reference fact IDs in nasa_data.json; student testing has not occurred."]},"cards":[]}
+{
+  "_meta": {
+    "file": "fact_cards.json",
+    "version": "1.0.0",
+    "data_class": "GAME_VALUE",
+    "status": "submission",
+    "notes": [
+      "Card explanations are educational game text; measurements, labels and source URLs resolve from immutable NASA fact/source IDs. Unlock only after the matching completed mission."
+    ]
+  },
+  "cards": [
+    {
+      "id": "sunlight",
+      "title": "Sunlight powers the base",
+      "fact_id": "solar_irradiance",
+      "level_id": "L01_first_light",
+      "body": "Solar panels need sunlight. Watch generation change when your base enters night."
+    },
+    {
+      "id": "martian_day",
+      "title": "A day on Mars",
+      "fact_id": "sol_hours",
+      "level_id": "L02_power_storage",
+      "body": "A Martian solar day is called a sol. Plan stored energy for the dark hours."
+    },
+    {
+      "id": "cold_mars",
+      "title": "Keep the habitat warm",
+      "fact_id": "temp_mean",
+      "level_id": "L03_energy_manager",
+      "body": "This is a planet-wide mean, not a forecast for your base. Turning off a heater has a cost."
+    },
+    {
+      "id": "dusty_sky",
+      "title": "Dust blocks sunlight",
+      "fact_id": "tau_3_sunlight",
+      "level_id": "L04_dust_on_mars",
+      "body": "NASA reports this direct-sunlight share at tau 3. The game uses simplified weather and power rules."
+    },
+    {
+      "id": "great_storm",
+      "title": "A rover in a great storm",
+      "fact_id": "tau_opportunity_2018",
+      "level_id": "L05_the_great_storm",
+      "body": "This is a measurement from Opportunity during the 2018 storm. Higher tau means dustier skies."
+    },
+    {
+      "id": "mars_air",
+      "title": "Mars air is different",
+      "fact_id": "co2_pct",
+      "level_id": "L06_greenhouse_online",
+      "body": "The outside air is mostly carbon dioxide. Our habitat needs its own life-support plan."
+    },
+    {
+      "id": "breathing",
+      "title": "Plan oxygen for the crew",
+      "fact_id": "crew_oxygen",
+      "level_id": "L07_breathing_matters",
+      "body": "This reference estimate includes exercise and a reference astronaut. Game reserves are simplified."
+    },
+    {
+      "id": "surface_radiation",
+      "title": "Radiation at Gale",
+      "fact_id": "rad_gale_surface",
+      "level_id": "L08_radiation_alert",
+      "body": "Curiosity measured this average at Gale from August 2012 to June 2013. It is not a safe-dose limit."
+    },
+    {
+      "id": "journey_radiation",
+      "title": "The trip also needs protection",
+      "fact_id": "rad_cruise",
+      "level_id": "L09_shelter_protocol",
+      "body": "Curiosity measured this average galactic-cosmic-ray dose during its journey. Game shelter rules are simplified."
+    },
+    {
+      "id": "find_ice",
+      "title": "Where explorers look for ice",
+      "fact_id": "ice_best_regions",
+      "level_id": "L10_finding_water",
+      "body": "Remote-sensing evidence helps choose where to explore. A promising site still needs careful planning."
+    },
+    {
+      "id": "shallow_ice",
+      "title": "Ice beneath the surface",
+      "fact_id": "arcadia_ice_depth",
+      "level_id": "L11_ice_operations",
+      "body": "In parts of Arcadia, NASA reports ice less than this depth below the surface. Finding ice is different from extracting water."
+    },
+    {
+      "id": "food",
+      "title": "Pack food for the mission",
+      "fact_id": "crew_food_packaged",
+      "level_id": "L12_food_and_supplies",
+      "body": "This is an ISS planning value for packaged food, not a Mars farming yield."
+    },
+    {
+      "id": "water",
+      "title": "Water for each crewmember",
+      "fact_id": "crew_water",
+      "level_id": "L13_crew_care",
+      "body": "This is minimum drinking water. Hygiene needs depend on the mission."
+    },
+    {
+      "id": "gravity",
+      "title": "A different world to work on",
+      "fact_id": "gravity",
+      "level_id": "L14_mission_control",
+      "body": "Mars has its own surface gravity. Construction timings and walking distances in BASE 67 are game values."
+    },
+    {
+      "id": "pressure",
+      "title": "A home with its own air",
+      "fact_id": "pressure_mean",
+      "level_id": "L15_the_final_mission",
+      "body": "This is the mean surface pressure at the reference radius. Our crew relies on a protected habitat."
+    }
+  ]
+}

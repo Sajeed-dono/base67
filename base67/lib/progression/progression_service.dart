@@ -44,6 +44,7 @@ class ProgressionConfig {
     required this.damageOccurrences,
     required this.lanes,
     required this.repairDurationMultiplier,
+    required this.savedRecipeDurations,
   }) : recipes = Map.unmodifiable(recipes),
        levels = List.unmodifiable(levels),
        resupplyLevels = Set.unmodifiable(resupplyLevels),
@@ -59,6 +60,7 @@ class ProgressionConfig {
   final Map<String, DamageAuthority> damageOccurrences;
   final double repairDurationMultiplier;
   final double refundFraction;
+  final Map<String, Set<Duration>> savedRecipeDurations;
 
   /// App-layer adapters will supply repository documents in 4B-2.
   factory ProgressionConfig.fromDocuments({
@@ -307,7 +309,24 @@ class ProgressionConfig {
       }
       damageOccurrences[id] = DamageAuthority._(id, target, level, units);
     }
+    final savedDurations = <String, Set<Duration>>{};
+    for (final entry
+        in (timers['saved_recipe_durations_seconds'] as Map? ?? {}).entries) {
+      if (!recipes.containsKey(entry.key)) {
+        throw const FormatException('Unknown saved recipe duration');
+      }
+      savedDurations[entry.key as String] = Set.unmodifiable([
+        for (final seconds in entry.value as List)
+          Duration(seconds: _integer(seconds)),
+      ]);
+      if (savedDurations[entry.key]!.any(
+        (duration) => duration <= Duration.zero,
+      )) {
+        throw const FormatException('Invalid saved recipe duration');
+      }
+    }
     return ProgressionConfig._(
+      savedRecipeDurations: Map.unmodifiable(savedDurations),
       recipes: recipes,
       levels: levels,
       resupplyLevels: eligible,

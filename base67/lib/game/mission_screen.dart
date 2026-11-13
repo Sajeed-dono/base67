@@ -97,7 +97,12 @@ class _MissionScreenState extends State<MissionScreen> {
           padding: const EdgeInsets.all(GameSpacing.page),
           child: Column(
             children: [
-              GameCopy(_feedback ?? 'Opening the mission…'),
+              GameCopy(
+                _feedback ??
+                    (session == null
+                        ? 'Opening the mission…'
+                        : 'Another mission is open. Resume it, or return to base.'),
+              ),
               if (session != null)
                 GameButton(
                   label: 'Resume current mission',
@@ -136,6 +141,26 @@ class _MissionScreenState extends State<MissionScreen> {
                 [])
             .any((event) => (event as Map)['event_id'] == 'dust_storm');
     final learned = (session['learned'] as List).contains(def['interaction']);
+    final missing = c.migration.config.requiredUnits.entries
+        .where(
+          (entry) =>
+              runtime.order(
+                    c
+                        .migration
+                        .config
+                        .recipes['construction:${entry.key}']!
+                        .levelId,
+                  ) <=
+                  number &&
+              (p.facilities[entry.key] ?? 0) < entry.value,
+        )
+        .map((entry) => entry.key)
+        .toList();
+    final buildingRows =
+        (widget.repository.document('buildings.json')!['buildings'] as List)
+            .cast<Map>();
+    String facilityName(String id) =>
+        buildingRows.firstWhere((row) => row['id'] == id)['name'] as String;
     final preview =
         phase == 'planning' &&
             runtime.forecasts(session).isEmpty &&
@@ -207,6 +232,8 @@ class _MissionScreenState extends State<MissionScreen> {
                       : 'Advance one step',
                   onPressed: _busy || _paused
                       ? null
+                      : phase == 'planning' && missing.isNotEmpty
+                      ? () => widget.navigate('/build')
                       : () => unawaited(
                           _act(
                             phase == 'review'
@@ -219,6 +246,32 @@ class _MissionScreenState extends State<MissionScreen> {
                 ),
               ),
             )
+          : phase == 'debrief'
+          ? SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(GameSpacing.md),
+                child: GameButton(
+                  expand: true,
+                  label: session['result'] != 'success'
+                      ? 'Retry with this base'
+                      : c.save.completedLevelIds.containsAll(runtime.levels)
+                      ? 'View certificate'
+                      : 'Next mission',
+                  onPressed: _busy
+                      ? null
+                      : () => session['result'] != 'success'
+                            ? unawaited(_act('retry'))
+                            : widget.navigate(
+                                c.save.completedLevelIds.containsAll(
+                                      runtime.levels,
+                                    )
+                                    ? '/certificate'
+                                    : '/next-mission',
+                              ),
+                ),
+              ),
+            )
           : null,
       body: SafeArea(
         child: Center(
@@ -227,8 +280,59 @@ class _MissionScreenState extends State<MissionScreen> {
               maxWidth: GameSpacing.contentMaxWidth,
             ),
             child: ListView(
+              key: ValueKey('mission-page-$phase'),
               padding: const EdgeInsets.all(GameSpacing.page),
               children: [
+                if (phase == 'debrief') ...[
+                  ColonySectionHeading(
+                    title: session['result'] == 'success'
+                        ? 'Expedition progress saved'
+                        : 'Try a new plan',
+                    caption: session['message'] as String,
+                    icon: session['result'] == 'success'
+                        ? Icons.verified_rounded
+                        : Icons.explore_rounded,
+                  ),
+                  if (session['result'] == 'success') ...[
+                    GameCopy(
+                      'Notebook discovery: ${c.notebookCards.where((card) => card['level_id'] == widget.levelId).map((card) => card['title']).join(', ')}',
+                    ),
+                    for (final badge in c.badgeDefinitions.where(
+                      (badge) => badge['level_id'] == widget.levelId,
+                    ))
+                      GameCopy('Badge earned: ${badge['name']}'),
+                    GameButton(
+                      label: 'Open Mars Notebook',
+                      secondary: true,
+                      onPressed: () => widget.navigate('/notebook'),
+                    ),
+                    if (number == 1)
+                      GameButton(
+                        label: 'Choose your mission patch',
+                        onPressed: () => widget.navigate('/patch'),
+                      ),
+                  ],
+                  gap(),
+                ],
+                if (phase == 'planning') ...[
+                  ColonySectionHeading(
+                    title: 'Your next action',
+                    caption: missing.isNotEmpty
+                        ? 'Build ${missing.map(facilityName).join(', ')}. Open Build, review its cost, then assign crew or use the checklist. Your base is safe while the real-time job runs.'
+                        : !learned
+                        ? 'Discuss the mission question below. Then check the base and start when your plan is ready.'
+                        : 'Your equipment and lesson are ready. Check the power and supplies, then start the mission.',
+                    icon: missing.isNotEmpty
+                        ? Icons.construction_rounded
+                        : Icons.flag_rounded,
+                  ),
+                  if (missing.isNotEmpty)
+                    GameButton(
+                      label: 'Open required build plans',
+                      onPressed: _busy ? null : () => widget.navigate('/build'),
+                    ),
+                  gap(),
+                ],
                 if (_paused) ...[
                   const RadioBubble(
                     speaker: 'Mission paused',
@@ -240,6 +344,36 @@ class _MissionScreenState extends State<MissionScreen> {
                   ),
                   gap(),
                 ],
+                if ((phase == 'planning' || phase == 'play') && !learned)
+                  InfoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GameCopy(def['question'] as String),
+                        GameButton(
+                          label: def['answer'] as String,
+                          onPressed: _busy
+                              ? null
+                              : () => unawaited(
+                                  _act('learn', value: def['answer'] as String),
+                                ),
+                        ),
+                        GameButton(
+                          label: def['alternative'] as String,
+                          secondary: true,
+                          onPressed: _busy
+                              ? null
+                              : () => unawaited(
+                                  _act(
+                                    'learn',
+                                    value: def['alternative'] as String,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                gap(),
                 GameCopy('${chapter['name']} • ${phase.toUpperCase()}'),
                 GameCopy(
                   'Level $number • Sol ${SimulationClock.solIndex(world.elapsedHours, runtime.config.number('sol_hours')) + 1} • ${hour.toStringAsFixed(1)} simulation hours',
@@ -650,38 +784,6 @@ class _MissionScreenState extends State<MissionScreen> {
                     ),
                   ],
                   if (phase == 'planning' || phase == 'play') ...[
-                    if (!learned)
-                      InfoCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            GameCopy(def['question'] as String),
-                            GameButton(
-                              label: def['answer'] as String,
-                              onPressed: _busy
-                                  ? null
-                                  : () => unawaited(
-                                      _act(
-                                        'learn',
-                                        value: def['answer'] as String,
-                                      ),
-                                    ),
-                            ),
-                            GameButton(
-                              label: def['alternative'] as String,
-                              secondary: true,
-                              onPressed: _busy
-                                  ? null
-                                  : () => unawaited(
-                                      _act(
-                                        'learn',
-                                        value: def['alternative'] as String,
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
                     if (runtime.introduced(widget.levelId, 'loads')) ...[
                       const GameCopy(
                         'Habitat: essential, always on. Optional does not mean consequence-free.',
@@ -1017,7 +1119,8 @@ class _MissionScreenState extends State<MissionScreen> {
                         afterLabel: 'If precharged',
                       ),
                     ],
-                    button('Retry with this base', 'retry'),
+                    if (session['result'] == 'success')
+                      button('Replay with this base', 'retry'),
                     GameButton(
                       label: 'Campaign map',
                       onPressed: () => widget.navigate('/campaign'),

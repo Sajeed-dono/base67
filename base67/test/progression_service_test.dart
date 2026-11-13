@@ -288,7 +288,9 @@ void main() {
   test('rollback cannot increase remaining duration, shift deadlines or repeat completion', () {
     var state = build(initial(), 'solar', 'solar_array').state;
     final deadline = state.jobs['solar']!.deadlineUtc!;
-    final half = now.add(const Duration(seconds: 150));
+    final half = now.add(
+      config.recipes['construction:solar_array']!.duration ~/ 2,
+    );
     state = service.reconcile(state, observation: observation(state, half));
     final remaining = service.remaining(state, 'solar');
     state = service.reconcile(
@@ -335,7 +337,9 @@ void main() {
           jobId: 'solar',
           observation: observation(
             state,
-            now.add(const Duration(seconds: 299)),
+            state.jobs['solar']!.deadlineUtc!.subtract(
+              const Duration(seconds: 1),
+            ),
           ),
         )
         .state;
@@ -369,7 +373,7 @@ void main() {
     final fresh = build(cancelled, 'retry', 'solar_array').state;
     expect(
       fresh.jobs['retry']!.deadlineUtc,
-      now.add(const Duration(seconds: 300)),
+      now.add(config.recipes['construction:solar_array']!.duration),
     );
   });
 
@@ -665,7 +669,8 @@ void main() {
 
   test('completion at a shared deadline is ordered by stable job IDs', () {
     final timers = document('timer_rules');
-    timers['timers'][0]['duration_seconds'] = 600;
+    timers['timers'][0]['duration_seconds'] = 40;
+    timers['timers'][0]['duration_seconds_max'] = 40;
     service = RealTimeProgressionService(configuration(timers: timers));
     var state = build(initial(), 'z-solar', 'solar_array').state;
     state = service

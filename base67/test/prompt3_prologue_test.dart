@@ -227,22 +227,14 @@ void main() {
       final name = find.byKey(ValueKey('crew-name-$role'));
       await tester.ensureVisible(name);
       await tester.enterText(name, '$role Pilot');
-      final age = find.byKey(ValueKey('crew-age-$role'));
-      await tester.ensureVisible(age);
-      await tester.enterText(age, '12');
     }
+    expect(find.byKey(const ValueKey('crew-age-Medic')), findsNothing);
     final crewSetup = tester.widget<CrewScreen>(find.byType(CrewScreen));
     expect(crewSetup.mission.crew.map((member) => member.name), [
       'Commander Pilot',
       'Engineer Pilot',
       'Scientist Pilot',
       'Medic Pilot',
-    ]);
-    expect(crewSetup.mission.crew.map((member) => member.age), [
-      12,
-      12,
-      12,
-      12,
     ]);
     tester.binding.focusManager.primaryFocus?.unfocus();
     await tester.pump();
@@ -280,7 +272,7 @@ void main() {
     expect(saved.prologueComplete, isTrue);
     expect(saved.selectedSiteId, 'gale');
     expect(saved.crewNames['Commander'], 'Commander Pilot');
-    expect(saved.crewAges['Medic'], 12);
+    expect(saved.crewAges, isEmpty);
     expect(saved.startingCargo['solar_panel'], 4);
     expect(saved.resources['spare_part'], 1);
     expect(saved.inventory.containsKey('spare_part'), isFalse);

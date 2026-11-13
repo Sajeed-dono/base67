@@ -196,10 +196,11 @@ void main() {
     expect(c.progression.jobs['greenhouse-test']!.status, 'active');
     final remaining = c.progression.jobs['greenhouse-test']!.clock!.remaining;
     final reserves = {...c.progression.resources};
-    now = now.add(const Duration(minutes: 10));
+    final halfway = remaining ~/ 2;
+    now = now.add(halfway);
     await c.missionAction(id, 'hint');
     expect(c.progression.jobs['greenhouse-test']!.clock!.remaining,
-      remaining - const Duration(minutes: 10));
+      remaining - halfway);
     expect(c.progression.resources, reserves);
     final beforeOffline = {...c.progression.resources};
     final beforeTime = c.missionWorld.elapsedHours;

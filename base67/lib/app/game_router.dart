@@ -7,11 +7,11 @@ import '../data/repositories/game_data_repository.dart';
 import '../data/validation/data_check_screen.dart';
 import '../data/models/data_class.dart';
 import '../game/campaign_map_screen.dart';
-import '../game/home_base_screen.dart';
-import '../game/mission_screen.dart';
+import '../game/settlement_game_screen.dart';
 import '../game/progression_screen.dart';
 import '../game/settlement_crew_screen.dart';
 import '../game/certificate_screen.dart';
+import '../game/rewards_screen.dart';
 import '../prologue/prologue.dart';
 import '../ui/crew_bean.dart';
 import '../ui/crew_movement.dart';
@@ -50,13 +50,14 @@ class _GameBootstrapState extends State<GameBootstrap> {
     builder: (context, snapshot) {
       if (snapshot.hasError) {
         return MaterialApp(
+          debugShowCheckedModeBanner: false,
           theme: Base67Theme.light(),
           home: Scaffold(
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'BASE 67 could not open its saved campaign or bundled data.\n${snapshot.error}',
+                  'BASE 67 could not open its saved campaign or bundled data. Your save has been kept. Close and reopen the app to try again.',
                 ),
               ),
             ),
@@ -65,6 +66,7 @@ class _GameBootstrapState extends State<GameBootstrap> {
       }
       if (!snapshot.hasData) {
         return MaterialApp(
+          debugShowCheckedModeBanner: false,
           theme: Base67Theme.light(),
           home: const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -233,22 +235,38 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
       );
     },
     initialRoute: '/splash',
+    onGenerateInitialRoutes: (_) => [
+      _route(const RouteSettings(name: '/splash')),
+    ],
     onGenerateRoute: _route,
   );
 
   Route<void> _route(RouteSettings settings) {
     final path = settings.name ?? '/splash';
     final fixedPrologue = path == '/prologue' ? _prologuePage() : null;
-    final requestedLevel = settings.arguments is String
+    final requestedLevel = path == '/next-mission'
+        ? _controller.progression.levelId
+        : settings.arguments is String
         ? settings.arguments! as String
         : _controller.mission?['level'] as String? ??
               _controller.progression.levelId;
-    Widget missionPage() => MissionScreen(
+    Widget missionPage() => SettlementGameScreen(
       controller: _controller,
       repository: widget.repository,
       levelId: requestedLevel,
       movement: _crewMovement,
-      navigate: (route) => _navigatorKey.currentState!.pushNamed(route),
+      navigate: (route) {
+        final navigator = _navigatorKey.currentState!;
+        if (route == '/home') {
+          navigator.popUntil(
+            (page) => page.settings.name == '/home' || page.isFirst,
+          );
+        } else if (route == '/next-mission') {
+          navigator.pushReplacementNamed(route);
+        } else {
+          navigator.pushNamed(route);
+        }
+      },
     );
     Widget page() => switch (path) {
       '/splash' => _SplashScreen(
@@ -261,18 +279,11 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
           _navigatorKey.currentState!.pushNamed('/prologue');
         },
       ),
-      '/home' => HomeBaseScreen(
-        save: _save,
-        movement: _crewMovement,
+      '/home' => SettlementGameScreen(
+        controller: _controller,
         repository: widget.repository,
-        world: _controller.missionWorld,
-        progression: _controller.progression,
-        generationKw: (_controller.mission?['generation'] as num?)?.toDouble(),
-        solHours: _controller.missions.config.number('sol_hours'),
-        daylightHours: _controller.missions.config.number('daylight_hours'),
-        navigate: (route) {
-          _navigatorKey.currentState!.pushNamed(route);
-        },
+        movement: _crewMovement,
+        navigate: (route) => _navigatorKey.currentState!.pushNamed(route),
       ),
       '/campaign' => CampaignMapScreen(
         save: _save,
@@ -286,6 +297,7 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
       '/briefing' when _controller.missions.supports(requestedLevel) =>
         missionPage(),
       '/resume-mission' => missionPage(),
+      '/next-mission' => missionPage(),
       '/briefing' => _BriefingScreen(
         repository: widget.repository,
         levelId: settings.arguments is String
@@ -319,24 +331,9 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
       ),
       '/crew' => SettlementCrewScreen(controller: _controller),
       '/certificate' => CertificateScreen(controller: _controller),
-      '/notebook' => _NotebookScreen(
-        repository: widget.repository,
-        save: _save,
-      ),
-      '/badges' => _SimpleScreen(
-        title: 'Badges',
-        subtitle: 'Mission badges celebrate the work your crew has completed.',
-        icon: Icons.military_tech_rounded,
-        body: Text('${_save.badgeIds.length} badge(s) earned'),
-      ),
-      '/patch' => _SimpleScreen(
-        title: 'Mission Patch',
-        subtitle: 'Your patch travels with your persistent Mars base.',
-        icon: Icons.shield_rounded,
-        body: Text(
-          _save.missionPatchId ?? 'Choose a patch after it is unlocked.',
-        ),
-      ),
+      '/notebook' => NotebookScreen(repository: widget.repository, save: _save),
+      '/badges' => BadgesScreen(controller: _controller),
+      '/patch' => PatchScreen(controller: _controller),
       '/planning' || '/play' || '/debrief' => missionPage(),
       '/about' => const _SimpleScreen(
         title: 'About BASE 67',
@@ -384,12 +381,29 @@ class _GameRouterState extends State<GameRouter> with WidgetsBindingObserver {
                 child: Builder(builder: (_) => page()),
               ),
       ),
-      transitionsBuilder: (context, animation, _, child) =>
-          reduceMotion ||
-              MediaQuery.disableAnimationsOf(context) ||
-              MediaQuery.accessibleNavigationOf(context)
-          ? child
-          : FadeTransition(opacity: animation, child: child),
+      transitionsBuilder: (context, animation, _, child) {
+        if (reduceMotion ||
+            MediaQuery.disableAnimationsOf(context) ||
+            MediaQuery.accessibleNavigationOf(context)) {
+          return child;
+        }
+        final progress = animation.drive(
+          CurveTween(curve: GameMotion.standard),
+        );
+        return FadeTransition(
+          opacity: progress,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, .03),
+              end: Offset.zero,
+            ).animate(progress),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: .985, end: 1).animate(progress),
+              child: child,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -400,61 +414,125 @@ class _SplashScreen extends StatelessWidget {
   final VoidCallback openPrologue;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Stack(
-      fit: StackFit.expand,
-      children: [
-        const Positioned.fill(child: ColonyBackdrop()),
-        SafeArea(
-          child: LayoutBuilder(
-            builder: (context, viewport) => SingleChildScrollView(
-              child: ConstrainedBox(
-                // Center short content; tall enlarged-text content remains scrollable.
-                constraints: BoxConstraints(minHeight: viewport.maxHeight),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: GameSpacing.splashMaxWidth,
+  Widget build(BuildContext context) {
+    if (MediaQuery.orientationOf(context) == Orientation.landscape) {
+      return Scaffold(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            const ColonyBackdrop(),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'BASE 67',
+                              style: Theme.of(context).textTheme.displaySmall
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'One crew. One lasting settlement.\nFifteen missions on Mars.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(GameSpacing.lg),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const ColonySectionHeading(
-                            title: 'MISSION CONTROL',
-                            caption: 'One crew. One lasting settlement. Fifteen missions on Mars.',
-                            icon: Icons.rocket_launch_rounded,
-                          ),
-                          const SizedBox(height: GameSpacing.md),
-                          Text(
-                            'BASE 67',
-                            style: Theme.of(context).textTheme.displaySmall
-                                ?.copyWith(fontWeight: FontWeight.w900),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'A new home begins with one good plan.',
-                            style: Theme.of(context).textTheme.titleMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 28),
-                          GameButton(
-                            label: 'Open Home Base',
-                            icon: Icons.home_rounded,
-                            expand: true,
-                            onPressed: openHome,
-                          ),
-                          const SizedBox(height: 10),
-                          GameButton(
-                            label: 'Watch the prologue',
-                            icon: Icons.play_circle_outline_rounded,
-                            expand: true,
-                            secondary: true,
-                            onPressed: openPrologue,
-                          ),
-                        ],
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GameButton(
+                              label: 'Open Home Base',
+                              icon: Icons.home_rounded,
+                              expand: true,
+                              onPressed: openHome,
+                            ),
+                            const SizedBox(height: 12),
+                            GameButton(
+                              label: 'Watch the prologue',
+                              icon: Icons.play_circle_outline_rounded,
+                              expand: true,
+                              secondary: true,
+                              onPressed: openPrologue,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const Positioned.fill(child: ColonyBackdrop()),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, viewport) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  // Center short content; tall enlarged-text content remains scrollable.
+                  constraints: BoxConstraints(minHeight: viewport.maxHeight),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: GameSpacing.splashMaxWidth,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(GameSpacing.lg),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const ColonySectionHeading(
+                              title: 'MISSION CONTROL',
+                              caption: 'One crew. One lasting settlement. Fifteen missions on Mars.',
+                              icon: Icons.rocket_launch_rounded,
+                            ),
+                            const SizedBox(height: GameSpacing.md),
+                            Text(
+                              'BASE 67',
+                              style: Theme.of(context).textTheme.displaySmall
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'A new home begins with one good plan.',
+                              style: Theme.of(context).textTheme.titleMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 28),
+                            GameButton(
+                              label: 'Open Home Base',
+                              icon: Icons.home_rounded,
+                              expand: true,
+                              onPressed: openHome,
+                            ),
+                            const SizedBox(height: 10),
+                            GameButton(
+                              label: 'Watch the prologue',
+                              icon: Icons.play_circle_outline_rounded,
+                              expand: true,
+                              secondary: true,
+                              onPressed: openPrologue,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -462,10 +540,10 @@ class _SplashScreen extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class _BriefingScreen extends StatelessWidget {
@@ -568,43 +646,6 @@ String _roleLabel(CrewRole role) => switch (role) {
   CrewRole.scientist => 'Scientist',
   CrewRole.medic => 'Medic',
 };
-
-class _NotebookScreen extends StatelessWidget {
-  const _NotebookScreen({required this.repository, required this.save});
-  final GameDataRepository repository;
-  final CampaignSave save;
-
-  @override
-  Widget build(BuildContext context) {
-    final cards =
-        (repository.document('fact_cards.json')?['cards'] as List?)
-            ?.whereType<Map<String, dynamic>>() ??
-        const [];
-    return Scaffold(
-      appBar: AppBar(title: const Text('Mars Notebook')),
-      body: ListView(
-        padding: const EdgeInsets.all(GameSpacing.page),
-        children: [
-          for (final card in cards)
-            if (save.notebookFactIds.contains(card['id']) ||
-                save.notebookFactIds.isEmpty)
-              FactCard(
-                title: card['title'] as String? ?? 'Mars fact',
-                body:
-                    card['body'] as String? ??
-                    card['template'] as String? ??
-                    'A new fact will appear as your crew learns.',
-                dataClass: DataClass.nasa,
-              ),
-          if (cards.isEmpty)
-            const Text(
-              'New notebook facts appear as you explore the campaign.',
-            ),
-        ],
-      ),
-    );
-  }
-}
 
 class _SettingsScreen extends StatelessWidget {
   const _SettingsScreen({

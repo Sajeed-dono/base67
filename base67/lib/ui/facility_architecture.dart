@@ -45,7 +45,22 @@ abstract final class FacilityArchitecture {
         GameColors.machinery,
         1,
       );
-      box(Rect.fromLTWH(-width / 2, -height / 2, width, height), shell, 5);
+      final bodyRect = Rect.fromLTWH(-width / 2, -height / 2, width, height);
+      final body = RRect.fromRectAndRadius(bodyRect, const Radius.circular(5));
+      canvas.drawRRect(
+        body,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.lerp(shell, Colors.white, .24)!,
+              shell,
+              Color.lerp(shell, GameColors.ink, .20)!,
+            ],
+          ).createShader(bodyRect),
+      );
+      canvas.drawRRect(body, edge);
       final roof = Path()
         ..moveTo(-width / 2, -height / 2)
         ..lineTo(-width / 2 + 7, -height / 2 - 9)
@@ -116,9 +131,25 @@ abstract final class FacilityArchitecture {
 
     void windows(int count) {
       for (var i = 0; i < count; i++) {
+        final rect = Rect.fromLTWH(-18 + i * 12, -6, 9, 8);
+        if (operational) {
+          final center = rect.center;
+          canvas.drawCircle(
+            center,
+            9,
+            Paint()
+              ..shader = RadialGradient(
+                colors: [
+                  GameColors.gold.withValues(alpha: .42),
+                  GameColors.gold.withValues(alpha: .04),
+                  Colors.transparent,
+                ],
+              ).createShader(Rect.fromCircle(center: center, radius: 9)),
+          );
+        }
         box(
-          Rect.fromLTWH(-18 + i * 12, -6, 9, 8),
-          operational ? GameColors.solarGlass : GameColors.machinery,
+          rect,
+          operational ? const Color(0xFFFFD88B) : GameColors.machinery,
           2,
         );
         line(

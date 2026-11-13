@@ -664,3 +664,48 @@ warning: in the working copy of 'base67/lib/progression/timer_completion.dart', 
 
 No untracked original-pack files were found either. Protected application/prologue/UI/sim/config-loader/dependency/existing-test diff is empty (Git prints only a line-ending warning for lib/main.dart; no change is listed). New file line counts: progression_service.dart 848; progression_service_test.dart 604; progression_economy_test.dart 383; pre_4b_f0a179f.json 1. TimerCompletion is 77 lines. All 4 new files remain untracked for owner review. No commit or push.
 
+---
+
+**Date and tool:** 2026-11-13; Copilot
+**Prompt worked on:** Owner-provided final setup and visual polish pass (Steps 0-4)
+**Read before starting:** `AGENTS.md`; `docs/vault/00_START_HERE.md` and vault 01-11; `docs/PROGRESS.md`; `docs/DECISIONS.md`; `docs/GAME_BRIEF.md`; `docs/BASE_67_Codex_Prompt_Sequence.txt`; both read-only task attachments.
+
+## Done (with evidence)
+- Crew setup no longer requests ages; `CampaignSave.crewAges` remains backward-compatible and setup writes an empty map. Updated the Prompt 3 test to enter names only and assert no age field.
+- Added deterministic code-drawn terrain, facility lighting/shadows/chips, astronaut shading and state cues, campaign backdrops/path/pins, motion tokens, route transitions, reduced-motion gates, build-count effects, and animated job progress.
+- `flutter analyze`: `No issues found! (ran in 1.8s)`; this was before removing one campaign label font-size literal.
+- The exact requested combined test command ran once; the settlement visual test passed. It reported two failures in `prompt3_prologue_test.dart`.
+- Per the failure rule, reran only `test/prompt3_prologue_test.dart`: 5 passed, 2 failed. Remaining failures: three font-size-token violations in out-of-scope screens, and the expected `Your Mars settlement` text was not found.
+
+## Partly done
+- HUD resource-number tween and camera focus/Show on map animation were not implemented within the permitted file scope.
+
+## Not done
+- No formatter, full suite, other tests, build, emulator, or data checker was run.
+- Hot restart was attempted but no app was connected to DTD.
+- No commit was made, as requested after reviewing the already-dirty worktree.
+
+## Files changed
+- `lib/prologue/prologue.dart`, `test/prompt3_prologue_test.dart`: names-only setup.
+- `lib/ui/mars_terrain.dart`, `lib/ui/mars_base_painter.dart`, `lib/ui/facility_architecture.dart`, `lib/ui/settlement_map.dart`, `lib/ui/crew_bean.dart`: visual polish and animation.
+- `lib/ui/theme.dart`, `lib/ui/game_widgets.dart`, `lib/game/campaign_map_screen.dart`, `lib/app/game_router.dart`: motion and campaign presentation.
+- `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/vault/10_OPEN_QUESTIONS.md`: handoff/status.
+
+## Real command results
+- flutter analyze: `No issues found! (ran in 1.8s)`; not rerun after the token-style correction.
+- flutter test: combined requested command failed in the Prompt 3 file; settlement visual test passed. Rerun of the Prompt 3 file: `5 passed, 2 failed`.
+- check_data.py: not run; no data files were changed.
+- git diff on original data: not run. `git status` showed pre-existing edits only under `assets/data/extra/`, with no original-pack files listed.
+
+## Decisions made and provisional values added
+- Names-only crew entry; preserve old save schema and age fields. No gameplay or scientific values added. Recorded in `docs/DECISIONS.md`.
+
+## Conflicts found between documents
+- No design-source conflict found. The requested no-commit choice was followed because unrelated pre-existing changes were present.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- #24: HUD resource-number tween and camera focus transition remain deferred until their screen/camera files are in scope.
+- Resolved and removed the age-range question because crew setup no longer collects age.
+
+## Next safe step
+- Review the two remaining Prompt 3 test failures and the deferred HUD/camera surfaces before requesting another scoped change.

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
@@ -224,8 +226,7 @@ class MarsBasePainter extends CustomPainter {
   }
 
   void _drawPath(Canvas canvas, Size size) {
-    // Surface access routes are decorative, traversable ground. They do not
-    // imply power connectivity, installed corridors or new facility ownership.
+    // Surface roads are decorative and never imply system connectivity.
     for (final end in const [
       Offset(.23, .75),
       Offset(.74, .69),
@@ -233,23 +234,69 @@ class MarsBasePainter extends CustomPainter {
       Offset(.50, .77),
       Offset(.34, .86),
     ]) {
+      final start = Offset(size.width * .48, size.height * .62);
+      final finish = Offset(size.width * end.dx, size.height * (end.dy + .045));
+      final control = Offset(
+        (start.dx + finish.dx) / 2 + (finish.dy - start.dy) * .12,
+        (start.dy + finish.dy) / 2 - 17,
+      );
       final route = Path()
-        ..moveTo(size.width * .48, size.height * .62)
-        ..lineTo(size.width * end.dx, size.height * (end.dy + .045));
+        ..moveTo(start.dx, start.dy)
+        ..quadraticBezierTo(control.dx, control.dy, finish.dx, finish.dy);
       canvas.drawPath(
         route,
         Paint()
-          ..color = GameColors.ink.withValues(alpha: .18)
+          ..color = GameColors.ink.withValues(alpha: .3)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 12,
+          ..strokeWidth = 16
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
       );
       canvas.drawPath(
         route,
         Paint()
-          ..color = GameColors.sand.withValues(alpha: .35)
+          ..color = GameColors.marsRockShade.withValues(alpha: .72)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 7,
+          ..strokeWidth = 11
+          ..strokeCap = StrokeCap.round,
       );
+      canvas.drawPath(
+        route,
+        Paint()
+          ..color = GameColors.sand.withValues(alpha: .72)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 7
+          ..strokeCap = StrokeCap.round,
+      );
+      _drawDashes(
+        canvas,
+        route,
+        Paint()
+          ..color = GameColors.paper.withValues(alpha: .34)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..strokeCap = StrokeCap.round,
+        dashLength: 4,
+        gapLength: 10,
+      );
+      for (final offset in const [-2.4, 2.4]) {
+        final track = Path()
+          ..moveTo(start.dx + offset, start.dy + offset)
+          ..quadraticBezierTo(
+            control.dx + offset,
+            control.dy + offset,
+            finish.dx + offset,
+            finish.dy + offset,
+          );
+        canvas.drawPath(
+          track,
+          Paint()
+            ..color = GameColors.marsRockShade.withValues(alpha: .24)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = .8
+            ..strokeCap = StrokeCap.round,
+        );
+      }
     }
     final path = Path()
       ..moveTo(size.width * .12, size.height * .90)
@@ -277,6 +324,37 @@ class MarsBasePainter extends CustomPainter {
         ..strokeWidth = 2
         ..strokeCap = StrokeCap.round,
     );
+    _drawDashes(
+      canvas,
+      path,
+      Paint()
+        ..color = GameColors.paper.withValues(alpha: .38)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..strokeCap = StrokeCap.round,
+      dashLength: 5,
+      gapLength: 12,
+    );
+  }
+
+  static void _drawDashes(
+    Canvas canvas,
+    Path path,
+    Paint paint, {
+    required double dashLength,
+    required double gapLength,
+  }) {
+    for (final metric in path.computeMetrics()) {
+      for (var start = 0.0; start < metric.length; start += dashLength + gapLength) {
+        canvas.drawPath(
+          metric.extractPath(
+            start,
+            math.min(start + dashLength, metric.length).toDouble(),
+          ),
+          paint,
+        );
+      }
+    }
   }
 
   static void paintFacility(
@@ -293,22 +371,30 @@ class MarsBasePainter extends CustomPainter {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.scale(scale);
-    // Cast shadow and pad are decorative, within the original solid footprint.
-    final cast = Path()
-      ..moveTo(-22, 4)
-      ..lineTo(22, 4)
-      ..lineTo(38, 24)
-      ..lineTo(-3, 28)
-      ..close();
-    canvas.drawPath(
-      cast,
-      Paint()..color = GameColors.marsRockShade.withValues(alpha: .3),
+    final built = facility.count > 0;
+    if (built) {
+      canvas.drawOval(
+        const Rect.fromLTWH(-39, 14, 78, 20),
+        Paint()..color = GameColors.marsLit.withValues(alpha: .22),
+      );
+      canvas.drawOval(
+        const Rect.fromLTWH(-39, 14, 78, 20),
+        Paint()
+          ..color = GameColors.sand.withValues(alpha: .25)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+    }
+    canvas.drawOval(
+      const Rect.fromLTWH(-24, 12, 57, 21),
+      Paint()
+        ..color = GameColors.ink.withValues(alpha: .32)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
     );
     canvas.drawOval(
       const Rect.fromLTWH(-31, 14, 65, 14),
-      Paint()..color = GameColors.ink.withValues(alpha: .22),
+      Paint()..color = GameColors.ink.withValues(alpha: .18),
     );
-    final built = facility.count > 0;
     final inactive =
         facility.condition == 'off' ||
         facility.condition == 'outOfResources' ||
@@ -361,24 +447,29 @@ class MarsBasePainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2,
       );
-      final warning = Path()
-        ..moveTo(21, -27)
-        ..lineTo(30, -11)
-        ..lineTo(12, -11)
-        ..close();
-      canvas.drawPath(warning, Paint()..color = GameColors.danger);
+      final warning = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(10, -31, 22, 17),
+        const Radius.circular(6),
+      );
+      canvas.drawRRect(warning, Paint()..color = GameColors.danger);
       final mark = TextPainter(
         text: const TextSpan(
           text: '!',
           style: TextStyle(
             color: GameColors.paper,
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
           ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      mark.paint(canvas, const Offset(19, -25));
+      mark.paint(
+        canvas,
+        Offset(
+          warning.left + (warning.width - mark.width) / 2,
+          warning.top + (warning.height - mark.height) / 2,
+        ),
+      );
     }
     if (facility.level > 1) {
       canvas.drawCircle(
@@ -411,14 +502,26 @@ class MarsBasePainter extends CustomPainter {
         canvas.drawLine(const Offset(-25, -27), const Offset(25, -27), rail);
         canvas.drawLine(const Offset(-25, 0), const Offset(25, -27), rail);
       }
-      canvas.drawRect(
-        const Rect.fromLTWH(-26, 22, 52, 4),
-        Paint()..color = GameColors.ink,
+      final rail = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(-27, 21, 54, 6),
+        const Radius.circular(3),
       );
-      canvas.drawRect(
-        Rect.fromLTWH(-26, 22, 52 * facility.jobProgress!, 4),
-        Paint()..color = GameColors.gold,
+      canvas.drawRRect(
+        rail,
+        Paint()..color = GameColors.ink.withValues(alpha: .92),
       );
+      final progress = (facility.jobProgress ?? 0).clamp(0, 1).toDouble();
+      final fill = RRect.fromRectAndRadius(
+        Rect.fromLTWH(-26, 22, 52 * progress, 4),
+        const Radius.circular(2),
+      );
+      canvas.drawRRect(
+        fill,
+        Paint()
+          ..color = GameColors.gold.withValues(alpha: .45)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+      canvas.drawRRect(fill, Paint()..color = GameColors.gold);
     }
     final suffix = !built
         ? facility.referenceOnly
@@ -445,22 +548,46 @@ class MarsBasePainter extends CustomPainter {
       maxLines: 1,
       ellipsis: '...',
     )..layout(maxWidth: 110);
-    tp.paint(canvas, Offset(-tp.width / 2, 29));
+    final labelRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(-tp.width / 2 - 6, 27, tp.width + 12, tp.height + 5),
+      const Radius.circular(7),
+    );
+    canvas.drawRRect(
+      labelRect,
+      Paint()..color = GameColors.night.withValues(alpha: .86),
+    );
+    canvas.drawRRect(
+      labelRect,
+      Paint()
+        ..color = GameColors.sand.withValues(alpha: .46)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .7,
+    );
+    tp.paint(canvas, Offset(-tp.width / 2, 29.5));
     canvas.restore();
   }
 
   void _drawLights(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFFFD58A).withValues(alpha: .85);
     for (final fraction in const [
       Offset(.20, .64),
       Offset(.48, .56),
       Offset(.80, .62),
     ]) {
+      final center = Offset(size.width * fraction.dx, size.height * fraction.dy);
+      const radius = 16.0;
       canvas.drawCircle(
-        Offset(size.width * fraction.dx, size.height * fraction.dy),
+        center,
+        radius,
+        Paint()
+          ..shader = const RadialGradient(
+            colors: [Color(0x88FFD58A), Color(0x22FFD58A), Colors.transparent],
+            stops: [0, .35, 1],
+          ).createShader(Rect.fromCircle(center: center, radius: radius)),
+      );
+      canvas.drawCircle(
+        center,
         2.8,
-        paint,
+        Paint()..color = const Color(0xFFFFD58A).withValues(alpha: .92),
       );
     }
   }
