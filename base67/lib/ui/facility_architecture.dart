@@ -20,7 +20,7 @@ abstract final class FacilityArchitecture {
       _ => 27.0,
     };
     canvas.save();
-    canvas.clipRect(Rect.fromLTRB(-half, -30, half, 25));
+    canvas.clipRect(Rect.fromLTRB(-half, -35, half, 25));
     if (!operational) {
       canvas.saveLayer(
         null,
@@ -215,6 +215,25 @@ abstract final class FacilityArchitecture {
       for (final x in [-w * .33, w * .33]) {
         line(Offset(x, -h / 2 + 7), Offset(x, h / 2 - 4), shade, .8);
       }
+      for (final x in [-w * .3, w * .3]) {
+        line(Offset(x, h / 2 - 1), Offset(x + 2, h / 2 + 7), shade, 2);
+        line(
+          Offset(x + 2, h / 2 + 7),
+          Offset(x + 2, h / 2 + 10),
+          GameColors.machineryHighlight,
+          2,
+        );
+      }
+      canvas.drawArc(
+        Rect.fromLTWH(-w / 2 + 2, -h / 2 + 1, w - 4, h - 2),
+        math.pi * 1.08,
+        math.pi * .54,
+        false,
+        Paint()
+          ..color = GameColors.workLight.withValues(alpha: .76)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4,
+      );
       hatch(Offset(0, h / 2 - 6));
       hazard(Offset(-w * .32, 4));
       screen(Rect.fromLTWH(8, -5, 6, 4));
@@ -232,20 +251,58 @@ abstract final class FacilityArchitecture {
       }
     }
 
-    // Contact shadow and ambient occlusion share a top-left light source.
+    // Top-left golden light casts the contact shadow toward the lower right.
     canvas.drawOval(
-      const Rect.fromLTWH(-22, 10, 48, 14),
+      const Rect.fromLTWH(-16, 13, 52, 14),
       Paint()
-        ..color = GameColors.ink.withValues(alpha: .30)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        ..color = GameColors.ink.withValues(alpha: .28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
     canvas.drawOval(
-      const Rect.fromLTWH(-22, 13, 44, 8),
-      Paint()..color = GameColors.ink.withValues(alpha: .32),
+      const Rect.fromLTWH(-18, 15, 44, 7),
+      Paint()..color = GameColors.ink.withValues(alpha: .25),
     );
     switch (id) {
       case 'habitat' || 'crew_habitat':
         pod(47, 31);
+        final dome = Path()
+          ..moveTo(-18, -14)
+          ..cubicTo(-19, -35, 19, -35, 18, -14)
+          ..close();
+        canvas.drawPath(
+          dome,
+          Paint()
+            ..shader = const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [GameColors.solarCellLine, GameColors.solarGlass],
+            ).createShader(const Rect.fromLTWH(-19, -35, 38, 21)),
+        );
+        for (final x in [-12.0, 0.0, 12.0]) {
+          final rib = Path()
+            ..moveTo(0, -34)
+            ..quadraticBezierTo(x * .7, -24, x, -14);
+          canvas.drawPath(
+            rib,
+            Paint()
+              ..color = GameColors.machineryHighlight.withValues(alpha: .9)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.3,
+          );
+        }
+        line(
+          const Offset(-17, -25),
+          const Offset(17, -25),
+          GameColors.machineryHighlight,
+          1,
+        );
+        canvas.drawArc(
+          const Rect.fromLTWH(-18, -35, 36, 21),
+          math.pi,
+          math.pi,
+          false,
+          edge,
+        );
         box(
           const Rect.fromLTWH(-15, -22, 30, 5),
           GameColors.machineryHighlight,
@@ -412,6 +469,20 @@ abstract final class FacilityArchitecture {
             edge
               ..color = hull
               ..strokeWidth = 1.4,
+          );
+        }
+        for (final pair in const [(-18.0, -8.0), (-8.0, 3.0), (3.0, 14.0)]) {
+          line(
+            Offset(pair.$1, -13),
+            Offset(pair.$2, 1),
+            hull.withValues(alpha: .75),
+            1,
+          );
+          line(
+            Offset(pair.$1, 1),
+            Offset(pair.$2, -13),
+            hull.withValues(alpha: .75),
+            1,
           );
         }
         line(const Offset(-24, 1), const Offset(24, 1), hull, 1.5);

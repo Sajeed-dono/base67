@@ -33,6 +33,10 @@ const crewSuitColors = <Color>[
   Color(0xFFB64C48),
 ];
 
+// Role offsets give legacy/default crews distinct uniforms without changing saves.
+Color crewSuitColor(CrewRole role, int choice) =>
+    crewSuitColors[(choice + role.index) % crewSuitColors.length];
+
 const crewVisorColors = <Color>[
   GameColors.tealLight,
   GameColors.sand,
@@ -105,7 +109,7 @@ class _CrewBeanState extends State<CrewBean>
 
   @override
   Widget build(BuildContext context) {
-    final color = crewSuitColors[widget.suitColorIndex % crewSuitColors.length];
+    final color = crewSuitColor(widget.role, widget.suitColorIndex);
     final painter = AnimatedBuilder(
       animation: _breath,
       builder: (context, _) => CustomPaint(
@@ -154,6 +158,10 @@ class _CrewBeanState extends State<CrewBean>
 }
 
 class CrewBeanPainter extends CustomPainter {
+  static final Paint _groundShadow = Paint()
+    ..color = GameColors.ink.withValues(alpha: .3)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.6);
+
   const CrewBeanPainter({
     required this.role,
     required this.mood,
@@ -184,289 +192,162 @@ class CrewBeanPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final sx = size.width / 100;
-    final sy = size.height / 116;
     canvas.save();
-    canvas.scale(sx, sy);
+    canvas.scale(size.width / 100, size.height / 116);
     if (facing.dx < 0) {
       canvas.translate(100, 0);
       canvas.scale(-1, 1);
     }
-    final stride = walking ? math.sin(walkPhase * math.pi * 2) * 5 : 0.0;
-    final bob = mood == CrewMood.celebrating ? -4.0 : breath * 1.5;
-    final suit = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color.lerp(crewSuitColors.first, GameColors.paper, .24)!,
-          crewSuitColors.first,
-          GameColors.rust,
-        ],
-      ).createShader(const Rect.fromLTWH(20, 14, 70, 88));
-    final trim = Paint()..color = Colors.white.withValues(alpha: 0.92);
-    final dark = Paint()..color = GameColors.ink;
-    final shadow = Paint()
-      ..color = GameColors.ink.withValues(alpha: .24)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-    final visor = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          GameColors.solarCellLine,
-          Color.lerp(GameColors.solarGlass, visorTint, .15)!,
-          GameColors.marsNight,
-        ],
-      ).createShader(const Rect.fromLTWH(34, 31, 35, 22));
-    final stroke = Paint()
-      ..color = Color.lerp(suitColor, GameColors.ink, .62)!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+    final ink = GameColors.ink;
+    final light = Color.lerp(suitColor, Colors.white, .36)!;
+    final shade = Color.lerp(suitColor, ink, .4)!;
+    void pixels(Rect rect, Color color) => canvas.drawRect(
+      rect,
+      Paint()
+        ..color = color
+        ..isAntiAlias = false,
+    );
+    void panel(Rect rect, Color color) {
+      pixels(rect.inflate(2), ink);
+      pixels(rect, color);
+    }
 
-    canvas.drawOval(const Rect.fromLTWH(23, 100, 62, 9), shadow);
+    void shape(List<Offset> points, Color color) => canvas.drawPath(
+      Path()..addPolygon(points, true),
+      Paint()
+        ..color = color
+        ..isAntiAlias = false,
+    );
+    // The top-left light casts this cached-paint shadow down and right.
+    canvas.drawOval(const Rect.fromLTWH(24, 105, 64, 10), _groundShadow);
+    final stride = walking
+        ? (math.sin(walkPhase * math.pi * 2) * 3).roundToDouble()
+        : 0.0;
+    final bob = mood == CrewMood.celebrating ? -4.0 : breath * 1.5;
     canvas.save();
-    final squash = walking ? math.sin(walkPhase * math.pi * 2) * .025 : 0.0;
-    canvas.translate(0, bob + (walking ? stride.abs() * -.35 : 0));
-    canvas.translate(52, 70);
-    canvas.rotate(
-      walking
-          ? facing.dx * -.045 + facing.dy * .02
-          : math.sin(breath * math.pi * 2) * .012,
-    );
-    canvas.scale(1 + squash, 1 - squash);
-    canvas.translate(-52, -70);
-    if (walking) {
-      final dust = Paint();
-      final phase = (walkPhase % 1 + 1) % 1;
-      for (var i = 0; i < 3; i++) {
-        final age = (phase + i / 3) % 1;
-        dust.color = GameColors.sand.withValues(alpha: (1 - age) * .34);
-        canvas.drawCircle(
-          Offset(34 + age * 10, 99 - age * 4 + i * 1.5),
-          1.2 + age * 1.3,
-          dust,
-        );
-      }
-    }
-    // Backpack sits behind the rounded suit.
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(67, 40, 22, 40),
-        const Radius.circular(8),
-      ),
-      suit,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(68, 47, 18, 14),
-        const Radius.circular(5),
-      ),
-      trim,
-    );
-    // Legs and boots.
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(31, 78 + stride, 15, 24),
-        const Radius.circular(7),
-      ),
-      suit,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(55, 78 - stride, 15, 24),
-        const Radius.circular(7),
-      ),
-      suit,
-    );
-    canvas.drawOval(Rect.fromLTWH(25, 95 + stride, 25, 9), dark);
-    canvas.drawOval(Rect.fromLTWH(52, 95 - stride, 25, 9), dark);
-    // Separate pressure helmet, orange torso and shoulder patches keep the
-    // small map sprite readable without changing its animation coordinates.
-    final body = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(26, 54, 48, 34),
-      const Radius.circular(9),
-    );
-    canvas.drawRRect(body, suit);
-    canvas.drawRRect(body, stroke);
-    for (final x in [20.0, 70.0]) {
-      final arm = RRect.fromRectAndRadius(
-        Rect.fromLTWH(x, 57, 12, 29),
-        const Radius.circular(5),
+    canvas.translate(0, bob - (walking ? stride.abs() * .35 : 0));
+    panel(const Rect.fromLTWH(15, 36, 17, 42), shade);
+    pixels(const Rect.fromLTWH(15, 38, 5, 35), visorTint);
+    for (final leg in [(30.0, stride), (55.0, -stride)]) {
+      panel(Rect.fromLTWH(leg.$1, 83 + leg.$2, 16, 22), suitColor);
+      pixels(Rect.fromLTWH(leg.$1 + 1, 86 + leg.$2, 5, 16), light);
+      panel(Rect.fromLTWH(leg.$1 - 4, 102 + leg.$2, 23, 9), GameColors.paper);
+      pixels(
+        Rect.fromLTWH(leg.$1 - 4, 108 + leg.$2, 23, 3),
+        GameColors.machinery,
       );
-      canvas.drawRRect(arm, suit);
-      canvas.drawRRect(arm, stroke);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(x, 78, 12, 8),
-          const Radius.circular(3),
-        ),
-        trim,
-      );
+      pixels(Rect.fromLTWH(leg.$1, 98 + leg.$2, 16, 4), ink);
     }
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(27, 77, 46, 8),
-        const Radius.circular(3),
-      ),
-      trim,
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(46, 78, 9, 6),
-      Paint()..color = suitColor,
-    );
-    final helmet = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(23, 14, 56, 46),
-      const Radius.circular(20),
-    );
-    canvas.drawRRect(
-      helmet,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white,
-            GameColors.paper,
-            GameColors.machineryHighlight,
-          ],
-        ).createShader(const Rect.fromLTWH(23, 14, 56, 46)),
-    );
-    canvas.drawRRect(helmet, stroke);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(19, 33, 7, 15),
-        const Radius.circular(2),
-      ),
-      trim,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(76, 33, 7, 15),
-        const Radius.circular(2),
-      ),
-      trim,
-    );
-    canvas.drawArc(
-      const Rect.fromLTWH(28, 18, 44, 33),
-      3.4,
-      1.4,
-      false,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-    // Visor, shine and lower suit panel.
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(31, 30, 39, 26),
-        const Radius.circular(13),
-      ),
-      dark,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(35, 33, 31, 19),
-        const Radius.circular(10),
-      ),
-      visor,
-    );
-    canvas.drawArc(
-      const Rect.fromLTWH(39, 34, 20, 12),
-      3.2,
-      1.1,
-      false,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.65)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-    canvas.drawArc(
-      const Rect.fromLTWH(38, 35, 24, 15),
-      3.25,
-      .85,
-      false,
-      Paint()
-        ..color = Colors.white.withValues(alpha: .22)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
-    final accent = switch (role) {
-      CrewRole.commander => GameColors.gold,
-      CrewRole.engineer => GameColors.colorBlindSafeBlue,
-      CrewRole.scientist => GameColors.teal,
-      CrewRole.medic => const Color(0xFFCA6686),
-    };
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(21, 59, 9, 10),
-        const Radius.circular(2),
-      ),
-      Paint()..color = accent,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(39, 62, 24, 12),
-        const Radius.circular(5),
-      ),
-      trim,
-    );
+    panel(const Rect.fromLTWH(28, 55, 46, 34), suitColor);
+    pixels(const Rect.fromLTWH(30, 57, 7, 27), light);
+    pixels(const Rect.fromLTWH(66, 58, 7, 27), shade);
+    pixels(const Rect.fromLTWH(35, 86, 32, 5), shade);
+    for (final x in [17.0, 75.0]) {
+      panel(Rect.fromLTWH(x, 59, 11, 25), suitColor);
+      pixels(Rect.fromLTWH(x, 61, 4, 20), light);
+      panel(Rect.fromLTWH(x, 86, 11, 9), GameColors.paper);
+      pixels(Rect.fromLTWH(x, 82, 11, 4), ink);
+    }
+    final roleColor = crewSuitColors[role.index];
+    pixels(const Rect.fromLTWH(19, 58, 8, 5), roleColor);
+    pixels(const Rect.fromLTWH(77, 58, 7, 5), roleColor);
+    pixels(const Rect.fromLTWH(42, 80, 18, 4), GameColors.paper);
+    pixels(const Rect.fromLTWH(48, 81, 6, 2), suitColor);
+    const helmet = [
+      Offset(22, 27),
+      Offset(28, 27),
+      Offset(28, 19),
+      Offset(36, 19),
+      Offset(36, 13),
+      Offset(63, 13),
+      Offset(63, 19),
+      Offset(72, 19),
+      Offset(72, 27),
+      Offset(79, 27),
+      Offset(79, 48),
+      Offset(73, 48),
+      Offset(73, 57),
+      Offset(65, 57),
+      Offset(65, 62),
+      Offset(33, 62),
+      Offset(33, 57),
+      Offset(25, 57),
+      Offset(25, 48),
+      Offset(22, 48),
+    ];
+    shape(helmet, ink);
+    shape(const [
+      Offset(26, 29),
+      Offset(31, 29),
+      Offset(31, 22),
+      Offset(38, 22),
+      Offset(38, 17),
+      Offset(61, 17),
+      Offset(61, 22),
+      Offset(69, 22),
+      Offset(69, 29),
+      Offset(75, 29),
+      Offset(75, 47),
+      Offset(69, 47),
+      Offset(69, 54),
+      Offset(62, 54),
+      Offset(62, 58),
+      Offset(35, 58),
+      Offset(35, 54),
+      Offset(29, 54),
+      Offset(29, 47),
+      Offset(26, 47),
+    ], GameColors.paper);
+    pixels(const Rect.fromLTWH(44, 27, 24, 3), GameColors.solarCellLine);
+    panel(const Rect.fromLTWH(22, 31, 8, 15), GameColors.machineryHighlight);
+    pixels(const Rect.fromLTWH(23, 32, 3, 12), Colors.white);
+    pixels(const Rect.fromLTWH(71, 31, 5, 18), GameColors.machinery);
     if (facing.dy < -.5) {
-      // Rear view retains the helmet, backpack and role badge.
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          const Rect.fromLTWH(29, 27, 44, 32),
-          const Radius.circular(14),
-        ),
-        trim,
-      );
-      final pack = RRect.fromRectAndRadius(
-        const Rect.fromLTWH(39, 51, 29, 30),
-        const Radius.circular(7),
-      );
-      canvas.drawRRect(pack, trim);
-      canvas.drawRRect(pack, stroke);
-      canvas.drawLine(const Offset(43, 62), const Offset(64, 62), stroke);
+      panel(const Rect.fromLTWH(34, 32, 31, 15), GameColors.machineryHighlight);
+      pixels(const Rect.fromLTWH(40, 38, 19, 3), suitColor);
+      panel(const Rect.fromLTWH(38, 58, 27, 23), GameColors.paper);
+      pixels(const Rect.fromLTWH(41, 61, 20, 5), shade);
+      pixels(const Rect.fromLTWH(42, 73, 18, 3), suitColor);
     } else {
-      canvas.save();
-      canvas.translate(facing.dx.abs() * 2, facing.dy * 2);
-      _drawMood(canvas);
-      canvas.restore();
+      shape(const [
+        Offset(34, 31),
+        Offset(70, 31),
+        Offset(70, 48),
+        Offset(65, 48),
+        Offset(65, 54),
+        Offset(38, 54),
+        Offset(38, 50),
+        Offset(34, 50),
+      ], ink);
+      pixels(const Rect.fromLTWH(67, 33, 3, 13), GameColors.solarGlass);
+      pixels(const Rect.fromLTWH(40, 54, 22, 3), GameColors.machinery);
       _drawFaceStyle(canvas);
     }
     canvas.save();
     canvas.translate(34, 69);
-    canvas.scale(.65);
+    canvas.scale(.55);
     canvas.translate(-34, -69);
     _drawBadge(canvas);
     canvas.restore();
+    panel(const Rect.fromLTWH(59, 66, 7, 5), GameColors.solarGlass);
+    pixels(const Rect.fromLTWH(60, 67, 3, 1), visorTint);
     _drawMoodDetails(canvas);
     _drawActivity(canvas);
     if (carryingReservedEquipment) {
-      final box = RRect.fromRectAndRadius(
-        const Rect.fromLTWH(74, 72, 21, 18),
-        const Radius.circular(3),
-      );
-      canvas.drawRRect(box, Paint()..color = GameColors.sand);
-      canvas.drawRRect(box, stroke);
-      canvas.drawLine(const Offset(84, 74), const Offset(84, 88), stroke);
+      panel(const Rect.fromLTWH(75, 74, 18, 17), GameColors.sand);
+      pixels(const Rect.fromLTWH(82, 74, 3, 17), shade);
     }
     canvas.restore();
     canvas.restore();
   }
 
   void _drawFaceStyle(Canvas canvas) {
-    final mark = Paint()..color = GameColors.sand.withValues(alpha: .78);
-    switch (faceStyleIndex % 3) {
-      case 1:
-        canvas.drawCircle(const Offset(38, 53), 1.6, mark);
-        canvas.drawCircle(const Offset(65, 53), 1.6, mark);
-      case 2:
-        canvas.drawCircle(const Offset(40, 41), 1.3, mark);
-        canvas.drawCircle(const Offset(64, 41), 1.3, mark);
-        canvas.drawCircle(const Offset(52, 56), 1.3, mark);
-    }
+    final shine = Paint()
+      ..color = Colors.white
+      ..isAntiAlias = false;
+    final x = 38.0 + faceStyleIndex % 3 * 3;
+    canvas.drawRect(Rect.fromLTWH(x, 33, 10, 3), shine);
+    canvas.drawRect(Rect.fromLTWH(x, 36, 5, 5), shine);
   }
 
   /// Only the map supplies an activity after arrival at an assigned station.
@@ -525,51 +406,6 @@ class CrewBeanPainter extends CustomPainter {
       default:
         break;
     }
-  }
-
-  void _drawMood(Canvas canvas) {
-    final face = Paint()..color = GameColors.ink;
-    final white = Paint()..color = Colors.white;
-    final eyeY = mood == CrewMood.worried ? 43.0 : 45.0;
-    final eyeRadius = mood == CrewMood.resting ? 1.8 : 2.5;
-    if (mood == CrewMood.resting) {
-      final line = Paint()
-        ..color = GameColors.ink
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round;
-      canvas.drawLine(const Offset(42, 45), const Offset(47, 45), line);
-      canvas.drawLine(const Offset(56, 45), const Offset(61, 45), line);
-    } else {
-      canvas.drawCircle(Offset(44, eyeY), eyeRadius + 1, white);
-      canvas.drawCircle(Offset(59, eyeY), eyeRadius + 1, white);
-      canvas.drawCircle(Offset(45, eyeY + 1), eyeRadius, face);
-      canvas.drawCircle(Offset(60, eyeY + 1), eyeRadius, face);
-    }
-    final mouth = Paint()
-      ..color = GameColors.ink
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round;
-    final path = Path();
-    switch (mood) {
-      case CrewMood.worried:
-      case CrewMood.hungry:
-        path.moveTo(48, 53);
-        path.quadraticBezierTo(52, 49, 57, 53);
-      case CrewMood.cold:
-        path.moveTo(49, 53);
-        path.lineTo(55, 53);
-      case CrewMood.celebrating:
-        path.moveTo(47, 51);
-        path.quadraticBezierTo(52, 60, 59, 51);
-      case CrewMood.resting:
-        path.moveTo(49, 53);
-        path.lineTo(55, 53);
-      default:
-        path.moveTo(47, 51);
-        path.quadraticBezierTo(52, 57, 59, 51);
-    }
-    canvas.drawPath(path, mouth);
   }
 
   void _drawMoodDetails(Canvas canvas) {

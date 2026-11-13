@@ -161,6 +161,7 @@ abstract final class MarsTerrain {
     canvas.save();
     canvas.clipPath(ground);
     _paintGround(canvas, size, night: false);
+    _paintRocks(canvas, size, const []);
     _paintCrater(canvas, Offset(size.width * .76, size.height * .76), 1.0);
     _paintCrater(canvas, Offset(size.width * .24, size.height * .88), .62);
     canvas.restore();
@@ -202,8 +203,8 @@ abstract final class MarsTerrain {
                   GameColors.marsGround,
                 ]
               : const [
-                  GameColors.marsSkyHigh,
-                  GameColors.marsSky,
+                  Color(0xFF65566C),
+                  Color(0xFFB87870),
                   GameColors.marsHaze,
                 ],
           stops: const [0, .56, 1],
@@ -359,6 +360,25 @@ abstract final class MarsTerrain {
         ).createShader(rect),
     );
     canvas.drawRect(rect, _ripplePaint);
+    // Broad, fixed patches give the cached regolith depth without frame noise.
+    for (var i = 0; i < 14; i++) {
+      final x = ((i * 211 + 79) % 997) / 997 * size.width;
+      final y = (.49 + ((i * 131 + 37) % 477) / 1000) * size.height;
+      final rx = size.shortestSide * (.035 + i % 4 * .009);
+      final ry = rx * (.24 + i % 3 * .08);
+      final patch = Rect.fromCenter(
+        center: Offset(x, y),
+        width: rx * 2,
+        height: ry * 2,
+      );
+      canvas.drawOval(
+        patch,
+        Paint()
+          ..color = (i.isEven ? GameColors.marsLit : GameColors.marsRockShade)
+              .withValues(alpha: night ? .065 : .12)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, rx * .22),
+      );
+    }
     for (var i = 0; i < 8; i++) {
       final x = ((i * 157 + 47) % 997) / 997 * size.width;
       final y = size.height * (.48 + ((i * 83) % 47) / 100);
@@ -372,13 +392,14 @@ abstract final class MarsTerrain {
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
       );
     }
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < 3; i++) {
       final center = Offset(
-        size.width * (.17 + (i * 23 % 71) / 100),
-        size.height * (.53 + (i * 11 % 38) / 100),
+        size.width * (.18 + (i * 31 % 68) / 100),
+        size.height * (.62 + (i * 17 % 29) / 100),
       );
-      _paintCrater(canvas, center, .64 + (i % 3) * .16);
+      _paintCrater(canvas, center, .8 + (i % 3) * .22);
     }
+    _paintTracks(canvas, size, night: night);
     final speckles = <Offset>[];
     for (var i = 0; i < 260; i++) {
       final x = ((i * 269 + 73) % 997) / 997 * size.width;
@@ -403,9 +424,46 @@ abstract final class MarsTerrain {
     );
   }
 
+  static void _paintTracks(Canvas canvas, Size size, {required bool night}) {
+    final track = Path()
+      ..moveTo(size.width * .14, size.height * .91)
+      ..cubicTo(
+        size.width * .29,
+        size.height * .82,
+        size.width * .37,
+        size.height * .88,
+        size.width * .48,
+        size.height * .70,
+      )
+      ..cubicTo(
+        size.width * .58,
+        size.height * .61,
+        size.width * .69,
+        size.height * .78,
+        size.width * .84,
+        size.height * .66,
+      );
+    final dark = Paint()
+      ..color = GameColors.marsRockShade.withValues(alpha: night ? .13 : .21)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.shortestSide * .012
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(track, dark);
+    final ridge = Paint()
+      ..color = GameColors.marsLit.withValues(alpha: night ? .08 : .17)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.shortestSide * .004
+      ..strokeCap = StrokeCap.round;
+    for (final shift in [-.007, .007]) {
+      final parallel = track.shift(Offset(0, size.height * shift));
+      canvas.drawPath(parallel, dark);
+      canvas.drawPath(parallel, ridge);
+    }
+  }
+
   static void _paintCrater(Canvas canvas, Offset center, double scale) {
-    final width = 24 * scale;
-    final height = 8 * scale;
+    final width = 34 * scale;
+    final height = 11 * scale;
     canvas.drawOval(
       Rect.fromCenter(
         center: center.translate(2 * scale, 2 * scale),
