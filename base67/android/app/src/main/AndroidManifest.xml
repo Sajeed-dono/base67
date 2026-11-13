@@ -2,7 +2,7 @@
     <application
         android:label="BASE 67"
         android:name="${applicationName}"
-        android:icon="@drawable/base67_icon">
+        android:icon="@drawable/base67_logo">
         <activity
             android:name=".MainActivity"
             android:exported="true"

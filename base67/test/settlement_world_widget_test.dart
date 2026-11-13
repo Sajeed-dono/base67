@@ -12,6 +12,136 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets(
+    'fullscreen inspection replaces panels, expires, and only offers nearby interactions',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 420);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final movement = CrewMovement();
+      const facilities = [
+        MarsFacility('habitat', 'Habitat', Offset(.48, .57), level: 1),
+        MarsFacility('rover', 'Rover', Offset(.65, .57), referenceOnly: true),
+        MarsFacility(
+          'research_lab',
+          'Lab',
+          Offset(.23, .57),
+          referenceOnly: true,
+        ),
+      ];
+      const crew = [
+        MapCrew(CrewRole.commander, 'Alex'),
+        MapCrew(CrewRole.engineer, 'Sam'),
+      ];
+      var input = true;
+      late StateSetter update;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: Base67Theme.missionControl(),
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                update = setState;
+                return SettlementMap(
+                  facilities: facilities,
+                  crew: crew,
+                  movement: movement,
+                  reducedMotion: true,
+                  fullScreen: true,
+                  inputEnabled: input,
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      final actor = movement.actors['commander']!;
+      final viewport = tester.getRect(
+        find.byKey(const ValueKey('settlement-viewport')),
+      );
+      final camera = SettlementCamera()
+        ..layout(viewport.size, const Offset(432, 399));
+      camera.follow(actor.position, 0, reducedMotion: true);
+      Future<void> pick(MarsFacility site) async {
+        final point = Offset(
+          site.position.dx * SettlementView.world.width,
+          site.position.dy * SettlementView.world.height,
+        );
+        await tester.tapAt(viewport.topLeft + camera.worldToScreen(point));
+        await tester.pump();
+      }
+
+      final before = actor.position;
+      await tester.tap(find.byKey(const ValueKey('crew-chip')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('select-engineer')), findsOneWidget);
+      await pick(facilities[1]);
+      expect(find.byKey(const ValueKey('facility-toast')), findsOneWidget);
+      expect(find.byKey(const ValueKey('select-engineer')), findsNothing);
+      expect(find.text('Rover'), findsOneWidget);
+      expect(
+        tester.getSize(find.byKey(const ValueKey('facility-toast'))).width,
+        lessThanOrEqualTo(240),
+      );
+      await pick(facilities[2]);
+      expect(find.byKey(const ValueKey('facility-toast')), findsOneWidget);
+      expect(find.text('Rover'), findsNothing);
+      expect(find.text('Lab'), findsOneWidget);
+      await tester.pump(GameMotion.inspectionTimeout);
+      expect(find.byKey(const ValueKey('facility-toast')), findsNothing);
+      expect(actor.position, before);
+      actor.position = const Offset(820, 600);
+      movement.select('commander');
+      await tester.pump();
+      expect(find.byKey(const ValueKey('world-interact')), findsNothing);
+      // A nearby unbuilt station alone cannot expose Interact.
+      actor.position = const Offset(585, 399);
+      movement.select('commander');
+      await tester.pump();
+      expect(find.byKey(const ValueKey('world-interact')), findsNothing);
+      actor.position = const Offset(432, 450);
+      movement.select('commander');
+      await tester.pump();
+      expect(
+        find.byKey(const ValueKey('world-interact')).hitTestable(),
+        findsOneWidget,
+      );
+      // External management must close any transient HUD panel.
+      await tester.tap(find.byKey(const ValueKey('crew-chip')));
+      await tester.pump();
+      update(() => input = false);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('select-engineer')), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      movement.dispose();
+    },
+  );
+
+  test('facility label pass suppresses overlapping pills', () {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    const site = MarsFacility('habitat', 'Habitat', Offset(.48, .57), level: 1);
+    final first = MarsBasePainter.paintFacilityLabel(
+      canvas,
+      SettlementView.world,
+      site,
+    );
+    expect(first, isNotNull);
+    expect(
+      MarsBasePainter.paintFacilityLabel(
+        canvas,
+        SettlementView.world,
+        site,
+        occupied: [first!],
+      ),
+      isNull,
+    );
+    recorder.endRecording().dispose();
+  });
+  testWidgets(
     'cached building art refreshes after canonical facility changes',
     (tester) async {
       var count = 0;

@@ -47,6 +47,10 @@ void main() {
         tester.getSize(find.byKey(const ValueKey('settlement-viewport'))),
         const Size(640, 360),
       );
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.byTooltip('Missions'), 100);
+      await tester.pump();
       await tester.tap(find.byTooltip('Missions'));
       await tester.pumpAndSettle();
       expect(find.text('One base. Fifteen missions.'), findsOneWidget);
@@ -86,6 +90,10 @@ void main() {
         find.widgetWithText(FilledButton, 'Build equipment').hitTestable(),
         findsOneWidget,
       );
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.byTooltip('Missions'), 100);
+      await tester.pump();
       await tester.tap(find.byTooltip('Missions'));
       await tester.pumpAndSettle();
       final scroll = find

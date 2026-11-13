@@ -431,6 +431,11 @@ class _SplashScreen extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            Image.asset(
+                              'assets/branding/base67_logo.png',
+                              height: GameSpacing.joystick,
+                              excludeFromSemantics: true,
+                            ),
                             Text(
                               'BASE 67',
                               style: Theme.of(context).textTheme.displaySmall
@@ -505,6 +510,11 @@ class _SplashScreen extends StatelessWidget {
                               icon: Icons.rocket_launch_rounded,
                             ),
                             const SizedBox(height: GameSpacing.md),
+                            Image.asset(
+                              'assets/branding/base67_logo.png',
+                              height: GameSpacing.joystick,
+                              excludeFromSemantics: true,
+                            ),
                             Text(
                               'BASE 67',
                               style: Theme.of(context).textTheme.displaySmall

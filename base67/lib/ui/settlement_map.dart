@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -54,14 +55,21 @@ class _SettlementMapState extends State<SettlementMap>
   final Set<LogicalKeyboardKey> _keys = {};
   final camera = SettlementCamera();
   final _view = _SceneRepaint();
-  ui.Picture? _terrain;
+  ui.Image? _terrain;
+  // Keep static art crisp through the existing maximum zoom without replaying it.
+  static const _rasterScale = 2.0;
+  final _hud = _SceneRepaint();
+  (String, MapCrew?, String?)? _hudSnapshot;
+  bool _hudFollowing = true;
   String? _terrainKey;
-  final _buildingPictures = <String, ui.Picture>{};
+  final _buildingImages = <String, ui.Image>{};
   final _buildingKeys = <String, String>{};
   final List<_BuildPulse> _buildPulses = [];
   double _gestureZoom = 1;
   bool _lookAround = false;
   String? _inspectedId;
+  Timer? _inspectionTimer;
+  bool _crewExpanded = false;
   Duration? _previous;
   bool _foreground = true;
   bool _wakePending = false;
@@ -83,6 +91,8 @@ class _SettlementMapState extends State<SettlementMap>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    movement.addListener(_movementHudChanged);
+    _view.addListener(_cameraHudChanged);
   }
 
   @override
@@ -118,6 +128,7 @@ class _SettlementMapState extends State<SettlementMap>
       }
     }
     if (!widget.inputEnabled) {
+      _closeTransient();
       _stopInput();
       _ticker.stop();
     }
@@ -218,6 +229,31 @@ class _SettlementMapState extends State<SettlementMap>
     });
   }
 
+  void _movementHudChanged() {
+    final next = (
+      movement.selected,
+      movement.actors[movement.selected]?.member,
+      _nearbyFacility()?.id,
+    );
+    if (next != _hudSnapshot) {
+      _hudSnapshot = next;
+      _hud.invalidate();
+    }
+  }
+
+  void _cameraHudChanged() {
+    if (_inspectedId != null || _hudFollowing != camera.following) {
+      _hudFollowing = camera.following;
+      _hud.invalidate();
+    }
+  }
+
+  void _closeTransient() {
+    _inspectionTimer?.cancel();
+    _inspectedId = null;
+    _crewExpanded = false;
+  }
+
   void _stopInput() {
     _keys.clear();
     movement.input(Offset.zero);
@@ -225,9 +261,9 @@ class _SettlementMapState extends State<SettlementMap>
 
   void _cacheBuildings() {
     final ids = widget.facilities.map((site) => site.id).toSet();
-    for (final id in _buildingPictures.keys.toList()) {
+    for (final id in _buildingImages.keys.toList()) {
       if (!ids.contains(id)) {
-        _buildingPictures.remove(id)?.dispose();
+        _buildingImages.remove(id)?.dispose();
         _buildingKeys.remove(id);
       }
     }
@@ -236,17 +272,29 @@ class _SettlementMapState extends State<SettlementMap>
           '${site.position}:${site.label}:${site.count}:${site.level}:'
           '${site.condition}:${site.damagedUnits}:${site.available}:'
           '${site.referenceOnly}:${site.jobProgress}:${site.jobLabel}:'
-          '${site.operatingState}:${widget.dust}';
+          '${site.operatingState}:${site.id == 'solar_array' ? widget.dust : 0}';
       if (_buildingKeys[site.id] == key) continue;
-      _buildingPictures.remove(site.id)?.dispose();
+      _buildingImages.remove(site.id)?.dispose();
       final recorder = ui.PictureRecorder();
+      final bounds = SettlementLayout.hull(
+        site,
+        SettlementView.world,
+      ).inflate(16);
+      final canvas = Canvas(recorder)
+        ..scale(_rasterScale)
+        ..translate(-bounds.left, -bounds.top);
       MarsBasePainter.paintFacility(
-        Canvas(recorder),
+        canvas,
         SettlementView.world,
         site,
         panelDust: widget.dust,
       );
-      _buildingPictures[site.id] = recorder.endRecording();
+      final picture = recorder.endRecording();
+      _buildingImages[site.id] = picture.toImageSync(
+        (bounds.width * _rasterScale).ceil(),
+        (bounds.height * _rasterScale).ceil(),
+      );
+      picture.dispose();
       _buildingKeys[site.id] = key;
     }
   }
@@ -298,6 +346,7 @@ class _SettlementMapState extends State<SettlementMap>
   }
 
   void _select(MapCrew member) {
+    setState(_closeTransient);
     if (widget.fullScreen && member.task != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -323,6 +372,7 @@ class _SettlementMapState extends State<SettlementMap>
   }
 
   Future<void> _inspectCrew() async {
+    setState(_closeTransient);
     final actor = movement.actors[movement.selected];
     if (actor == null) return;
     _stopInput();
@@ -465,11 +515,20 @@ class _SettlementMapState extends State<SettlementMap>
   Future<void> _inspect(MarsFacility site, {bool details = false}) async {
     if (widget.fullScreen && !details) {
       _stopInput();
-      setState(() => _inspectedId = site.id);
+      setState(() {
+        _closeTransient();
+        _inspectedId = site.id;
+      });
+      _inspectionTimer = Timer(GameMotion.inspectionTimeout, () {
+        if (mounted) setState(() => _inspectedId = null);
+      });
       return;
     }
     _stopInput();
-    setState(() => _inspectedId = site.id);
+    setState(() {
+      _closeTransient();
+      if (!widget.fullScreen) _inspectedId = site.id;
+    });
     final actor = movement.actors[movement.selected];
     final canApproach =
         site.count > 0 ||
@@ -585,169 +644,308 @@ class _SettlementMapState extends State<SettlementMap>
     setState(() {});
   }
 
+  MarsFacility? _nearbyFacility() {
+    final actor = movement.actors[movement.selected];
+    if (actor == null) return null;
+    double distance(MarsFacility site) =>
+        (Offset(
+                  site.position.dx * SettlementView.world.width,
+                  site.position.dy * SettlementView.world.height,
+                ) -
+                actor.position)
+            .distance;
+    final nearby =
+        widget.facilities
+            .where(
+              (site) =>
+                  distance(site) < 110 &&
+                  (site.count > 0 ||
+                      actor.member.task == 'construction' &&
+                          SettlementLayout.painterId(
+                                actor.member.target ?? '',
+                              ) ==
+                              site.id),
+            )
+            .toList()
+          ..sort((a, b) => distance(a).compareTo(distance(b)));
+    return nearby.firstOrNull;
+  }
+
   Widget _gameWorld(BuildContext context, bool reduced) => Stack(
     fit: StackFit.expand,
     children: [
       _world(context, reduced),
       SafeArea(
-        child: Stack(
-          children: [
-            Positioned(
-              left: 12,
-              top: 120,
-              child: Material(
-                color: GameColors.night.withValues(alpha: .88),
-                borderRadius: BorderRadius.circular(18),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      tooltip: 'Zoom out',
-                      onPressed: () => _zoom(1 / SettlementView.zoomStep),
-                      icon: const Icon(Icons.remove),
-                    ),
-                    IconButton(
-                      tooltip: 'Zoom in',
-                      onPressed: () => _zoom(SettlementView.zoomStep),
-                      icon: const Icon(Icons.add),
-                    ),
-                    IconButton(
-                      tooltip: 'Follow selected astronaut',
-                      onPressed: () {
-                        camera.following = true;
-                        _wake();
-                        setState(() {});
-                      },
-                      icon: Icon(
-                        camera.following
-                            ? Icons.gps_fixed
-                            : Icons.gps_not_fixed,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              left: 16,
-              bottom: 12,
-              child: VirtualCrewJoystick(
-                compact: true,
-                enabled: _active,
-                onStep: (direction) {
-                  movement.nudge(direction);
-                  _wake();
-                },
-                onDirection: (direction) {
-                  if (!_active) return;
-                  if (movement.actors[movement.selected]?.member.task != null) {
-                    movement.input(Offset.zero);
-                    return;
-                  }
-                  movement.input(direction);
-                  _focus.requestFocus();
-                  _wake();
-                },
-              ),
-            ),
-            Positioned(
-              left: 144,
-              bottom: 12,
-              child: Material(
-                color: GameColors.night.withValues(alpha: .9),
-                borderRadius: BorderRadius.circular(18),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 192,
-                        child: Text(
-                          '${movement.actors[movement.selected]?.member.name ?? 'Commander'} • ${movement.selected}',
-                          key: const ValueKey('selected-player'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: GameColors.sand,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+        child: LayoutBuilder(
+          builder: (context, bounds) => ListenableBuilder(
+            listenable: _hud,
+            builder: (context, _) {
+              final actor = movement.actors[movement.selected];
+              final member = actor?.member;
+              final nearby = _nearbyFacility();
+              final inspected = widget.facilities
+                  .where((s) => s.id == _inspectedId)
+                  .firstOrNull;
+              final narrow = bounds.maxWidth < GameSpacing.telemetryWide;
+              final glassShape = RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(GameRadii.chip),
+                side: const BorderSide(color: GameColors.hudBorder),
+              );
+              final anchor = inspected == null
+                  ? Offset.zero
+                  : camera.worldToScreen(
+                          Offset(
+                            inspected.position.dx * SettlementView.world.width,
+                            inspected.position.dy * SettlementView.world.height,
                           ),
+                        ) -
+                        Offset(
+                          MediaQuery.paddingOf(context).left,
+                          MediaQuery.paddingOf(context).top,
+                        );
+              final toastWidth = math.min(
+                GameSpacing.inspectionToastWidth,
+                bounds.maxWidth - GameSpacing.md,
+              );
+              return Stack(
+                children: [
+                  Positioned(
+                    left: GameSpacing.md,
+                    bottom: GameSpacing.compactJoystick + GameSpacing.lg,
+                    child: Material(
+                      color: GameColors.hudGlass,
+                      shape: glassShape,
+                      child: IconButton(
+                        tooltip: 'Follow selected astronaut',
+                        iconSize: GameIconSizes.button,
+                        onPressed: () {
+                          camera.following = true;
+                          _wake();
+                          setState(() {});
+                        },
+                        icon: Icon(
+                          camera.following
+                              ? Icons.gps_fixed
+                              : Icons.gps_not_fixed,
                         ),
                       ),
-                      Row(
+                    ),
+                  ),
+                  Positioned(
+                    left: GameSpacing.md,
+                    bottom: GameSpacing.compact,
+                    child: VirtualCrewJoystick(
+                      compact: true,
+                      enabled: _active,
+                      onStep: (direction) {
+                        movement.nudge(direction);
+                        _wake();
+                      },
+                      onDirection: (direction) {
+                        if (!_active) return;
+                        if (movement.actors[movement.selected]?.member.task !=
+                            null) {
+                          movement.input(Offset.zero);
+                          return;
+                        }
+                        movement.input(direction);
+                        _focus.requestFocus();
+                        _wake();
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    left: GameSpacing.compactJoystick + GameSpacing.lg,
+                    bottom: narrow
+                        ? GameSpacing.touchTarget * 3 + GameSpacing.lg
+                        : GameSpacing.compact,
+                    child: Material(
+                      color: GameColors.hudGlass,
+                      shape: glassShape,
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          for (final member in widget.crew)
-                            IconButton(
-                              key: ValueKey('select-${member.id}'),
-                              tooltip:
-                                  'Control ${member.name}, ${member.role.name}${member.task == null ? '' : ' (working)'}',
-                              onPressed: widget.inputEnabled
-                                  ? () => _select(member)
-                                  : null,
-                              color: movement.selected == member.id
-                                  ? GameColors.gold
-                                  : GameColors.paper,
-                              icon: Icon(switch (member.role) {
-                                CrewRole.commander => Icons.star_rounded,
-                                CrewRole.engineer => Icons.build_rounded,
-                                CrewRole.scientist => Icons.science_rounded,
-                                CrewRole.medic =>
-                                  Icons.medical_services_rounded,
-                              }),
+                          InkWell(
+                            key: const ValueKey('crew-chip'),
+                            onLongPress: _inspectCrew,
+                            borderRadius: BorderRadius.circular(GameRadii.chip),
+                            onTap: () => setState(() {
+                              final expand = !_crewExpanded;
+                              _closeTransient();
+                              _crewExpanded = expand;
+                            }),
+                            child: Semantics(
+                              button: true,
+                              expanded: _crewExpanded,
+                              label:
+                                  '${member?.name ?? 'Commander'} \u2022 ${movement.selected}. Current assignment: ${member?.task ?? 'Available / resting'}',
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minHeight: GameSpacing.touchTarget,
+                                ),
+                                width: math.min(
+                                  GameSpacing.messageViewport,
+                                  bounds.maxWidth -
+                                      GameSpacing.compactJoystick -
+                                      GameSpacing.xl,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: GameSpacing.sm,
+                                ),
+                                child: Row(
+                                  children: [
+                                    if (member != null)
+                                      ExcludeSemantics(
+                                        child: CrewBean(
+                                          role: member.role,
+                                          mood: member.mood,
+                                          suitColorIndex: member.suit,
+                                          visorTintIndex: member.visor,
+                                          faceStyleIndex: member.face,
+                                          size: GameSpacing.xl,
+                                          reducedMotion: true,
+                                        ),
+                                      ),
+                                    const SizedBox(width: GameSpacing.xs),
+                                    Expanded(
+                                      child: Text(
+                                        member?.name ?? 'Commander',
+                                        key: const ValueKey('selected-player'),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: GameColors.paper,
+                                          fontSize: GameTypography.labelMedium,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      switch (member?.task) {
+                                        'construction' ||
+                                        'repair' ||
+                                        'upgrade' => Icons.build_outlined,
+                                        'research' ||
+                                        'survey' => Icons.science_outlined,
+                                        'shelter' => Icons.shield_outlined,
+                                        null => Icons.pause_circle_outline,
+                                        _ => Icons.pending_actions,
+                                      },
+                                      size: GameIconSizes.button,
+                                      color: GameColors.tealLight,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (_crewExpanded)
+                            SizedBox(
+                              width: math.min(
+                                GameSpacing.touchTarget * 4,
+                                bounds.maxWidth -
+                                    GameSpacing.compactJoystick -
+                                    GameSpacing.xl,
+                              ),
+                              child: Wrap(
+                                children: [
+                                  for (final person in widget.crew)
+                                    IconButton(
+                                      key: ValueKey('select-${person.id}'),
+                                      tooltip:
+                                          'Control ${person.name}, ${person.role.name}${person.task == null ? '' : ' (working)'}',
+                                      onPressed: !widget.inputEnabled
+                                          ? null
+                                          : () {
+                                              setState(_closeTransient);
+                                              _select(person);
+                                            },
+                                      color: movement.selected == person.id
+                                          ? GameColors.tealLight
+                                          : GameColors.paper,
+                                      icon: Icon(switch (person.role) {
+                                        CrewRole.commander =>
+                                          Icons.star_rounded,
+                                        CrewRole.engineer =>
+                                          Icons.build_rounded,
+                                        CrewRole.scientist =>
+                                          Icons.science_rounded,
+                                        CrewRole.medic =>
+                                          Icons.medical_services_rounded,
+                                      }, size: GameIconSizes.button),
+                                    ),
+                                ],
+                              ),
                             ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
-            Positioned(
-              right: 16,
-              bottom: 12,
-              child: ListenableBuilder(
-                listenable: movement,
-                builder: (context, _) {
-                  final actor = movement.actors[movement.selected];
-                  double distanceTo(MarsFacility site) => actor == null
-                      ? double.infinity
-                      : (Offset(
-                                  site.position.dx * SettlementView.world.width,
-                                  site.position.dy *
-                                      SettlementView.world.height,
-                                ) -
-                                actor.position)
-                            .distance;
-                  final nearby =
-                      widget.facilities
-                          .where((site) => distanceTo(site) < 110)
-                          .toList()
-                        ..sort(
-                          (a, b) => distanceTo(a).compareTo(distanceTo(b)),
-                        );
-                  final site =
-                      widget.facilities
-                          .where((site) => site.id == _inspectedId)
-                          .firstOrNull ??
-                      nearby.firstOrNull;
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (site != null && _inspectedId != null)
-                        Container(
-                          width: 230,
-                          constraints: const BoxConstraints(maxHeight: 160),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: GameColors.night.withValues(alpha: .94),
-                            borderRadius: BorderRadius.circular(18),
+                  if (nearby != null)
+                    Positioned(
+                      right: GameSpacing.md,
+                      bottom: narrow
+                          ? GameSpacing.touchTarget * 2
+                          : GameSpacing.touchTarget + GameSpacing.lg,
+                      child: Material(
+                        color: GameColors.hudGlass,
+                        shape: glassShape,
+                        child: TextButton.icon(
+                          key: const ValueKey('world-interact'),
+                          onPressed: !widget.inputEnabled
+                              ? null
+                              : () {
+                                  _stopInput();
+                                  _inspect(nearby, details: true);
+                                },
+                          icon: const Icon(
+                            Icons.touch_app_rounded,
+                            size: GameIconSizes.button,
+                          ),
+                          label: const Text('Interact'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: GameColors.paper,
+                            minimumSize: const Size(
+                              GameSpacing.touchTarget,
+                              GameSpacing.touchTarget,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (inspected != null)
+                    Positioned(
+                      left: (anchor.dx + GameSpacing.sm)
+                          .clamp(
+                            GameSpacing.sm,
+                            bounds.maxWidth - toastWidth - GameSpacing.sm,
+                          )
+                          .toDouble(),
+                      top: (anchor.dy - GameSpacing.messageViewport)
+                          .clamp(
+                            GameSpacing.touchTarget * 2 + GameSpacing.sm,
+                            math.max(
+                              GameSpacing.touchTarget * 2 + GameSpacing.sm,
+                              bounds.maxHeight -
+                                  GameSpacing.messageViewport -
+                                  GameSpacing.md,
+                            ),
+                          )
+                          .toDouble(),
+                      child: Material(
+                        key: const ValueKey('facility-toast'),
+                        color: GameColors.hudGlass,
+                        shape: glassShape,
+                        child: Container(
+                          width: toastWidth,
+                          constraints: BoxConstraints(
+                            maxHeight: math.min(
+                              GameSpacing.messageViewport,
+                              bounds.maxHeight * .45,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: GameSpacing.sm,
                           ),
                           child: SingleChildScrollView(
                             child: Column(
@@ -758,44 +956,47 @@ class _SettlementMapState extends State<SettlementMap>
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        site.label,
+                                        inspected.label,
                                         style: const TextStyle(
+                                          fontSize: GameTypography.label,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                    SizedBox(
-                                      width: 48,
-                                      height: 48,
-                                      child: IconButton(
-                                        tooltip: 'Clear building selection',
-                                        onPressed: () =>
-                                            setState(() => _inspectedId = null),
-                                        icon: const Icon(Icons.close),
+                                    IconButton(
+                                      tooltip: 'Clear building selection',
+                                      onPressed: () =>
+                                          setState(_closeTransient),
+                                      icon: const Icon(
+                                        Icons.close,
+                                        size: GameIconSizes.button,
                                       ),
                                     ),
                                   ],
                                 ),
                                 Text(
-                                  _stateLabel(site),
-                                  style: const TextStyle(fontSize: 14),
+                                  _stateLabel(inspected),
+                                  style: const TextStyle(
+                                    fontSize: GameTypography.labelMedium,
+                                  ),
                                 ),
-                                if (site.jobProgress != null)
+                                if (inspected.jobProgress != null)
                                   LinearProgressIndicator(
-                                    value: site.jobProgress,
+                                    value: inspected.jobProgress,
                                   ),
                                 if (widget.onManage != null &&
-                                    !site.referenceOnly &&
-                                    site.id != 'landing_craft')
+                                    !inspected.referenceOnly &&
+                                    inspected.id != 'landing_craft')
                                   TextButton(
                                     onPressed: () {
                                       _stopInput();
+                                      setState(_closeTransient);
                                       widget.onManage!('/build');
                                     },
                                     child: Text(
-                                      site.count == 0
+                                      inspected.count == 0
                                           ? 'Build'
-                                          : site.damagedUnits > 0
+                                          : inspected.damagedUnits > 0
                                           ? 'Repair'
                                           : 'Manage facility',
                                     ),
@@ -804,30 +1005,12 @@ class _SettlementMapState extends State<SettlementMap>
                             ),
                           ),
                         ),
-                      const SizedBox(height: 8),
-                      FilledButton.icon(
-                        key: const ValueKey('world-interact'),
-                        onPressed: !widget.inputEnabled
-                            ? null
-                            : () {
-                                _stopInput();
-                                if (site != null) {
-                                  _inspect(site, details: true);
-                                } else {
-                                  _inspectCrew();
-                                }
-                              },
-                        icon: const Icon(Icons.touch_app_rounded),
-                        label: Text(
-                          site == null ? 'Inspect astronaut' : 'Interact',
-                        ),
                       ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
+                    ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     ],
@@ -842,13 +1025,21 @@ class _SettlementMapState extends State<SettlementMap>
           widget.crew,
           reduceMotion: reduced,
         );
+        final core = widget.facilities
+            .where((site) => site.id == 'habitat')
+            .firstOrNull;
         camera.layout(
           Size(
             constraints.maxWidth,
             widget.fullScreen ? constraints.maxHeight : widget.height,
           ),
-          movement.actors[movement.selected]?.position ??
-              SettlementView.world.center(Offset.zero),
+          widget.fullScreen
+              ? Offset(
+                  SettlementView.world.width * (core?.position.dx ?? .5),
+                  SettlementView.world.height * (core?.position.dy ?? .5),
+                )
+              : movement.actors[movement.selected]?.position ??
+                    SettlementView.world.center(Offset.zero),
         );
         _afterLayout();
       }
@@ -861,8 +1052,13 @@ class _SettlementMapState extends State<SettlementMap>
           sunset: widget.night,
           storm: widget.storm,
           terrainOnly: true,
-        ).paint(Canvas(recorder), SettlementView.world);
-        _terrain = recorder.endRecording();
+        ).paint(Canvas(recorder)..scale(_rasterScale), SettlementView.world);
+        final picture = recorder.endRecording();
+        _terrain = picture.toImageSync(
+          (SettlementView.world.width * _rasterScale).ceil(),
+          (SettlementView.world.height * _rasterScale).ceil(),
+        );
+        picture.dispose();
         _terrainKey = terrainKey;
       }
       _cacheBuildings();
@@ -902,7 +1098,7 @@ class _SettlementMapState extends State<SettlementMap>
                     movement: movement,
                     camera: camera,
                     terrain: _terrain!,
-                    buildings: Map.unmodifiable(_buildingPictures),
+                    buildings: Map.unmodifiable(_buildingImages),
                     facilities: widget.facilities,
                     dust: widget.dust,
                     storm: widget.storm,
@@ -922,15 +1118,19 @@ class _SettlementMapState extends State<SettlementMap>
 
   @override
   void dispose() {
+    _inspectionTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     if (_wasActive) {
       _stopInput();
     }
+    movement.removeListener(_movementHudChanged);
+    _view.removeListener(_cameraHudChanged);
     _ticker.dispose();
     _focus.dispose();
+    _hud.dispose();
     _view.dispose();
     _terrain?.dispose();
-    for (final picture in _buildingPictures.values) {
+    for (final picture in _buildingImages.values) {
       picture.dispose();
     }
     if (widget.movement == null) {
@@ -1239,8 +1439,11 @@ class VirtualCrewJoystick extends StatefulWidget {
 }
 
 class _VirtualCrewJoystickState extends State<VirtualCrewJoystick> {
-  double get _diameter => widget.compact ? 112 : GameSpacing.joystick;
-  double get _knob => widget.compact ? 40 : GameSpacing.joystickKnob;
+  double get _diameter =>
+      widget.compact ? GameSpacing.compactJoystick : GameSpacing.joystick;
+  double get _knob => widget.compact
+      ? GameSpacing.compactJoystickKnob
+      : GameSpacing.joystickKnob;
   @override
   void didUpdateWidget(covariant VirtualCrewJoystick oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -1303,8 +1506,14 @@ class _VirtualCrewJoystickState extends State<VirtualCrewJoystick> {
               height: _diameter,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: GameColors.tealLight,
-                border: Border.all(color: GameColors.teal),
+                color: widget.compact
+                    ? GameColors.night.withValues(alpha: .15)
+                    : GameColors.tealLight,
+                border: Border.all(
+                  color: widget.compact
+                      ? GameColors.paper.withValues(alpha: GameOpacity.joystick)
+                      : GameColors.teal,
+                ),
               ),
               child: Center(
                 child: Transform.translate(
@@ -1312,11 +1521,23 @@ class _VirtualCrewJoystickState extends State<VirtualCrewJoystick> {
                   child: Container(
                     width: _knob,
                     height: _knob,
-                    decoration: const BoxDecoration(
-                      color: GameColors.teal,
+                    decoration: BoxDecoration(
+                      color: widget.compact
+                          ? GameColors.night.withValues(
+                              alpha: GameOpacity.joystick,
+                            )
+                          : GameColors.teal,
                       shape: BoxShape.circle,
+                      border: widget.compact
+                          ? Border.all(color: GameColors.hudBorder)
+                          : null,
                     ),
-                    child: const Icon(Icons.open_with, color: GameColors.paper),
+                    child: Icon(
+                      Icons.open_with,
+                      color: GameColors.paper.withValues(
+                        alpha: widget.compact ? GameOpacity.joystick : 1,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1372,14 +1593,15 @@ class _SettlementScenePainter extends CustomPainter {
   }) : super(repaint: repaint);
   final CrewMovement movement;
   final SettlementCamera camera;
-  final ui.Picture terrain;
-  final Map<String, ui.Picture> buildings;
+  final ui.Image terrain;
+  final Map<String, ui.Image> buildings;
   final List<MarsFacility> facilities;
   final double dust;
   final bool storm;
   final String? selectedFacility;
   final List<_BuildPulse> buildPulses;
   final bool reducedMotion;
+  final Paint _spritePaint = Paint()..filterQuality = FilterQuality.low;
   final Paint _buildRingPaint = Paint()..style = PaintingStyle.stroke;
   final Paint _buildPuffPaint = Paint();
   @override
@@ -1389,7 +1611,12 @@ class _SettlementScenePainter extends CustomPainter {
     final origin = camera.worldToScreen(Offset.zero);
     canvas.translate(origin.dx, origin.dy);
     canvas.scale(camera.zoom);
-    canvas.drawPicture(terrain);
+    canvas.drawImageRect(
+      terrain,
+      Rect.fromLTWH(0, 0, terrain.width.toDouble(), terrain.height.toDouble()),
+      Offset.zero & SettlementView.world,
+      _spritePaint,
+    );
     final layers = <(double, VoidCallback)>[
       for (final site in facilities)
         (
@@ -1404,8 +1631,20 @@ class _SettlementScenePainter extends CustomPainter {
                   ..strokeWidth = 2,
               );
             }
-            final picture = buildings[site.id];
-            if (picture != null) canvas.drawPicture(picture);
+            final image = buildings[site.id];
+            if (image != null) {
+              canvas.drawImageRect(
+                image,
+                Rect.fromLTWH(
+                  0,
+                  0,
+                  image.width.toDouble(),
+                  image.height.toDouble(),
+                ),
+                SettlementLayout.hull(site, SettlementView.world).inflate(16),
+                _spritePaint,
+              );
+            }
           },
         ),
       for (final actor in movement.actors.values)
@@ -1424,6 +1663,58 @@ class _SettlementScenePainter extends CustomPainter {
       reducedMotion: reducedMotion,
       storm: storm,
     );
+    if (camera.zoom >= SettlementView.labelZoom) {
+      final actor = movement.actors[movement.selected];
+      final nearby =
+          actor == null
+                ? <MarsFacility>[]
+                : facilities
+                      .where(
+                        (site) =>
+                            (Offset(
+                                      site.position.dx *
+                                          SettlementView.world.width,
+                                      site.position.dy *
+                                          SettlementView.world.height,
+                                    ) -
+                                    actor.position)
+                                .distance <
+                            110,
+                      )
+                      .toList()
+            ..sort(
+              (a, b) =>
+                  (Offset(
+                            a.position.dx * SettlementView.world.width,
+                            a.position.dy * SettlementView.world.height,
+                          ) -
+                          actor!.position)
+                      .distanceSquared
+                      .compareTo(
+                        (Offset(
+                                  b.position.dx * SettlementView.world.width,
+                                  b.position.dy * SettlementView.world.height,
+                                ) -
+                                actor.position)
+                            .distanceSquared,
+                      ),
+            );
+      final labels = <Rect>[];
+      final candidates = <MarsFacility>{
+        ...facilities.where((site) => site.id == selectedFacility),
+        if (nearby.isNotEmpty) nearby.first,
+        ...facilities.where((site) => site.count > 0),
+      };
+      for (final site in candidates) {
+        final rect = MarsBasePainter.paintFacilityLabel(
+          canvas,
+          SettlementView.world,
+          site,
+          occupied: labels,
+        );
+        if (rect != null) labels.add(rect);
+      }
+    }
     canvas.restore();
   }
 
@@ -1441,8 +1732,9 @@ class _SettlementScenePainter extends CustomPainter {
         ..strokeWidth = 3 * (1 - progress) + .5,
     );
     for (var i = 0; i < pulse.puffCount; i++) {
-      final puffAge =
-          (progress * 1.65 - i / pulse.puffCount * .65).clamp(0, 1).toDouble();
+      final puffAge = (progress * 1.65 - i / pulse.puffCount * .65)
+          .clamp(0, 1)
+          .toDouble();
       if (puffAge <= 0) continue;
       final angle = i * 2.399963;
       final drift = 9 + (i % 4) * 3;
@@ -1554,7 +1846,7 @@ class _SettlementScenePainter extends CustomPainter {
     CrewBeanPainter(
       role: member.role,
       mood: working || member.task == null ? member.mood : CrewMood.okay,
-      suitColor: crewSuitColors[member.suit % crewSuitColors.length],
+      suitColor: crewSuitColor(member.role, member.suit),
       visorTint: crewVisorColors[member.visor % crewVisorColors.length],
       faceStyleIndex: member.face,
       breath: reducedMotion

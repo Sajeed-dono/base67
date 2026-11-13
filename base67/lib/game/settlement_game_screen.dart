@@ -39,13 +39,32 @@ class SettlementGameScreen extends StatefulWidget {
 }
 
 class _SettlementGameScreenState extends State<SettlementGameScreen> {
-  bool _busy = false, _overlay = false;
+  bool _busy = false, _overlay = false, _objectiveExpanded = true;
+  Timer? _objectiveTimer;
+
+  void _showObjective() {
+    _objectiveTimer?.cancel();
+    setState(() => _objectiveExpanded = true);
+    _objectiveTimer = Timer(GameMotion.objectiveTimeout, () {
+      if (mounted) setState(() => _objectiveExpanded = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _objectiveTimer?.cancel();
+    super.dispose();
+  }
+
   CampaignController get c => widget.controller;
   String get _level => c.mission?['level'] as String? ?? c.progression.levelId;
 
   @override
   void initState() {
     super.initState();
+    _objectiveTimer = Timer(GameMotion.objectiveTimeout, () {
+      if (mounted) setState(() => _objectiveExpanded = false);
+    });
     if (widget.levelId != null) {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => unawaited(_run('open', level: widget.levelId)),
@@ -202,15 +221,20 @@ class _SettlementGameScreenState extends State<SettlementGameScreen> {
                             onPressed: () => Navigator.pop(context),
                           ),
                           for (final item in const [
+                            ('/campaign', 'Missions'),
                             ('/research', 'Research'),
                             ('/notebook', 'Mars Notebook'),
                             ('/badges', 'Badges'),
                             ('/patch', 'Mission Patch'),
                           ])
-                            GameButton(
-                              label: item.$2,
-                              secondary: true,
-                              onPressed: () => Navigator.pop(context, item.$1),
+                            Tooltip(
+                              message: item.$2,
+                              child: GameButton(
+                                label: item.$2,
+                                secondary: true,
+                                onPressed: () =>
+                                    Navigator.pop(context, item.$1),
+                              ),
                             ),
                           GameButton(
                             label: 'Settings',
@@ -332,7 +356,8 @@ class _SettlementGameScreenState extends State<SettlementGameScreen> {
       child: Scaffold(
         key: const ValueKey('settlement-game'),
         backgroundColor: hour >= c.missions.config.number('daylight_hours')
-            ? GameColors.marsNight : GameColors.marsGround,
+            ? GameColors.marsNight
+            : GameColors.marsGround,
         body: Stack(
           fit: StackFit.expand,
           children: [
@@ -353,97 +378,206 @@ class _SettlementGameScreenState extends State<SettlementGameScreen> {
               onManage: (route) => unawaited(_panel(route)),
             ),
             SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Wrap(
-                            spacing: 6,
-                            runSpacing: 4,
-                            children: [
-                              for (final counter in const [
-                                ('Power', 'battery_kwh', 'kWh'),
-                                ('Oxygen', 'oxygen_kg', 'kg'),
-                                ('Water', 'water_kg', 'kg'),
-                                ('Food', 'food_kg', 'kg'),
-                              ])
-                                _WorldCounter(
-                                  label: counter.$1,
-                                  value:
-                                      '${world.resources[counter.$2]!.quantity.toStringAsFixed(1)} ${counter.$3}',
+              child: LayoutBuilder(
+                builder: (context, bounds) {
+                  final narrow = bounds.maxWidth < GameSpacing.telemetryWide;
+                  final objective =
+                      '${level['name']} \u2022 ${mission == null
+                          ? 'Walk with the joystick. Tap a building to interact.'
+                          : phase == 'debrief'
+                          ? mission['message']
+                          : level['mission_objective']}';
+                  return Stack(
+                    children: [
+                      Positioned(
+                        left: GameSpacing.sm,
+                        top: narrow
+                            ? GameSpacing.touchTarget + GameSpacing.sm
+                            : GameSpacing.sm,
+                        right: narrow
+                            ? GameSpacing.sm
+                            : GameSpacing.touchTarget * 3 + GameSpacing.md,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (final counter in const [
+                              (
+                                'Power',
+                                'battery_kwh',
+                                'kWh',
+                                Icons.bolt_rounded,
+                              ),
+                              ('Oxygen', 'oxygen_kg', 'kg', Icons.air_rounded),
+                              (
+                                'Water',
+                                'water_kg',
+                                'kg',
+                                Icons.water_drop_outlined,
+                              ),
+                              (
+                                'Food',
+                                'food_kg',
+                                'kg',
+                                Icons.restaurant_outlined,
+                              ),
+                            ])
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: GameSpacing.xs,
+                                  ),
+                                  child: _WorldCounter(
+                                    label: counter.$1,
+                                    quantity:
+                                        world.resources[counter.$2]!.quantity,
+                                    unit: counter.$3,
+                                    icon: counter.$4,
+                                  ),
                                 ),
-                            ],
+                              ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: GameSpacing.sm,
+                        top: GameSpacing.xs,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _WorldTool(
+                              'Build',
+                              Icons.construction_rounded,
+                              () => _panel('/build'),
+                            ),
+                            _WorldTool(
+                              'Crew',
+                              Icons.groups_rounded,
+                              () => _panel('/crew'),
+                            ),
+                            _WorldTool(
+                              'Pause',
+                              Icons.pause_rounded,
+                              () => _panel('/pause'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        left: GameSpacing.sm,
+                        top: narrow
+                            ? GameSpacing.touchTarget * 2 + GameSpacing.md
+                            : GameSpacing.touchTarget + GameSpacing.sm,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: bounds.maxWidth * (narrow ? .8 : .55),
                           ),
-                        ),
-                        _WorldTool(
-                          'Build',
-                          Icons.construction_rounded,
-                          () => _panel('/build'),
-                        ),
-                        _WorldTool(
-                          'Missions',
-                          Icons.route_rounded,
-                          () => _panel('/campaign'),
-                        ),
-                        _WorldTool(
-                          'Crew',
-                          Icons.groups_rounded,
-                          () => _panel('/crew'),
-                        ),
-                        _WorldTool(
-                          'Pause',
-                          Icons.pause_rounded,
-                          () => _panel('/pause'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Material(
-                            color: GameColors.night.withValues(alpha: .92),
-                            borderRadius: BorderRadius.circular(14),
-                            child: InkWell(
-                              onTap: () => _panel('/mission-details'),
-                              borderRadius: BorderRadius.circular(14),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
+                          child: Semantics(
+                            label: objective,
+                            button: true,
+                            onTap: _showObjective,
+                            child: Material(
+                              color: GameColors.hudGlass,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  GameRadii.chip,
                                 ),
-                                child: Text(
-                                  '${level['name']} • ${mission == null
-                                      ? 'Walk with the joystick. Tap a building to interact.'
-                                      : phase == 'debrief'
-                                      ? mission['message']
-                                      : level['mission_objective']}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: GameColors.paper,
+                                side: const BorderSide(
+                                  color: GameColors.hudBorder,
+                                ),
+                              ),
+                              child: InkWell(
+                                key: const ValueKey('mission-objective'),
+                                onTap: _showObjective,
+                                onLongPress: () => _panel('/mission-details'),
+                                borderRadius: BorderRadius.circular(
+                                  GameRadii.chip,
+                                ),
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    minHeight: GameSpacing.touchTarget,
+                                    minWidth: GameSpacing.touchTarget,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: GameSpacing.sm,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.flag_outlined,
+                                          size: GameIconSizes.button,
+                                          color: GameColors.tealLight,
+                                        ),
+                                        if (_objectiveExpanded) ...[
+                                          const SizedBox(width: GameSpacing.xs),
+                                          Flexible(
+                                            child: Text(
+                                              objective,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize:
+                                                    GameTypography.labelMedium,
+                                                color: GameColors.paper,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          key: const ValueKey('mission-action'),
-                          onPressed: _busy || _overlay ? null : action,
-                          child: Text(button),
+                      ),
+                      Positioned(
+                        right: GameSpacing.compact,
+                        bottom: GameSpacing.compact,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: narrow
+                                ? bounds.maxWidth -
+                                      GameSpacing.compactJoystick -
+                                      GameSpacing.xl
+                                : bounds.maxWidth * .45,
+                          ),
+                          child: FilledButton(
+                            key: const ValueKey('mission-action'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: GameColors.rust,
+                              foregroundColor: GameColors.paper,
+                              minimumSize: const Size(
+                                GameSpacing.touchTarget,
+                                GameSpacing.touchTarget,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: GameSpacing.compact,
+                                vertical: GameSpacing.xs,
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: GameTypography.label,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  GameRadii.chip,
+                                ),
+                              ),
+                            ),
+                            onPressed: _busy || _overlay ? null : action,
+                            child: Text(
+                              button,
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -454,32 +588,48 @@ class _SettlementGameScreenState extends State<SettlementGameScreen> {
 }
 
 class _WorldCounter extends StatelessWidget {
-  const _WorldCounter({required this.label, required this.value});
-  final String label, value;
+  const _WorldCounter({
+    required this.label,
+    required this.quantity,
+    required this.unit,
+    required this.icon,
+  });
+  final String label, unit;
+  final double quantity;
+  final IconData icon;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-    decoration: BoxDecoration(
-      color: GameColors.night.withValues(alpha: .92),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, color: GameColors.tealLight),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: GameColors.paper,
+  Widget build(BuildContext context) => Semantics(
+    label: '$label: ${quantity.toStringAsFixed(1)} $unit',
+    excludeSemantics: true,
+    child: Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: GameSpacing.resourceGap,
+        vertical: GameSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: GameColors.hudGlass,
+        borderRadius: BorderRadius.circular(GameRadii.chip),
+        border: Border.all(color: GameColors.hudBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: GameIconSizes.button, color: GameColors.tealLight),
+          const SizedBox(width: GameSpacing.xs),
+          Flexible(
+            child: Text(
+              quantity.toStringAsFixed(0),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: GameTypography.labelMedium,
+                fontWeight: FontWeight.bold,
+                color: GameColors.paper,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
@@ -490,14 +640,18 @@ class _WorldTool extends StatelessWidget {
   final IconData icon;
   final VoidCallback action;
   @override
-  Widget build(BuildContext context) => Tooltip(
-    message: label,
-    child: IconButton(
-      onPressed: action,
-      icon: Icon(icon),
-      style: IconButton.styleFrom(
-        backgroundColor: GameColors.night.withValues(alpha: .92),
-        foregroundColor: GameColors.paper,
+  Widget build(BuildContext context) => IconButton(
+    tooltip: label,
+    onPressed: action,
+    iconSize: GameIconSizes.button,
+    icon: Icon(icon),
+    style: IconButton.styleFrom(
+      minimumSize: const Size(GameSpacing.touchTarget, GameSpacing.touchTarget),
+      backgroundColor: GameColors.hudGlass,
+      foregroundColor: GameColors.paper,
+      side: const BorderSide(color: GameColors.hudBorder),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(GameRadii.chip),
       ),
     ),
   );

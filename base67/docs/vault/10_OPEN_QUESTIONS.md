@@ -36,3 +36,9 @@ Update this file every session. Remove an item only when it is resolved, and rec
 |---|---|---|
 | Level 1 starting-damage scenario | Owner selected "Design starting damage separately" during M2-M10 | Preserve construction-first opening. Separate design must define the actual damaged unit/occurrence, ordinary/restricted payment authority, spare ownership, pacing, recovery/retry and save compatibility before implementation. No fabricated damage or assistance. |
 | M2-M10 final acceptance | Focused automated groups pass; M10 PARTIAL | Owner runs full suite/analyzer/build and reviews Android font/art/accessibility/touch, offline job/mid-mission resume, GPU/CPU/memory and pacing. No device/student-test or complete-game claim. |
+
+## Step 0.5 acceptance follow-up (2026-11-13)
+
+- Android visual/touch/performance review pending: no device connected. Review launcher/splash logo, objective/crew disclosure, 92 dp joystick, proximity-only Interact and timed toasts with system text scaling/reduced motion. Local test captures use test fonts/icon placeholders.
+- Only the two requested settlement files ran (17 passed); updated campaign-route expectations in test/widget_test.dart and full suite remain unexecuted. Historical M10 acceptance remains partial.
+- Current distributable is dist/Base 67.apk with the revised HUD/logo. Retained dist/BASE67.apk and gameplay video predate Step 0.5. Existing Android Debug signing is unchanged.

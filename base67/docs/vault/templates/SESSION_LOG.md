@@ -709,3 +709,48 @@ No untracked original-pack files were found either. Protected application/prolog
 
 ## Next safe step
 - Review the two remaining Prompt 3 test failures and the deferred HUD/camera surfaces before requesting another scoped change.
+
+# Session handoff - Step 0.5 HUD and branding
+
+**Date and tool:** 2026-11-13; Codex; built-in image_gen for the attached badge title edit.
+**Prompt worked on:** Step 0.5 only, plus explicit logo/APK naming request.
+**Read before starting:** Vault 00-10, PROGRESS, DECISIONS, GAME_BRIEF, master prompt sequence, session template; BASE 67 UI/UX, Ponytail and imagegen skills. Inspected actual screen/map/painter/camera/status code, callers and tests.
+
+## Done (with evidence)
+- Compact glass HUD, timed objective/inspection disclosure, crew chip, proximity-only Interact, 92 dp translucent joystick, Follow-only default control, separate final facility labels and ghost sites; initial zoom 1.3. Existing rules, geometry, movement and saves preserved.
+- Revised BASE 67 badge in Flutter/native launch screens and launcher. Fresh dist/Base 67.apk and hash exported using build_base67.ps1.
+- Clean analyzer, 17 requested tests passed, release build/signature/label/icon/offline permission/ZIP checks recorded below and in PROGRESS.
+
+## Partly done
+- Layout captures at 640x360, 960x420 and 360x800 with 1.4x text use test font/icon placeholders. Android visual/touch/performance acceptance remains pending.
+
+## Not done
+- Later visual/crew steps, full suite, execution of updated test/widget_test.dart, original-pack checksum test, emulator/physical device run (none connected), Git staging/commit/push.
+
+## Files changed
+- lib/game/settlement_game_screen.dart, lib/ui/settlement_map.dart, lib/ui/mars_base_painter.dart, lib/ui/theme.dart: HUD/labels/zoom presentation.
+- lib/app/game_router.dart, pubspec.yaml, assets/branding/base67_logo.png: Flutter branding.
+- android/app/src/main/AndroidManifest.xml, res/drawable/launch_background.xml, res/drawable-v21/launch_background.xml, res/values-v31/styles.xml, res/drawable-nodpi/base67_logo.png: native branding (res paths relative to android/app/src/main).
+- build_base67.ps1: named release export and hash.
+- test/settlement_hud_test.dart, test/settlement_world_widget_test.dart: responsive/disclosure/timer/proximity/overlap coverage; test/widget_test.dart: move campaign entry through Pause (unexecuted).
+- docs/PROGRESS.md, docs/DECISIONS.md, docs/vault/10_OPEN_QUESTIONS.md and this session log: results/decisions/acceptance record.
+
+## Real command results
+- flutter analyze: initial SDK lock denial did not execute analysis; SDK-access retry `No issues found! (ran in 47.0s)`; final after bounded fix `No issues found! (ran in 1.2s)`.
+- flutter test test/settlement_hud_test.dart test/settlement_world_widget_test.dart --dart-define=BASE67_REVIEW_DIR=build/step05-review: first 15 passed / 2 failed; final `00:03 +17: All tests passed!` (exit 0). One fix attempt (primary action constraints/menu scroll).
+- build_base67.ps1: `Built build\app\outputs\flutter-apk\app-release.apk (55.5MB)`; assembleRelease 70.3s. Export: 58,216,264 bytes; SHA-256 16c50535bf6144ac58b52c6d8e24277bffdc1f2e1139314ab99963fcfe5b0fc5.
+- apksigner: verified existing Android Debug signer. aapt: BASE 67 / new icon res/Qm.png / no INTERNET permission. ZIP and bundled image checks passed; initial filename-only assertion corrected for Android resource optimization, without asset changes.
+- check_data.py: not run; no data changed. git diff on original assets/data: empty. git diff --check: passed before documentation; final status/diff check follows append.
+- adb devices: no device attached.
+
+## Decisions made and provisional values added
+- Cosmetic zoom, opacity, durations, size/color tokens and contextual disclosure, generated logo and packaging approach; recorded in DECISIONS. No NASA/gameplay/balance inputs.
+
+## Conflicts found between documents
+- Latest Step 0.5/naming request supersedes older prompt gates. Requested two-file validation supersedes historical full-suite/manual-only rules. Current AGENTS requires session append despite historical no-log assignment. Earlier referenced override/token text not found; current shared tokens/vault and explicit requirements applied.
+
+## Open questions added to 10_OPEN_QUESTIONS.md
+- Device/full-suite/route acceptance pending; older APK/video are not evidence for this revision.
+
+## Next safe step
+- Owner reviews the new APK on Android and authorizes the next visual/crew step separately.

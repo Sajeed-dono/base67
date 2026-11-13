@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:base67/ui/crew_bean.dart';
 import 'package:base67/ui/mars_base_painter.dart';
 import 'package:base67/ui/mars_terrain.dart';
 import 'package:base67/ui/theme.dart';
@@ -38,6 +39,52 @@ void main() {
       picture.dispose();
     }
   }
+
+  test(
+    'pixel astronauts have distinct default uniforms and retain motion',
+    () async {
+      expect(
+        {for (final role in CrewRole.values) crewSuitColor(role, 0)}.length,
+        4,
+      );
+      await frame(
+        (canvas, _) {
+          for (final role in CrewRole.values) {
+            canvas.save();
+            canvas.translate(role.index * 120.0 + 10, 8);
+            CrewBeanPainter(
+              role: role,
+              mood: CrewMood.okay,
+              suitColor: crewSuitColor(role, 0),
+              visorTint: crewVisorColors.first,
+              faceStyleIndex: 0,
+              breath: 0,
+            ).paint(canvas, const Size(100, 116));
+            canvas.restore();
+          }
+        },
+        size: const Size(480, 140),
+        capture: 'crew-pixel-colours',
+      );
+      Future<String> astronaut(int choice, double phase) => frame(
+        (canvas, size) => CrewBeanPainter(
+          role: CrewRole.commander,
+          mood: CrewMood.okay,
+          suitColor: crewSuitColor(CrewRole.commander, choice),
+          visorTint: crewVisorColors.first,
+          faceStyleIndex: 0,
+          breath: 0,
+          walking: true,
+          walkPhase: phase,
+        ).paint(canvas, size),
+        size: const Size(100, 116),
+      );
+      final still = await astronaut(0, 0);
+      expect(await astronaut(0, 0), still);
+      expect(await astronaut(1, 0), isNot(still));
+      expect(await astronaut(0, .25), isNot(still));
+    },
+  );
 
   test(
     'whole colony composes distinct day and night in the stable world',

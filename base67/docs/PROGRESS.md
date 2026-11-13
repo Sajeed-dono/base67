@@ -1,5 +1,16 @@
 # BASE 67 Development Progress
 
+## Step 0.5 - settlement HUD and BASE 67 branding (2026-11-13)
+
+Owner scope: Step 0.5 only, plus supplied logo/APK naming. IMPLEMENTED and automatically validated; Android visual/touch acceptance pending. No later visual/crew step started.
+
+- Full-screen glass HUD: compact icon/value resources with full Semantics, three top tools (Missions inside Pause), four-second objective chip, bounded bottom-right phase action, proximity-only Interact, 92 dp translucent joystick, Follow-only default control, disclosed crew selection and three-second anchored/replacing facility toasts. Long press retains objective/astronaut details. Existing commands, wording, keys, movement, rules, clocks, saves and story remain.
+- Uninstalled facilities use 35% ghost art and a tiny lock. A separate final pass labels built/selected/nearest sites, suppresses overlapping pills, omits state suffixes and hides pills below 0.8 zoom. Initial zoom 1.3 uses the actual habitat anchor; existing bounds, follow, gestures, positions and collision remain.
+- Built-in imagegen edited the supplied badge title to BASE 67. assets/branding/base67_logo.png and an identical Android resource are wired into Flutter/native start screens and the launcher. Existing original icon files remain. build_base67.ps1 exports a fresh dist/Base 67.apk and SHA-256 while preserving Flutter's internal app-release.apk path.
+- Final analyzer: `No issues found! (ran in 1.2s)`. Requested two-file tests, with optional review capture define: `00:03 +17: All tests passed!`. First test run: 15 passed / 2 failed; one fix attempt bounded the long primary action and scrolled to the lazy menu item. An initial SDK-lock denial did not execute analysis; SDK-access retry succeeded. Test captures at 640x360, 960x420 and 360x800 use 1.4x text/reduced motion and test font/icon placeholders.
+- Actual build: `Built build\app\outputs\flutter-apk\app-release.apk (55.5MB)`; assembleRelease 70.3s. dist/Base 67.apk: 58,216,264 bytes; SHA-256 16c50535bf6144ac58b52c6d8e24277bffdc1f2e1139314ab99963fcfe5b0fc5. apksigner verified the existing Android Debug signer; aapt confirmed BASE 67, new launcher image at all densities and no INTERNET permission. ZIP/bundled-logo checks passed after accounting for Android optimized resource names.
+- git diff --check passed; original assets/data diff empty; no dependencies changed. test/widget_test.dart opens Pause and scrolls to Missions before its existing campaign assertions; updated but not run under the two-file verification limit. Full suite, checksum test and device acceptance not run; adb reports no connected device. No staging, commit or push. The older dist/BASE67.apk and gameplay recording are retained but predate this revision.
+
 Updated: 2026-11-13
 
 ## Android submission finishing pass ? 2026-11-13

@@ -1,4 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' as ui;
+
+import 'package:base67/app/campaign_controller.dart';
+import 'package:base67/app/campaign_save_store.dart';
+import 'package:base67/game/settlement_game_screen.dart';
+import 'package:base67/ui/crew_movement.dart';
+import 'package:flutter/rendering.dart';
 
 import 'package:base67/app/campaign_migration.dart';
 import 'package:base67/app/campaign_save.dart';
@@ -22,6 +30,144 @@ void main() {
     repository = await GameDataRepository.load();
     migration = CampaignMigration(repository);
   });
+  for (final size in [
+    const Size(640, 360),
+    const Size(960, 420),
+    const Size(360, 800),
+  ]) {
+    testWidgets('compact settlement HUD fits $size and discloses controls', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final c = CampaignController(
+        repository: repository,
+        store: CampaignSaveStore(_Memory()),
+        initial: migration.migrate(
+          const CampaignSave(
+            prologueComplete: true,
+            selectedSiteId: 'gale',
+            settings: {'reduceMotion': true},
+            buildingLevels: {'crew_habitat': 1},
+          ),
+        ),
+      );
+      final movement = CrewMovement();
+      await c.initialize();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: Base67Theme.missionControl(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(1.4)),
+            child: child!,
+          ),
+          home: RepaintBoundary(
+            key: const ValueKey('hud-capture'),
+            child: ListenableBuilder(
+              listenable: c,
+              builder: (context, _) => SettlementGameScreen(
+                controller: c,
+                repository: repository,
+                movement: movement,
+                navigate: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(
+        tester.getSize(find.byKey(const ValueKey('settlement-viewport'))),
+        size,
+      );
+      expect(
+        tester.getSize(find.byKey(const ValueKey('crew-joystick'))),
+        const Size(92, 92),
+      );
+      expect(find.text('Power'), findsNothing);
+      expect(find.text('Oxygen'), findsNothing);
+      final semantics = tester.ensureSemantics();
+      expect(find.bySemanticsLabel(RegExp(r'^Power: .* kWh$')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'^Oxygen: .* kg$')), findsOneWidget);
+      for (final name in ['Build', 'Crew', 'Pause']) {
+        expect(find.byTooltip(name).hitTestable(), findsOneWidget);
+        expect(
+          tester.getSize(find.byTooltip(name)).shortestSide,
+          greaterThanOrEqualTo(48),
+        );
+      }
+      expect(find.byTooltip('Missions'), findsNothing);
+      expect(find.byTooltip('Zoom in'), findsNothing);
+      expect(find.byTooltip('Zoom out'), findsNothing);
+      expect(find.byKey(const ValueKey('select-engineer')), findsNothing);
+      final action = find.byKey(const ValueKey('mission-action'));
+      final actionRect = tester.getRect(action);
+      expect(action.hitTestable(), findsOneWidget);
+      expect(actionRect.center.dx, greaterThan(size.width / 2));
+      expect(actionRect.bottom, greaterThan(size.height - 32));
+      expect(actionRect.left, greaterThanOrEqualTo(108));
+      expect(
+        actionRect.overlaps(
+          tester.getRect(find.byKey(const ValueKey('crew-chip'))),
+        ),
+        isFalse,
+      );
+      const review = String.fromEnvironment('BASE67_REVIEW_DIR');
+      if (review.isNotEmpty) {
+        await tester.runAsync(() async {
+          final boundary = tester.renderObject<RenderRepaintBoundary>(
+            find.byKey(const ValueKey('hud-capture')),
+          );
+          final image = await boundary.toImage();
+          try {
+            final bytes = await image.toByteData(
+              format: ui.ImageByteFormat.png,
+            );
+            Directory(review).createSync(recursive: true);
+            File('$review/hud-${size.width.toInt()}.png')
+                .writeAsBytesSync(bytes!.buffer.asUint8List());
+          } finally {
+            image.dispose();
+          }
+        });
+      }
+      final objective = find.byKey(const ValueKey('mission-objective'));
+      final expandedWidth = tester.getSize(objective).width;
+      await tester.pump(GameMotion.objectiveTimeout);
+      expect(tester.getSize(objective).width, lessThan(expandedWidth));
+      await tester.tap(objective);
+      await tester.pump();
+      expect(tester.getSize(objective).width, expandedWidth);
+      await tester.tap(find.byKey(const ValueKey('crew-chip')));
+      await tester.pump();
+      expect(
+        find.byKey(const ValueKey('select-engineer')).hitTestable(),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('select-engineer')));
+      await tester.pump();
+      expect(movement.selected, 'engineer');
+      expect(find.byKey(const ValueKey('select-engineer')), findsNothing);
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.byTooltip('Missions'), 100);
+      await tester.pump();
+      expect(find.text('Missions'), findsOneWidget);
+      expect(movement.direction, Offset.zero);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(action.hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+      await tester.pumpWidget(const SizedBox.shrink());
+      c.dispose();
+      movement.dispose();
+    });
+  }
   testWidgets(
     'Home renders canonical night, storm and panel dust without changing the save',
     (tester) async {
@@ -169,5 +315,15 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     });
+  }
+}
+
+class _Memory implements LocalStringStore {
+  final values = <String, String>{};
+  @override
+  Future<String?> getString(String key) async => values[key];
+  @override
+  Future<void> setString(String key, String value) async {
+    values[key] = value;
   }
 }
