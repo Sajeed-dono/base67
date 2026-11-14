@@ -4,7 +4,7 @@
 
 A Mars Settlement & Junior Astronaut Mission Training Game
 
-🎮 PLAY BASE 67 ONLINE
+🎮 [PLAY BASE 67 ONLINE](https://sajeed-dono.github.io/base67/)
 
 Explore Mars, manage your settlement, lead your crew, and complete your astronaut training missions!
 
