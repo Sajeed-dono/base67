@@ -1,5 +1,48 @@
-The basic flutter and a prototype of our Base 67 game prologue part is done and the files and flutter setup is here. Android SDK needs to be set up manually for your computer. All the project is gonna be built here
-The part 1 of 8 has been finished. The foundation of our Game has been build
-The skills, agent, map, players, tasks, layout all of it is now build. We have prepared the the blueprint of our Architecture.
-The GUI is polished and the basic architecture is ready TO BE BUILD.
-The part 2 of 8 is finished. The basic architecture(A prototype) is created. the vault files, META prompts are now created.
+# BASE 67
+
+BASE 67 is an offline-first Flutter game prototype and junior astronaut mission
+trainer. The Flutter project is in [`base67/`](base67/).
+
+## Android APKs
+
+The repository includes the currently packaged APK:
+
+- [`BASE 67.apk`](base67/BASE%2067.apk) — installable Android release package.
+
+The release build script creates a freshly built copy at
+`base67/dist/Base 67.apk` and writes its SHA-256 checksum to
+`base67/dist/Base 67.apk.sha256`.
+
+### Install and use the APK
+
+1. Copy `BASE 67.apk` to an Android phone or tablet.
+2. Open it with the Android file manager and allow installation from that
+   source if Android asks for permission.
+3. Install the app, then open **BASE 67** from the app launcher.
+
+For an Android device connected through ADB, use:
+
+```bash
+adb install -r "base67/BASE 67.apk"
+```
+
+The `-r` option updates an existing installation while preserving its local
+app data. Remove it if a clean installation is required.
+
+## Build a new release APK
+
+From the repository root, run the PowerShell build script:
+
+```powershell
+Set-Location base67
+.\build_base67.ps1
+```
+
+The resulting APK is `base67/dist/Base 67.apk`. Flutter must be installed and
+the Android SDK must be configured before building or installing the app.
+
+## Development status
+
+The foundation, prologue prototype, data layer, campaign model, and initial
+architecture are in place. See [`base67/README.md`](base67/README.md) for
+project commands and implementation details.
