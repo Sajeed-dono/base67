@@ -1,5 +1,13 @@
 # BASE 67
 
+🚀 BASE 67
+
+A Mars Settlement & Junior Astronaut Mission Training Game
+
+🎮 PLAY BASE 67 ONLINE
+
+Explore Mars, manage your settlement, lead your crew, and complete your astronaut training missions!
+
 BASE 67 is an offline-first Flutter game prototype and junior astronaut mission
 trainer. The Flutter project is in [`base67/`](base67/).
 
