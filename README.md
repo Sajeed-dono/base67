@@ -3,6 +3,10 @@
 BASE 67 is an offline-first Flutter game prototype and junior astronaut mission
 trainer. The Flutter project is in [`base67/`](base67/).
 
+## Play online
+
+Play the web build on GitHub Pages: [BASE 67](https://sajeed-dono.github.io/base67/).
+
 ## Android APKs
 
 The repository includes the currently packaged APK:
